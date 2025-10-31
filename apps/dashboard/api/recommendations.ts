@@ -20,55 +20,38 @@ export default async function handler(
   }
 
   try {
-    const { storeId, productId, userId } = req.body;
+    const { 
+      storeId, 
+      productId, 
+      productName,
+      productCategory,
+      productPrice,
+      availableProducts,
+      userId 
+    } = req.body;
 
-    if (!storeId || !productId) {
+    if (!storeId || !productId || !availableProducts) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // 1. Get product details from Firestore
-    const productDoc = await db
-      .collection('products')
-      .where('storeId', '==', storeId)
-      .where('productId', '==', productId)
-      .limit(1)
-      .get();
+    // Products are sent directly from plugin - no Firestore lookup needed!
+    // This makes it work immediately for any client without setup
 
-    if (productDoc.empty) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    const product = productDoc.docs[0].data();
-
-    // 2. Get all available products for this store
-    const productsSnapshot = await db
-      .collection('products')
-      .where('storeId', '==', storeId)
-      .limit(50)
-      .get();
-
-    const availableProducts = productsSnapshot.docs.map(doc => ({
-      id: doc.data().productId,
-      name: doc.data().name,
-      category: doc.data().category || 'general',
-      price: doc.data().price || 0,
-    }));
-
-    // 3. Get AI recommendations from Groq
+    // Get AI recommendations from Groq
     const recommendedIds = await getAIRecommendations({
-      productId: product.productId,
-      productName: product.name,
-      productCategory: product.category || 'general',
-      productPrice: product.price || 0,
+      productId,
+      productName,
+      productCategory: productCategory || 'general',
+      productPrice: productPrice || 0,
       availableProducts,
     });
 
-    // 4. Get full product details for recommendations
-    const recommendations = availableProducts.filter(p =>
+    // Get full product details for recommendations
+    const recommendations = availableProducts.filter((p: any) =>
       recommendedIds.includes(p.id)
     );
 
-    // 5. Save recommendation to Firestore for tracking
+    // Save recommendation to Firestore for tracking
     await db.collection('recommendations').add({
       storeId,
       productId,
@@ -78,14 +61,14 @@ export default async function handler(
       converted: false,
     });
 
-    // 6. Return recommendations
+    // Return recommendations
     return res.status(200).json({
       success: true,
       product: {
-        id: product.productId,
-        name: product.name,
+        id: productId,
+        name: productName,
       },
-      recommendations: recommendations.map(r => ({
+      recommendations: recommendations.map((r: any) => ({
         id: r.id,
         name: r.name,
         price: r.price,
