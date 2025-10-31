@@ -2,6 +2,8 @@
 import { ref, onMounted } from 'vue';
 import { db } from '../firebase/config';
 import { collection, getDocs } from 'firebase/firestore';
+import PieDonutChart from '../components/charts/PieDonutChart.vue';
+import DonutChart from '../components/charts/DonutChart.vue';
 
 const isConnected = ref(false);
 const loading = ref(true);
@@ -91,6 +93,11 @@ onMounted(async () => {
       </div>
     </div>
 
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <PieDonutChart />
+      <DonutChart />
+    </div>
 
     <!-- Recent Activity & Quick Stats -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
