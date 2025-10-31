@@ -25,7 +25,7 @@ if (!defined('ABSPATH')) {
 define('UPSELLAI_VERSION', '1.0.0');
 define('UPSELLAI_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('UPSELLAI_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('UPSELLAI_API_URL', 'https://upsellai.net/api');
+define('UPSELLAI_API_URL', 'https://wpupsell-dashboard.vercel.app/api');
 
 // Check if WooCommerce is active
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
