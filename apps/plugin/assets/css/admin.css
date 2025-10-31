@@ -1,0 +1,50 @@
+/* WPUpsell Admin Styles */
+
+.wpupsell-settings-container {
+    max-width: 800px;
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin-top: 20px;
+}
+
+.wpupsell-settings-container h1 {
+    margin-bottom: 20px;
+}
+
+.wpupsell-settings-container .form-table th {
+    padding: 20px 10px 20px 0;
+    font-weight: 600;
+}
+
+.wpupsell-settings-container .form-table td {
+    padding: 20px 10px;
+}
+
+.wpupsell-stats {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.wpupsell-stats p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.wpupsell-stats a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.wpupsell-stats a:hover {
+    text-decoration: underline;
+}
+
+/* Success notice */
+.notice.notice-success {
+    border-left-color: #46b450;
+}
