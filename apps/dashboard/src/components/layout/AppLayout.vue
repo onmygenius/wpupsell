@@ -59,7 +59,7 @@ const toggleSidebar = () => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-lg transition group relative',
               isActive(item.path)
-                ? 'bg-blue-600 text-white font-semibold'
+                ? 'bg-gradient-to-r from-blue-600/30 to-blue-700/20 text-white font-semibold border-l-4 border-blue-500'
                 : 'text-gray-400 hover:bg-gray-800/50 hover:text-white',
               isCollapsed ? 'justify-center' : ''
             ]"
