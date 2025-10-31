@@ -22,9 +22,10 @@ class Recommendations {
     }
     
     public function enqueue_assets() {
-        if (!is_product()) {
-            return;
-        }
+        // Temporarily load on all pages for debugging
+        // if (!is_product()) {
+        //     return;
+        // }
         
         // Plugin CSS
         wp_enqueue_style('upsellai-frontend', UPSELLAI_PLUGIN_URL . 'assets/css/frontend.css', [], UPSELLAI_VERSION);
