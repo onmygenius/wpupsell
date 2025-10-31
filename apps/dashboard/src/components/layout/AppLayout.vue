@@ -1,9 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
+import { useAuthStore } from '../../stores/auth';
 
 const route = useRoute();
+const authStore = useAuthStore();
 const isCollapsed = ref(false);
+
+const userInitial = computed(() => {
+  return authStore.userEmail.charAt(0).toUpperCase() || 'U';
+});
+
+const userName = computed(() => {
+  return authStore.userEmail.split('@')[0] || 'User';
+});
 
 const navigation = [
   { name: 'Dashboard', path: '/', icon: '📊' },
@@ -45,7 +55,7 @@ const toggleSidebar = () => {
             <span class="text-xl">🚀</span>
           </div>
           <div v-if="!isCollapsed">
-            <h1 class="text-lg font-bold text-white">WPUpsell</h1>
+            <h1 class="text-lg font-bold text-white">UpSell AI</h1>
             <p class="text-xs text-gray-400">Pro Plan</p>
           </div>
         </div>
@@ -88,12 +98,20 @@ const toggleSidebar = () => {
       >
         <div :class="['flex items-center gap-3', isCollapsed ? 'justify-center' : '']">
           <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
-            U
+            {{ userInitial }}
           </div>
           <div v-if="!isCollapsed" class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-white truncate">User</p>
-            <p class="text-xs text-gray-400">Pro Plan</p>
+            <p class="text-sm font-semibold text-white truncate">{{ userName }}</p>
+            <p class="text-xs text-gray-400">{{ authStore.userEmail }}</p>
           </div>
+          <button 
+            v-if="!isCollapsed"
+            @click="authStore.logout()"
+            class="text-gray-400 hover:text-white transition"
+            title="Logout"
+          >
+            🚪
+          </button>
         </div>
       </div>
     </aside>

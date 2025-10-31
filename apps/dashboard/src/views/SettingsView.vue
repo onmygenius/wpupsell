@@ -1,32 +1,26 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useAuthStore } from '../stores/auth';
 
-// Mock user data - will be replaced with Firebase Auth data
-const user = ref({
-  userId: 'user_123',
-  email: 'alex@electronics.com',
-  displayName: 'Alex Johnson',
-  plan: 'growth',
-  createdAt: new Date('2025-09-15')
+const authStore = useAuthStore();
+const userProfile = ref<any>(null);
+const loading = ref(true);
+const copied = ref(false);
+
+onMounted(async () => {
+  userProfile.value = await authStore.getUserProfile();
+  loading.value = false;
 });
 
-// Mock API keys - will come from Firestore
-const apiKeys = ref([
-  {
-    keyId: 'key_001',
-    key: 'sk_live_abc123def456ghi789...',
-    name: 'Production Key',
-    createdAt: new Date('2025-09-15'),
-    lastUsed: new Date('2025-10-31')
-  },
-  {
-    keyId: 'key_002',
-    key: 'sk_test_xyz789uvw456rst123...',
-    name: 'Test Key',
-    createdAt: new Date('2025-10-01'),
-    lastUsed: new Date('2025-10-30')
+function copyApiKey() {
+  if (userProfile.value?.apiKey) {
+    navigator.clipboard.writeText(userProfile.value.apiKey);
+    copied.value = true;
+    setTimeout(() => {
+      copied.value = false;
+    }, 2000);
   }
-]);
+}
 
 const notifications = ref({
   emailOnConversion: true,
@@ -59,8 +53,9 @@ const billing = ref({
           <label class="block text-sm font-medium text-gray-400 mb-2">Email</label>
           <input 
             type="email" 
-            v-model="user.email"
-            class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            :value="authStore.userEmail"
+            disabled
+            class="w-full px-4 py-2 bg-gray-800/30 border border-gray-700 rounded-lg text-gray-500"
             placeholder="your@email.com"
           />
         </div>
@@ -68,8 +63,9 @@ const billing = ref({
           <label class="block text-sm font-medium text-gray-400 mb-2">Display Name</label>
           <input 
             type="text" 
-            v-model="user.displayName"
-            class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            :value="userProfile?.name || 'User'"
+            disabled
+            class="w-full px-4 py-2 bg-gray-800/30 border border-gray-700 rounded-lg text-gray-500"
             placeholder="Your Name"
           />
         </div>
@@ -77,14 +73,12 @@ const billing = ref({
           <label class="block text-sm font-medium text-gray-400 mb-2">User ID</label>
           <input 
             type="text" 
-            :value="user.userId"
+            :value="authStore.userId"
             disabled
             class="w-full px-4 py-2 bg-gray-800/30 border border-gray-700 rounded-lg text-gray-500"
           />
         </div>
-        <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-          Save Changes
-        </button>
+        <!-- Removed save button since fields are read-only -->
       </div>
     </div>
 
@@ -92,34 +86,33 @@ const billing = ref({
     <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h2 class="text-xl font-semibold text-white">API Keys</h2>
-          <p class="text-gray-400 text-sm mt-1">Manage your API keys for WooCommerce integration</p>
+          <h2 class="text-xl font-semibold text-white">Your API Key</h2>
+          <p class="text-gray-400 text-sm mt-1">Use this key in your WooCommerce plugin</p>
         </div>
-        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
-          <span class="text-xl">+</span>
-          <span>Generate New Key</span>
-        </button>
       </div>
       
-      <div class="space-y-4">
-        <div 
-          v-for="apiKey in apiKeys" 
-          :key="apiKey.keyId"
-          class="bg-gray-800/30 border border-gray-700 rounded-lg p-4"
-        >
-          <div class="flex items-start justify-between mb-3">
-            <div class="flex-1">
-              <h3 class="text-white font-medium mb-1">{{ apiKey.name }}</h3>
-              <p class="text-xs text-gray-400">Created {{ apiKey.createdAt.toLocaleDateString() }}</p>
-            </div>
-            <button class="text-red-400 hover:text-red-300 text-sm">🗑️ Delete</button>
+      <div v-if="loading" class="text-center py-8">
+        <p class="text-gray-400">Loading...</p>
+      </div>
+
+      <div v-else-if="userProfile?.apiKey" class="bg-gray-800/30 border border-gray-700 rounded-lg p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex-1">
+            <h3 class="text-white font-medium mb-1">Production API Key</h3>
+            <p class="text-xs text-gray-400">Created {{ userProfile.createdAt?.toDate().toLocaleDateString() }}</p>
           </div>
-          <div class="flex items-center gap-2">
-            <code class="flex-1 text-sm text-gray-300 bg-gray-900/50 px-3 py-2 rounded font-mono">{{ apiKey.key }}</code>
-            <button class="text-gray-400 hover:text-white transition">📋</button>
-          </div>
-          <p class="text-xs text-gray-500 mt-2">Last used: {{ apiKey.lastUsed.toLocaleDateString() }}</p>
         </div>
+        <div class="flex items-center gap-2">
+          <code class="flex-1 text-sm text-gray-300 bg-gray-900/50 px-3 py-2 rounded font-mono">{{ userProfile.apiKey }}</code>
+          <button 
+            @click="copyApiKey" 
+            class="text-gray-400 hover:text-white transition px-3 py-2"
+            :class="{ 'text-green-400': copied }"
+          >
+            {{ copied ? '✅' : '📋' }}
+          </button>
+        </div>
+        <p class="text-xs text-green-400 mt-2">✨ Copy this key and paste it in your WordPress plugin settings</p>
       </div>
     </div>
 
