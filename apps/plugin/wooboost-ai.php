@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: WooBoost AI - Upsell & Cross-sell
- * Plugin URI: https://github.com/onmygenius/wpupsell
+ * Plugin URI: https://github.com/onmygenius/upsellai
  * Description: AI-powered upsell and cross-sell recommendations for WooCommerce
  * Version: 0.1.0
- * Author: WPUpsell
- * Author URI: https://wpupsell.com
+ * Author: UpSell AI
+ * Author URI: https://upsellai.com
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wooboost-ai
@@ -25,7 +25,7 @@ if (!defined('ABSPATH')) {
 define('WOOBOOST_VERSION', '0.1.0');
 define('WOOBOOST_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WOOBOOST_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('WOOBOOST_API_URL', 'https://api.wpupsell.com');
+define('WOOBOOST_API_URL', 'https://api.upsellai.com');
 
 // Check if WooCommerce is active
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {

@@ -1,7 +1,7 @@
 <?php
-namespace WPUpsell\Tracking;
+namespace UpsellAI\Tracking;
 
-use WPUpsell\API\Client;
+use UpsellAI\API\Client;
 
 class Conversion {
     
@@ -17,14 +17,14 @@ class Conversion {
         add_action('woocommerce_thankyou', [$this, 'track_order_completion'], 10, 1);
         
         // AJAX endpoint for tracking
-        add_action('wp_ajax_wpupsell_track_conversion', [$this, 'ajax_track_conversion']);
-        add_action('wp_ajax_nopriv_wpupsell_track_conversion', [$this, 'ajax_track_conversion']);
+        add_action('wp_ajax_upsellai_track_conversion', [$this, 'ajax_track_conversion']);
+        add_action('wp_ajax_nopriv_upsellai_track_conversion', [$this, 'ajax_track_conversion']);
     }
     
     public function track_add_to_cart($cart_item_key, $product_id, $quantity, $variation_id, $variation, $cart_item_data) {
         // Check if this was from a recommendation
-        if (isset($_POST['wpupsell_recommendation_id'])) {
-            $recommendation_id = sanitize_text_field($_POST['wpupsell_recommendation_id']);
+        if (isset($_POST['upsellai_recommendation_id'])) {
+            $recommendation_id = sanitize_text_field($_POST['upsellai_recommendation_id']);
             
             $product = wc_get_product($product_id);
             $revenue = $product ? $product->get_price() * $quantity : 0;
@@ -38,7 +38,7 @@ class Conversion {
             );
             
             // Store in session for later
-            WC()->session->set('wpupsell_last_recommendation', [
+            WC()->session->set('upsellai_last_recommendation', [
                 'recommendation_id' => $recommendation_id,
                 'product_id' => $product_id,
                 'revenue' => $revenue,
@@ -58,7 +58,7 @@ class Conversion {
         }
         
         // Check if there was a recommendation in the session
-        $last_recommendation = WC()->session->get('wpupsell_last_recommendation');
+        $last_recommendation = WC()->session->get('upsellai_last_recommendation');
         
         if ($last_recommendation) {
             // Update conversion with final order data
@@ -71,12 +71,12 @@ class Conversion {
             );
             
             // Clear session
-            WC()->session->__unset('wpupsell_last_recommendation');
+            WC()->session->__unset('upsellai_last_recommendation');
         }
     }
     
     public function ajax_track_conversion() {
-        check_ajax_referer('wpupsell_nonce', 'nonce');
+        check_ajax_referer('upsellai_nonce', 'nonce');
         
         $recommendation_id = isset($_POST['recommendation_id']) ? sanitize_text_field($_POST['recommendation_id']) : '';
         $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;

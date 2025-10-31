@@ -1,6 +1,6 @@
-/* WPUpsell Admin Styles */
+/* UpSell AI Admin Styles */
 
-.wpupsell-settings-container {
+.upsellai-settings-container {
     max-width: 800px;
     background: #fff;
     padding: 30px;
@@ -9,38 +9,38 @@
     margin-top: 20px;
 }
 
-.wpupsell-settings-container h1 {
+.upsellai-settings-container h1 {
     margin-bottom: 20px;
 }
 
-.wpupsell-settings-container .form-table th {
+.upsellai-settings-container .form-table th {
     padding: 20px 10px 20px 0;
     font-weight: 600;
 }
 
-.wpupsell-settings-container .form-table td {
+.upsellai-settings-container .form-table td {
     padding: 20px 10px;
 }
 
-.wpupsell-stats {
+.upsellai-stats {
     background: #f8f9fa;
     padding: 20px;
     border-radius: 8px;
     margin-top: 20px;
 }
 
-.wpupsell-stats p {
+.upsellai-stats p {
     margin: 0;
     font-size: 14px;
 }
 
-.wpupsell-stats a {
+.upsellai-stats a {
     color: #667eea;
     text-decoration: none;
     font-weight: 600;
 }
 
-.wpupsell-stats a:hover {
+.upsellai-stats a:hover {
     text-decoration: underline;
 }
 

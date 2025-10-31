@@ -1,9 +1,9 @@
 /**
- * WPUpsell Frontend JavaScript
+ * UpSell AI Frontend JavaScript
  * Uses Alpine.js for reactivity
  */
 
-function wpupsellRecommendations() {
+function upsellaiRecommendations() {
     return {
         loading: false,
         recommendations: [],
@@ -15,15 +15,15 @@ function wpupsellRecommendations() {
             this.error = null;
             
             try {
-                const response = await fetch(wpupsellData.ajaxUrl, {
+                const response = await fetch(upsellaiData.ajaxUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     body: new URLSearchParams({
-                        action: 'wpupsell_get_recommendations',
-                        nonce: wpupsellData.nonce,
-                        product_id: wpupsellData.productId,
+                        action: 'upsellai_get_recommendations',
+                        nonce: upsellaiData.nonce,
+                        product_id: upsellaiData.productId,
                     }),
                 });
                 
@@ -41,7 +41,7 @@ function wpupsellRecommendations() {
                     this.error = data.data?.message || 'Failed to load recommendations';
                 }
             } catch (error) {
-                console.error('WPUpsell Error:', error);
+                console.error('UpSell AI Error:', error);
                 this.error = 'Failed to load recommendations';
             } finally {
                 this.loading = false;
@@ -58,7 +58,7 @@ function wpupsellRecommendations() {
                 const formData = new FormData();
                 formData.append('product_id', product.id);
                 formData.append('quantity', '1');
-                formData.append('wpupsell_recommendation_id', this.recommendationId);
+                formData.append('upsellai_recommendation_id', this.recommendationId);
                 
                 const response = await fetch('/?wc-ajax=add_to_cart', {
                     method: 'POST',
@@ -89,16 +89,16 @@ function wpupsellRecommendations() {
         
         async trackImpression() {
             try {
-                await fetch(wpupsellData.ajaxUrl, {
+                await fetch(upsellaiData.ajaxUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     body: new URLSearchParams({
-                        action: 'wpupsell_track_conversion',
-                        nonce: wpupsellData.nonce,
+                        action: 'upsellai_track_conversion',
+                        nonce: upsellaiData.nonce,
                         recommendation_id: this.recommendationId,
-                        product_id: wpupsellData.productId,
+                        product_id: upsellaiData.productId,
                         converted: false,
                         revenue: 0,
                     }),
@@ -110,14 +110,14 @@ function wpupsellRecommendations() {
         
         async trackConversion(product, converted) {
             try {
-                await fetch(wpupsellData.ajaxUrl, {
+                await fetch(upsellaiData.ajaxUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     body: new URLSearchParams({
-                        action: 'wpupsell_track_conversion',
-                        nonce: wpupsellData.nonce,
+                        action: 'upsellai_track_conversion',
+                        nonce: upsellaiData.nonce,
                         recommendation_id: this.recommendationId,
                         product_id: product.id,
                         converted: converted,

@@ -1,17 +1,17 @@
 /**
- * WPUpsell Admin JavaScript
+ * UpSell AI Admin JavaScript
  */
 
 jQuery(document).ready(function($) {
     'use strict';
     
     // Copy Store ID to clipboard
-    $('#wpupsell_store_id').on('click', function() {
+    $('#upsellai_store_id').on('click', function() {
         this.select();
         document.execCommand('copy');
         
         // Show tooltip
-        const tooltip = $('<span class="wpupsell-tooltip">Copied!</span>');
+        const tooltip = $('<span class="upsellai-tooltip">Copied!</span>');
         $(this).after(tooltip);
         
         setTimeout(function() {
@@ -22,7 +22,7 @@ jQuery(document).ready(function($) {
     });
     
     // Validate API key format
-    $('#wpupsell_api_key').on('blur', function() {
+    $('#upsellai_api_key').on('blur', function() {
         const apiKey = $(this).val();
         
         if (apiKey && !apiKey.startsWith('sk_')) {

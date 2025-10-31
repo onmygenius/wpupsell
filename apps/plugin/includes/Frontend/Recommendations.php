@@ -1,7 +1,7 @@
 <?php
-namespace WPUpsell\Frontend;
+namespace UpsellAI\Frontend;
 
-use WPUpsell\API\Client;
+use UpsellAI\API\Client;
 
 class Recommendations {
     
@@ -17,8 +17,8 @@ class Recommendations {
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
         
         // AJAX endpoint for getting recommendations
-        add_action('wp_ajax_wpupsell_get_recommendations', [$this, 'ajax_get_recommendations']);
-        add_action('wp_ajax_nopriv_wpupsell_get_recommendations', [$this, 'ajax_get_recommendations']);
+        add_action('wp_ajax_upsellai_get_recommendations', [$this, 'ajax_get_recommendations']);
+        add_action('wp_ajax_nopriv_upsellai_get_recommendations', [$this, 'ajax_get_recommendations']);
     }
     
     public function enqueue_assets() {
@@ -30,69 +30,69 @@ class Recommendations {
         wp_enqueue_script('alpinejs', 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js', [], '3.0', true);
         
         // Plugin CSS
-        wp_enqueue_style('wpupsell-frontend', WPUPSELL_PLUGIN_URL . 'assets/css/frontend.css', [], WPUPSELL_VERSION);
+        wp_enqueue_style('upsellai-frontend', UPSELLAI_PLUGIN_URL . 'assets/css/frontend.css', [], UPSELLAI_VERSION);
         
         // Plugin JS
-        wp_enqueue_script('wpupsell-frontend', WPUPSELL_PLUGIN_URL . 'assets/js/frontend.js', ['jquery', 'alpinejs'], WPUPSELL_VERSION, true);
+        wp_enqueue_script('upsellai-frontend', UPSELLAI_PLUGIN_URL . 'assets/js/frontend.js', ['jquery', 'alpinejs'], UPSELLAI_VERSION, true);
         
         // Localize script
-        wp_localize_script('wpupsell-frontend', 'wpupsellData', [
+        wp_localize_script('upsellai-frontend', 'upsellaiData', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('wpupsell_nonce'),
+            'nonce' => wp_create_nonce('upsellai_nonce'),
             'productId' => get_the_ID(),
-            'storeId' => get_option('wpupsell_store_id'),
+            'storeId' => get_option('upsellai_store_id'),
         ]);
     }
     
     public function display_recommendations() {
-        if (!get_option('wpupsell_enabled', '1')) {
+        if (!get_option('upsellai_enabled', '1')) {
             return;
         }
         
         $product_id = get_the_ID();
         
         ?>
-        <div id="wpupsell-recommendations" 
-             x-data="wpupsellRecommendations()" 
+        <div id="upsellai-recommendations" 
+             x-data="upsellaiRecommendations()" 
              x-init="loadRecommendations()"
-             class="wpupsell-container">
+             class="upsellai-container">
             
             <!-- Loading State -->
-            <div x-show="loading" class="wpupsell-loading">
-                <div class="wpupsell-spinner"></div>
-                <p><?php _e('Loading AI recommendations...', 'wpupsell'); ?></p>
+            <div x-show="loading" class="upsellai-loading">
+                <div class="upsellai-spinner"></div>
+                <p><?php _e('Loading AI recommendations...', 'upsellai'); ?></p>
             </div>
             
             <!-- Recommendations -->
             <div x-show="!loading && recommendations.length > 0" 
                  x-cloak
-                 class="wpupsell-recommendations">
+                 class="upsellai-recommendations">
                 
-                <h3 class="wpupsell-title">
-                    🤖 <?php _e('Customers also bought', 'wpupsell'); ?>
+                <h3 class="upsellai-title">
+                    🤖 <?php _e('Customers also bought', 'upsellai'); ?>
                 </h3>
                 
-                <div class="wpupsell-grid">
+                <div class="upsellai-grid">
                     <template x-for="product in recommendations" :key="product.id">
-                        <div class="wpupsell-product-card">
-                            <div class="wpupsell-product-image">
+                        <div class="upsellai-product-card">
+                            <div class="upsellai-product-image">
                                 <img :src="product.image" :alt="product.name" />
                             </div>
                             
-                            <div class="wpupsell-product-info">
-                                <h4 class="wpupsell-product-name" x-text="product.name"></h4>
-                                <p class="wpupsell-product-price" x-text="'$' + product.price"></p>
-                                <p class="wpupsell-product-reason" x-text="product.reason"></p>
+                            <div class="upsellai-product-info">
+                                <h4 class="upsellai-product-name" x-text="product.name"></h4>
+                                <p class="upsellai-product-price" x-text="'$' + product.price"></p>
+                                <p class="upsellai-product-reason" x-text="product.reason"></p>
                             </div>
                             
                             <button @click="addToCart(product)" 
-                                    class="wpupsell-add-to-cart"
+                                    class="upsellai-add-to-cart"
                                     :disabled="product.adding">
                                 <span x-show="!product.adding">
-                                    <?php _e('Add to Cart', 'wpupsell'); ?>
+                                    <?php _e('Add to Cart', 'upsellai'); ?>
                                 </span>
                                 <span x-show="product.adding">
-                                    <?php _e('Adding...', 'wpupsell'); ?>
+                                    <?php _e('Adding...', 'upsellai'); ?>
                                 </span>
                             </button>
                         </div>
@@ -101,7 +101,7 @@ class Recommendations {
             </div>
             
             <!-- Error State -->
-            <div x-show="error" x-cloak class="wpupsell-error">
+            <div x-show="error" x-cloak class="upsellai-error">
                 <p x-text="error"></p>
             </div>
         </div>
@@ -109,7 +109,7 @@ class Recommendations {
     }
     
     public function ajax_get_recommendations() {
-        check_ajax_referer('wpupsell_nonce', 'nonce');
+        check_ajax_referer('upsellai_nonce', 'nonce');
         
         $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
         

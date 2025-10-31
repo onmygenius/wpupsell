@@ -1,5 +1,5 @@
 <?php
-namespace WPUpsell\API;
+namespace UpsellAI\API;
 
 class Client {
     
@@ -8,9 +8,9 @@ class Client {
     private $store_id;
     
     public function __construct() {
-        $this->api_url = WPUPSELL_API_URL;
-        $this->api_key = get_option('wpupsell_api_key', '');
-        $this->store_id = get_option('wpupsell_store_id', '');
+        $this->api_url = UPSELLAI_API_URL;
+        $this->api_key = get_option('upsellai_api_key', '');
+        $this->store_id = get_option('upsellai_store_id', '');
         
         // Sync products on product save
         add_action('woocommerce_update_product', [$this, 'sync_product'], 10, 1);
@@ -39,7 +39,7 @@ class Client {
         ]);
         
         if (is_wp_error($response)) {
-            error_log('WPUpsell API Error: ' . $response->get_error_message());
+            error_log('UpSell AI API Error: ' . $response->get_error_message());
             return ['error' => $response->get_error_message()];
         }
         
@@ -74,7 +74,7 @@ class Client {
         ]);
         
         if (is_wp_error($response)) {
-            error_log('WPUpsell Conversion Tracking Error: ' . $response->get_error_message());
+            error_log('UpSell AI Conversion Tracking Error: ' . $response->get_error_message());
             return false;
         }
         

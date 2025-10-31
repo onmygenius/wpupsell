@@ -1,6 +1,6 @@
-/* WPUpsell Frontend Styles */
+/* UpSell AI Frontend Styles */
 
-.wpupsell-container {
+.upsellai-container {
     margin: 40px 0;
     padding: 30px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -8,7 +8,7 @@
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
-.wpupsell-title {
+.upsellai-title {
     color: #ffffff;
     font-size: 24px;
     font-weight: 700;
@@ -16,13 +16,13 @@
     text-align: center;
 }
 
-.wpupsell-loading {
+.upsellai-loading {
     text-align: center;
     padding: 40px;
     color: #ffffff;
 }
 
-.wpupsell-spinner {
+.upsellai-spinner {
     border: 4px solid rgba(255, 255, 255, 0.3);
     border-top: 4px solid #ffffff;
     border-radius: 50%;
@@ -37,13 +37,13 @@
     100% { transform: rotate(360deg); }
 }
 
-.wpupsell-grid {
+.upsellai-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
 }
 
-.wpupsell-product-card {
+.upsellai-product-card {
     background: #ffffff;
     border-radius: 12px;
     padding: 20px;
@@ -52,12 +52,12 @@
     flex-direction: column;
 }
 
-.wpupsell-product-card:hover {
+.upsellai-product-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
 }
 
-.wpupsell-product-image {
+.upsellai-product-image {
     width: 100%;
     height: 200px;
     overflow: hidden;
@@ -65,18 +65,18 @@
     margin-bottom: 16px;
 }
 
-.wpupsell-product-image img {
+.upsellai-product-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.wpupsell-product-info {
+.upsellai-product-info {
     flex: 1;
     margin-bottom: 16px;
 }
 
-.wpupsell-product-name {
+.upsellai-product-name {
     font-size: 18px;
     font-weight: 600;
     color: #1a202c;
@@ -84,20 +84,20 @@
     line-height: 1.4;
 }
 
-.wpupsell-product-price {
+.upsellai-product-price {
     font-size: 24px;
     font-weight: 700;
     color: #667eea;
     margin-bottom: 8px;
 }
 
-.wpupsell-product-reason {
+.upsellai-product-reason {
     font-size: 13px;
     color: #718096;
     font-style: italic;
 }
 
-.wpupsell-add-to-cart {
+.upsellai-add-to-cart {
     width: 100%;
     padding: 12px 24px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -110,17 +110,17 @@
     transition: opacity 0.3s ease, transform 0.2s ease;
 }
 
-.wpupsell-add-to-cart:hover:not(:disabled) {
+.upsellai-add-to-cart:hover:not(:disabled) {
     opacity: 0.9;
     transform: scale(1.02);
 }
 
-.wpupsell-add-to-cart:disabled {
+.upsellai-add-to-cart:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
-.wpupsell-error {
+.upsellai-error {
     text-align: center;
     padding: 20px;
     color: #ffffff;
@@ -135,16 +135,16 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-    .wpupsell-container {
+    .upsellai-container {
         padding: 20px;
         margin: 20px 0;
     }
     
-    .wpupsell-title {
+    .upsellai-title {
         font-size: 20px;
     }
     
-    .wpupsell-grid {
+    .upsellai-grid {
         grid-template-columns: 1fr;
     }
 }

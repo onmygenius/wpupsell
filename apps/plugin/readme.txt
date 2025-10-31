@@ -1,5 +1,5 @@
-=== WPUpsell - AI Recommendations ===
-Contributors: wpupsell
+=== UpSell AI - AI Recommendations ===
+Contributors: upsellai
 Tags: woocommerce, upsell, cross-sell, ai, recommendations
 Requires at least: 6.0
 Tested up to: 6.4
@@ -12,7 +12,7 @@ Increase WooCommerce sales by 25-40% with AI-powered upsell and cross-sell recom
 
 == Description ==
 
-WPUpsell uses advanced AI technology to analyze your products and customer behavior, providing intelligent product recommendations that increase your average order value.
+UpSell AI uses advanced AI technology to analyze your products and customer behavior, providing intelligent product recommendations that increase your average order value.
 
 **Features:**
 
@@ -26,23 +26,23 @@ WPUpsell uses advanced AI technology to analyze your products and customer behav
 **How it works:**
 
 1. Install and activate the plugin
-2. Get your API key from [WPUpsell Dashboard](https://wpupsell-dashboard.vercel.app)
+2. Get your API key from [UpSell AI Dashboard](https://upsellai-dashboard.vercel.app)
 3. Enter your API key in plugin settings
 4. AI recommendations appear automatically on product pages
 5. Watch your sales grow!
 
 == Installation ==
 
-1. Upload the plugin files to `/wp-content/plugins/wpupsell` directory
+1. Upload the plugin files to `/wp-content/plugins/upsellai` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Go to WPUpsell settings and enter your API key
+3. Go to UpSell AI settings and enter your API key
 4. Done! Recommendations will appear on product pages
 
 == Frequently Asked Questions ==
 
-= Do I need a WPUpsell account? =
+= Do I need a UpSell AI account? =
 
-Yes, you need to sign up at [wpupsell-dashboard.vercel.app](https://wpupsell-dashboard.vercel.app) to get your API key.
+Yes, you need to sign up at [upsellai-dashboard.vercel.app](https://upsellai-dashboard.vercel.app) to get your API key.
 
 = Is there a free trial? =
 
@@ -74,4 +74,4 @@ Yes! You can customize colors, layout, and positioning through CSS.
 == Upgrade Notice ==
 
 = 1.0.0 =
-Initial release of WPUpsell AI Recommendations plugin.
+Initial release of UpSell AI AI Recommendations plugin.
