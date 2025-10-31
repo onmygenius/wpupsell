@@ -22,11 +22,11 @@ const toggleSidebar = () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 flex">
+  <div class="min-h-screen bg-[#0a0e27] flex">
     <!-- Sidebar -->
     <aside 
       :class="[
-        'bg-white shadow-lg transition-all duration-300 ease-in-out relative',
+        'bg-[#0f1535] border-r border-gray-800 transition-all duration-300 ease-in-out relative',
         isCollapsed ? 'w-20' : 'w-64'
       ]"
     >
@@ -41,10 +41,12 @@ const toggleSidebar = () => {
       <div class="p-6">
         <!-- Logo -->
         <div :class="['flex items-center gap-2 mb-8 transition-all', isCollapsed ? 'justify-center' : '']">
-          <span class="text-3xl">🚀</span>
+          <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span class="text-xl">🚀</span>
+          </div>
           <div v-if="!isCollapsed">
-            <h1 class="text-xl font-bold text-gray-900">WPUpsell</h1>
-            <p class="text-xs text-gray-500">AI-Powered</p>
+            <h1 class="text-lg font-bold text-white">WPUpsell</h1>
+            <p class="text-xs text-gray-400">Pro Plan</p>
           </div>
         </div>
 
@@ -57,8 +59,8 @@ const toggleSidebar = () => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-lg transition group relative',
               isActive(item.path)
-                ? 'bg-blue-50 text-blue-600 font-semibold'
-                : 'text-gray-700 hover:bg-gray-50',
+                ? 'bg-blue-600 text-white font-semibold'
+                : 'text-gray-400 hover:bg-gray-800/50 hover:text-white',
               isCollapsed ? 'justify-center' : ''
             ]"
             :title="isCollapsed ? item.name : ''"
@@ -80,7 +82,7 @@ const toggleSidebar = () => {
       <!-- User Section -->
       <div 
         :class="[
-          'absolute bottom-0 p-6 border-t border-gray-200 transition-all',
+          'absolute bottom-0 p-6 border-t border-gray-800 transition-all',
           isCollapsed ? 'w-20' : 'w-64'
         ]"
       >
@@ -89,15 +91,15 @@ const toggleSidebar = () => {
             U
           </div>
           <div v-if="!isCollapsed" class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-gray-900 truncate">User</p>
-            <p class="text-xs text-gray-500">Free Plan</p>
+            <p class="text-sm font-semibold text-white truncate">User</p>
+            <p class="text-xs text-gray-400">Pro Plan</p>
           </div>
         </div>
       </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 p-8 overflow-auto">
+    <main class="flex-1 p-8 overflow-auto bg-[#0a0e27]">
       <RouterView />
     </main>
   </div>
