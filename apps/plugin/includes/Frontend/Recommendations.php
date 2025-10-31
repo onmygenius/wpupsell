@@ -30,8 +30,8 @@ class Recommendations {
         // Plugin CSS
         wp_enqueue_style('upsellai-frontend', UPSELLAI_PLUGIN_URL . 'assets/css/frontend.css', [], UPSELLAI_VERSION);
         
-        // Plugin JS (Vanilla JS - no dependencies)
-        wp_enqueue_script('upsellai-frontend', UPSELLAI_PLUGIN_URL . 'assets/js/frontend.js', ['jquery'], UPSELLAI_VERSION, true);
+        // Plugin JS (Vanilla JS - no jQuery dependency needed)
+        wp_enqueue_script('upsellai-frontend', UPSELLAI_PLUGIN_URL . 'assets/js/frontend.js', [], UPSELLAI_VERSION, true);
         
         // Localize script
         wp_localize_script('upsellai-frontend', 'upsellaiData', [
