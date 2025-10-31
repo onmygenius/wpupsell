@@ -2,6 +2,95 @@
 
 ## AI-Powered Recommendations Engine pentru WooCommerce
 
+**Repo:** https://github.com/onmygenius/wpupsell  
+**Status:** 🚧 In Development
+
+---
+
+## 📁 STRUCTURĂ MONOREPO
+
+```
+wpupsell/
+├── apps/
+│   ├── api/              # Vercel Serverless API (TypeScript)
+│   ├── dashboard/        # Vue 3 Dashboard (Vite + TypeScript)
+│   └── plugin/           # WooCommerce Plugin (PHP 8.0+)
+├── packages/
+│   └── shared/           # Shared TypeScript types
+├── firebase/             # Firebase config (Firestore, Auth, Storage)
+└── docs/                 # Documentation (.md files)
+```
+
+---
+
+## 🛠️ TECH STACK
+
+- **Backend:** TypeScript + Vercel Serverless Functions
+- **Database:** Firebase Firestore + Firebase Auth
+- **Cache:** Vercel Edge Config
+- **AI:** Groq API (hybrid: 80% rules + 20% AI)
+- **Dashboard:** Vue 3 + Vite + TypeScript + Tailwind + Pinia
+- **Plugin:** PHP 8.0+ + Alpine.js
+- **Monorepo:** pnpm workspaces + Turborepo
+
+---
+
+## 🚀 QUICK START
+
+### Prerequisites
+- Node.js >= 20.0.0
+- pnpm >= 8.0.0
+- PHP >= 8.0 (pentru plugin)
+- Firebase CLI
+- Vercel CLI (optional)
+
+### Installation
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start Firebase Emulators
+pnpm emulators
+
+# Start API dev server
+pnpm api:dev
+
+# Start Dashboard dev server
+pnpm dashboard:dev
+```
+
+---
+
+## 📦 PACKAGES
+
+### `apps/api`
+Vercel Serverless API cu endpoints pentru:
+- `/api/recommendations` - AI recommendations
+- `/api/conversion` - Tracking conversii
+- `/api/analytics` - Analytics dashboard
+- `/api/health` - Health check
+
+### `apps/dashboard`
+Vue 3 dashboard pentru:
+- Autentificare (Firebase Auth)
+- Overview & Analytics
+- Settings & API Keys
+- Billing (Stripe)
+
+### `apps/plugin`
+WooCommerce plugin pentru:
+- Colectare date (produse, comenzi)
+- Afișare recomandări (popup/banner)
+- Tracking conversii
+- Integrare cu API
+
+### `packages/shared`
+Shared TypeScript types pentru:
+- Store, Product, Order
+- Recommendation, Conversion
+- Analytics
+
 ---
 
 ## 📋 DESPRE PROIECT
