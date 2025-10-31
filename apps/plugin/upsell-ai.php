@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('UPSELLAI_VERSION', '1.0.0');
+define('UPSELLAI_VERSION', '1.0.1');
 define('UPSELLAI_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('UPSELLAI_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('UPSELLAI_API_URL', 'https://wpupsell-dashboard.vercel.app/api');
