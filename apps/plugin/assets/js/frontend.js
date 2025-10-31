@@ -219,10 +219,23 @@
         }
     }
     
-    // Initialize when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
+    // Initialize when DOM is ready AND upsellaiData is available
+    function tryInit() {
+        // Check if upsellaiData is available
+        if (typeof window.upsellaiData === 'undefined') {
+            // Wait a bit and try again
+            setTimeout(tryInit, 100);
+            return;
+        }
+        
+        // Data is available, initialize
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
     }
+    
+    // Start trying to initialize
+    tryInit();
 })();
