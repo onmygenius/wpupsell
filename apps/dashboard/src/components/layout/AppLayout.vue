@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
 const route = useRoute();
+const isCollapsed = ref(false);
 
 const navigation = [
   { name: 'Dashboard', path: '/', icon: '📊' },
@@ -13,47 +15,81 @@ const navigation = [
 const isActive = (path: string) => {
   return route.path === path;
 };
+
+const toggleSidebar = () => {
+  isCollapsed.value = !isCollapsed.value;
+};
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-50 flex">
     <!-- Sidebar -->
-    <aside class="w-64 bg-white shadow-lg">
+    <aside 
+      :class="[
+        'bg-white shadow-lg transition-all duration-300 ease-in-out relative',
+        isCollapsed ? 'w-20' : 'w-64'
+      ]"
+    >
+      <!-- Toggle Button -->
+      <button
+        @click="toggleSidebar"
+        class="absolute -right-3 top-6 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition shadow-lg z-10"
+      >
+        <span class="text-xs">{{ isCollapsed ? '→' : '←' }}</span>
+      </button>
+
       <div class="p-6">
-        <div class="flex items-center gap-2 mb-8">
+        <!-- Logo -->
+        <div :class="['flex items-center gap-2 mb-8 transition-all', isCollapsed ? 'justify-center' : '']">
           <span class="text-3xl">🚀</span>
-          <div>
+          <div v-if="!isCollapsed">
             <h1 class="text-xl font-bold text-gray-900">WPUpsell</h1>
-            <p class="text-xs text-gray-500">AI-Powered Upsells</p>
+            <p class="text-xs text-gray-500">AI-Powered</p>
           </div>
         </div>
 
+        <!-- Navigation -->
         <nav class="space-y-2">
           <RouterLink
             v-for="item in navigation"
             :key="item.path"
             :to="item.path"
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-lg transition',
+              'flex items-center gap-3 px-4 py-3 rounded-lg transition group relative',
               isActive(item.path)
                 ? 'bg-blue-50 text-blue-600 font-semibold'
-                : 'text-gray-700 hover:bg-gray-50'
+                : 'text-gray-700 hover:bg-gray-50',
+              isCollapsed ? 'justify-center' : ''
             ]"
+            :title="isCollapsed ? item.name : ''"
           >
             <span class="text-xl">{{ item.icon }}</span>
-            <span>{{ item.name }}</span>
+            <span v-if="!isCollapsed" class="transition-opacity">{{ item.name }}</span>
+            
+            <!-- Tooltip when collapsed -->
+            <div 
+              v-if="isCollapsed"
+              class="absolute left-full ml-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50"
+            >
+              {{ item.name }}
+            </div>
           </RouterLink>
         </nav>
       </div>
 
       <!-- User Section -->
-      <div class="absolute bottom-0 w-64 p-6 border-t border-gray-200">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold">
+      <div 
+        :class="[
+          'absolute bottom-0 p-6 border-t border-gray-200 transition-all',
+          isCollapsed ? 'w-20' : 'w-64'
+        ]"
+      >
+        <div :class="['flex items-center gap-3', isCollapsed ? 'justify-center' : '']">
+          <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
             U
           </div>
-          <div class="flex-1">
-            <p class="text-sm font-semibold text-gray-900">User</p>
+          <div v-if="!isCollapsed" class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-gray-900 truncate">User</p>
             <p class="text-xs text-gray-500">Free Plan</p>
           </div>
         </div>
@@ -61,7 +97,7 @@ const isActive = (path: string) => {
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 p-8">
+    <main class="flex-1 p-8 overflow-auto">
       <RouterView />
     </main>
   </div>
