@@ -26,14 +26,11 @@ class Recommendations {
             return;
         }
         
-        // Alpine.js for interactivity
-        wp_enqueue_script('alpinejs', 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js', [], '3.0', true);
-        
         // Plugin CSS
         wp_enqueue_style('upsellai-frontend', UPSELLAI_PLUGIN_URL . 'assets/css/frontend.css', [], UPSELLAI_VERSION);
         
-        // Plugin JS
-        wp_enqueue_script('upsellai-frontend', UPSELLAI_PLUGIN_URL . 'assets/js/frontend.js', ['jquery', 'alpinejs'], UPSELLAI_VERSION, true);
+        // Plugin JS (Vanilla JS - no dependencies)
+        wp_enqueue_script('upsellai-frontend', UPSELLAI_PLUGIN_URL . 'assets/js/frontend.js', ['jquery'], UPSELLAI_VERSION, true);
         
         // Localize script
         wp_localize_script('upsellai-frontend', 'upsellaiData', [
@@ -52,58 +49,24 @@ class Recommendations {
         $product_id = get_the_ID();
         
         ?>
-        <div id="upsellai-recommendations" 
-             x-data="upsellaiRecommendations()" 
-             x-init="loadRecommendations()"
-             class="upsellai-container">
+        <div id="upsellai-recommendations" class="upsellai-container">
             
             <!-- Loading State -->
-            <div x-show="loading" class="upsellai-loading">
+            <div class="upsellai-loading" style="display: none;">
                 <div class="upsellai-spinner"></div>
                 <p><?php _e('Loading AI recommendations...', 'upsellai'); ?></p>
             </div>
             
-            <!-- Recommendations -->
-            <div x-show="!loading && recommendations.length > 0" 
-                 x-cloak
-                 class="upsellai-recommendations">
-                
+            <!-- Recommendations (will be populated by JavaScript) -->
+            <div class="upsellai-recommendations" style="display: none;">
                 <h3 class="upsellai-title">
                     🤖 <?php _e('Customers also bought', 'upsellai'); ?>
                 </h3>
-                
-                <div class="upsellai-grid">
-                    <template x-for="product in recommendations" :key="product.id">
-                        <div class="upsellai-product-card">
-                            <div class="upsellai-product-image">
-                                <img :src="product.image" :alt="product.name" />
-                            </div>
-                            
-                            <div class="upsellai-product-info">
-                                <h4 class="upsellai-product-name" x-text="product.name"></h4>
-                                <p class="upsellai-product-price" x-text="'$' + product.price"></p>
-                                <p class="upsellai-product-reason" x-text="product.reason"></p>
-                            </div>
-                            
-                            <button @click="addToCart(product)" 
-                                    class="upsellai-add-to-cart"
-                                    :disabled="product.adding">
-                                <span x-show="!product.adding">
-                                    <?php _e('Add to Cart', 'upsellai'); ?>
-                                </span>
-                                <span x-show="product.adding">
-                                    <?php _e('Adding...', 'upsellai'); ?>
-                                </span>
-                            </button>
-                        </div>
-                    </template>
-                </div>
+                <!-- Products will be inserted here by JavaScript -->
             </div>
             
             <!-- Error State -->
-            <div x-show="error" x-cloak class="upsellai-error">
-                <p x-text="error"></p>
-            </div>
+            <div class="upsellai-error" style="display: none;"></div>
         </div>
         <?php
     }
