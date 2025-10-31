@@ -81,8 +81,36 @@ class Recommendations {
             wp_send_json_error(['message' => 'Invalid product ID']);
         }
         
-        // Get recommendations from API
-        $recommendations = $this->api_client->get_recommendations($product_id);
+        // Get current product details
+        $current_product = wc_get_product($product_id);
+        if (!$current_product) {
+            wp_send_json_error(['message' => 'Product not found']);
+        }
+        
+        // Get all products from WooCommerce
+        $all_products = wc_get_products([
+            'limit' => 50,
+            'status' => 'publish',
+            'exclude' => [$product_id], // Exclude current product
+        ]);
+        
+        // Format products for API
+        $available_products = [];
+        foreach ($all_products as $product) {
+            $available_products[] = [
+                'id' => (string) $product->get_id(),
+                'name' => $product->get_name(),
+                'price' => (float) $product->get_price(),
+                'category' => $this->get_product_category($product),
+            ];
+        }
+        
+        // Get recommendations from API with all products
+        $recommendations = $this->api_client->get_recommendations(
+            $product_id,
+            $current_product,
+            $available_products
+        );
         
         if (isset($recommendations['error'])) {
             wp_send_json_error(['message' => $recommendations['error']]);
@@ -112,5 +140,17 @@ class Recommendations {
             'recommendations' => $formatted,
             'recommendation_id' => $recommendations['recommendation_id'] ?? null,
         ]);
+    }
+    
+    private function get_product_category($product) {
+        $categories = $product->get_category_ids();
+        
+        if (empty($categories)) {
+            return 'uncategorized';
+        }
+        
+        $category = get_term($categories[0], 'product_cat');
+        
+        return $category ? $category->name : 'uncategorized';
     }
 }

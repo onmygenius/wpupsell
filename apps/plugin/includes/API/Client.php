@@ -20,7 +20,7 @@ class Client {
     /**
      * Get AI recommendations for a product
      */
-    public function get_recommendations($product_id, $user_id = null) {
+    public function get_recommendations($product_id, $current_product, $available_products, $user_id = null) {
         if (empty($this->api_key) || empty($this->store_id)) {
             return ['error' => 'API key or Store ID not configured'];
         }
@@ -33,9 +33,13 @@ class Client {
             'body' => json_encode([
                 'storeId' => $this->store_id,
                 'productId' => (string) $product_id,
+                'productName' => $current_product->get_name(),
+                'productCategory' => $this->get_product_category($current_product),
+                'productPrice' => (float) $current_product->get_price(),
+                'availableProducts' => $available_products,
                 'userId' => $user_id ?: 'guest_' . wp_generate_password(8, false),
             ]),
-            'timeout' => 15,
+            'timeout' => 30, // Increased timeout for AI processing
         ]);
         
         if (is_wp_error($response)) {
