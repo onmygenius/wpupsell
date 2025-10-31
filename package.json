@@ -11,8 +11,8 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "clean": "turbo run clean",
-    "api:dev": "pnpm --filter api dev",
-    "dashboard:dev": "pnpm --filter dashboard dev",
+    "api:dev": "npm run dev --workspace=api",
+    "dashboard:dev": "npm run dev --workspace=dashboard",
     "emulators": "firebase emulators:start"
   },
   "devDependencies": {
@@ -21,7 +21,6 @@
   },
   "engines": {
     "node": ">=20.0.0",
-    "pnpm": ">=8.0.0"
-  },
-  "packageManager": "pnpm@8.15.0"
+    "npm": ">=10.0.0"
+  }
 }
