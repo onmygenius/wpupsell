@@ -17,7 +17,7 @@ async function getAIRecommendations(product, availableProducts) {
     console.log('🤖 Using Groq AI for recommendations...');
     
     const prompt = `
-You are an AI recommendation engine for an e-commerce store.
+You are an AI recommendation engine for an e-commerce jewelry store.
 
 Current Product:
 - ID: ${product.productId}
@@ -34,8 +34,12 @@ Consider:
 2. Higher-value alternatives (upsells)
 3. Related products in same/similar category
 
-Return ONLY product IDs as a JSON array, nothing else.
-Example: ["prod_002", "prod_005", "prod_008"]
+For each recommendation, provide:
+- id: product ID
+- reason: A SHORT, compelling reason in Romanian (max 8 words) why this product complements the current one
+
+Return ONLY a JSON array of objects, nothing else.
+Example: [{"id": "123", "reason": "Perfect pentru a completa colecția"}, {"id": "456", "reason": "Stil similar, mai elegant"}]
 `;
 
     const groq = getGroq();
@@ -58,10 +62,10 @@ Example: ["prod_002", "prod_005", "prod_008"]
     const response = completion.choices[0]?.message?.content || '[]';
     console.log('🤖 Groq AI raw response:', response);
     
-    const productIds = JSON.parse(response.trim());
-    console.log('🤖 Groq AI recommended IDs:', productIds);
+    const recommendations = JSON.parse(response.trim());
+    console.log('🤖 Groq AI recommendations:', recommendations);
 
-    return productIds;
+    return recommendations; // Array of {id, reason}
   } catch (error) {
     console.error('❌ Groq AI error:', error.message);
     return null; // Return null to trigger fallback
@@ -160,13 +164,13 @@ module.exports = async (req, res) => {
     console.log('Product object created:', JSON.stringify(product, null, 2));
 
     // Try AI recommendations first (hybrid strategy)
-    let recommendedIds = null;
+    let aiRecommendations = null;
     let algorithm = 'simple-rules';
     
     if (process.env.GROQ_API_KEY) {
       console.log('🤖 Groq API Key found, trying AI recommendations...');
-      recommendedIds = await getAIRecommendations(product, availableProducts);
-      if (recommendedIds && recommendedIds.length > 0) {
+      aiRecommendations = await getAIRecommendations(product, availableProducts);
+      if (aiRecommendations && aiRecommendations.length > 0) {
         algorithm = 'groq-ai';
         console.log('✅ Using AI recommendations');
       }
@@ -175,20 +179,30 @@ module.exports = async (req, res) => {
     }
     
     // Fallback to simple rules if AI failed or no API key
-    if (!recommendedIds || recommendedIds.length === 0) {
+    let recommendations = [];
+    if (!aiRecommendations || aiRecommendations.length === 0) {
       console.log('📊 Falling back to simple rule-based recommendations...');
-      recommendedIds = getSimpleRecommendations(product, availableProducts);
+      const recommendedIds = getSimpleRecommendations(product, availableProducts);
       algorithm = 'simple-rules';
+      
+      // Get full product details for simple recommendations
+      recommendations = availableProducts
+        .filter(p => recommendedIds.includes(p.id))
+        .map(p => ({
+          ...p,
+          reason: 'Recomandat pe baza similarității produsului'
+        }));
+    } else {
+      // Get full product details for AI recommendations with reasons
+      recommendations = aiRecommendations
+        .map(rec => {
+          const product = availableProducts.find(p => p.id === rec.id);
+          return product ? { ...product, reason: rec.reason } : null;
+        })
+        .filter(p => p !== null);
     }
     
-    console.log('Recommended IDs:', recommendedIds);
-
-    // Get full product details for recommendations
-    console.log('Filtering products by recommended IDs...');
-    const recommendations = availableProducts.filter(p =>
-      recommendedIds.includes(p.id)
-    );
-    console.log('Filtered recommendations:', recommendations.length);
+    console.log('Final recommendations:', recommendations.length);
 
     // Generate temp recommendation ID (no Firebase)
     const recommendationId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -206,7 +220,7 @@ module.exports = async (req, res) => {
         id: r.id,
         name: r.name,
         price: r.price,
-        reason: 'AI recommended based on product similarity',
+        reason: r.reason || 'Recomandat pentru tine',
       })),
       algorithm: algorithm,
       timestamp: new Date().toISOString(),
