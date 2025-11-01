@@ -168,7 +168,6 @@ async function handleList(req, res) {
     const db = admin.firestore();
     const snapshot = await db.collection('products')
       .where('storeId', '==', storeId)
-      .orderBy('name')
       .get();
     
     const products = [];

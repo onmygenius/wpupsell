@@ -121,10 +121,12 @@ const loadProducts = async () => {
     const data = await response.json();
     
     if (data.success) {
-      products.value = data.products.map((p: any) => ({
-        ...p,
-        syncedAt: p.syncedAt?._seconds ? new Date(p.syncedAt._seconds * 1000) : new Date(),
-      })) as Product[];
+      products.value = data.products
+        .map((p: any) => ({
+          ...p,
+          syncedAt: p.syncedAt?._seconds ? new Date(p.syncedAt._seconds * 1000) : new Date(),
+        }))
+        .sort((a: any, b: any) => a.name.localeCompare(b.name)) as Product[];
       
       // Update last sync time from first product
       if (products.value.length > 0) {
