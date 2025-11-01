@@ -47,28 +47,10 @@ class Recommendations {
             return;
         }
         
-        $product_id = get_the_ID();
-        
+        // Just render a hidden container for JavaScript to detect
+        // Pop-up will be shown by JavaScript, no inline display
         ?>
-        <div id="upsellai-recommendations" class="upsellai-container">
-            
-            <!-- Loading State -->
-            <div class="upsellai-loading" style="display: none;">
-                <div class="upsellai-spinner"></div>
-                <p><?php _e('Loading AI recommendations...', 'upsellai'); ?></p>
-            </div>
-            
-            <!-- Recommendations (will be populated by JavaScript) -->
-            <div class="upsellai-recommendations" style="display: none;">
-                <h3 class="upsellai-title">
-                    🤖 <?php _e('Customers also bought', 'upsellai'); ?>
-                </h3>
-                <!-- Products will be inserted here by JavaScript -->
-            </div>
-            
-            <!-- Error State -->
-            <div class="upsellai-error" style="display: none;"></div>
-        </div>
+        <div id="upsellai-recommendations" style="display: none;" data-product-id="<?php echo get_the_ID(); ?>"></div>
         <?php
     }
     

@@ -5,8 +5,23 @@ import { ref, computed, onMounted } from 'vue';
 const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
 const STORE_ID = 'store_fHg74QwLurg5'; // TODO: Get from auth/store selection
 
+// Product interface
+interface Product {
+  id: string;
+  productId: string;
+  storeId: string;
+  name: string;
+  category: string;
+  price: number;
+  stock: number;
+  image?: string;
+  url: string;
+  enabled: boolean;
+  syncedAt: Date;
+}
+
 // Real data from API
-const products = ref([]);
+const products = ref<Product[]>([]);
 
 const loading = ref(false);
 const syncing = ref(false);
@@ -108,12 +123,12 @@ const loadProducts = async () => {
     if (data.success) {
       products.value = data.products.map((p: any) => ({
         ...p,
-        syncedAt: p.syncedAt ? new Date(p.syncedAt._seconds * 1000) : new Date(),
-      }));
+        syncedAt: p.syncedAt?._seconds ? new Date(p.syncedAt._seconds * 1000) : new Date(),
+      })) as Product[];
       
       // Update last sync time from first product
-      if (products.value.length > 0 && products.value[0].syncedAt) {
-        lastSync.value = products.value[0].syncedAt;
+      if (products.value.length > 0) {
+        lastSync.value = products.value[0]?.syncedAt || new Date();
       }
     } else {
       console.error('Failed to load products:', data.message);

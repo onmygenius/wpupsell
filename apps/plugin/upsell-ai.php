@@ -3,7 +3,7 @@
  * Plugin Name: UpSell AI - AI Recommendations
  * Plugin URI: https://upsellai.net
  * Description: Increase WooCommerce sales by 25-40% with AI-powered upsell and cross-sell recommendations
- * Version: 1.0.8
+ * Version: 1.0.9
  * Author: UpSell AI
  * Author URI: https://upsellai.net
  * Text Domain: upsell-ai
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('UPSELLAI_VERSION', '1.0.8');
+define('UPSELLAI_VERSION', '1.0.9');
 define('UPSELLAI_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('UPSELLAI_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('UPSELLAI_API_URL', 'https://wpupsell-dashboard.vercel.app/api');
@@ -79,9 +79,28 @@ register_activation_hook(__FILE__, function() {
     if (!get_option('upsellai_enabled')) {
         add_option('upsellai_enabled', '1');
     }
+    if (!get_option('upsellai_display_location')) {
+        add_option('upsellai_display_location', 'product_page');
+    }
+    if (!get_option('upsellai_max_recommendations')) {
+        add_option('upsellai_max_recommendations', '3');
+    }
     
-    // Flush rewrite rules
-    flush_rewrite_rules();
+    // Trigger initial product sync if API key exists
+    $api_key = get_option('upsellai_api_key');
+    $store_id = get_option('upsellai_store_id');
+    if ($api_key && $store_id) {
+        error_log('UpSell AI: Plugin activated, triggering initial product sync...');
+        // Schedule sync to run after activation
+        wp_schedule_single_event(time() + 10, 'upsellai_initial_sync');
+    }
+});
+
+// Initial sync hook
+add_action('upsellai_initial_sync', function() {
+    error_log('UpSell AI: Running initial sync...');
+    $sync = new UpsellAI\Sync\Products();
+    $sync->sync_products();
 });
 
 // Deactivation hook

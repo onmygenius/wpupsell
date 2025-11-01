@@ -115,38 +115,98 @@
             }
     }
     
-    // Render recommendations
+    // Render recommendations in elegant pop-up
     function renderRecommendations() {
-        if (!recommendationsEl) return;
-        
         hideLoading();
         
-        let html = '<div class="upsellai-grid">';
+        // Check if user added to cart recently (within 1 minute)
+        const lastAddedToCart = sessionStorage.getItem('upsellai_last_added_to_cart');
+        if (lastAddedToCart) {
+            const timeSinceAdded = Date.now() - parseInt(lastAddedToCart);
+            const oneMinute = 60 * 1000; // 1 minute in milliseconds
+            
+            if (timeSinceAdded < oneMinute) {
+                const remainingSeconds = Math.ceil((oneMinute - timeSinceAdded) / 1000);
+                console.log(`🚀 UpSell AI: Pop-up suppressed. User added to cart ${remainingSeconds}s ago. Will show again in ${remainingSeconds}s`);
+                return;
+            } else {
+                // More than 1 minute passed, clear the flag
+                sessionStorage.removeItem('upsellai_last_added_to_cart');
+            }
+        }
         
+        // Wait 3 seconds before showing pop-up
+        setTimeout(() => {
+            showPopup();
+        }, 3000);
+    }
+    
+    // Show pop-up with recommendations
+    function showPopup() {
+        // Create pop-up overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'upsellai-popup-overlay';
+        overlay.id = 'upsellai-popup';
+        
+        // Build pop-up HTML
+        let popupHTML = `
+            <div class="upsellai-popup-container">
+                <button class="upsellai-popup-close" onclick="document.getElementById('upsellai-popup').remove()">×</button>
+                <div class="upsellai-popup-content">
+                    <h2 class="upsellai-popup-title">🎁 Ofertă Specială Pentru Tine!</h2>
+                    <p class="upsellai-popup-subtitle">Am găsit ceva perfect pentru tine</p>
+        `;
+        
+        // Add each product
         state.recommendations.forEach(product => {
-            html += `
-                <div class="upsellai-product-card" data-product-id="${product.id}">
-                    <div class="upsellai-product-image">
-                        <img src="${product.image}" alt="${product.name}" />
-                    </div>
-                    <div class="upsellai-product-info">
-                        <h4 class="upsellai-product-name">${product.name}</h4>
-                        <p class="upsellai-product-price">$${product.price}</p>
-                        <p class="upsellai-product-reason">${product.reason}</p>
-                    </div>
-                    <button class="upsellai-add-to-cart" data-product-id="${product.id}" data-price="${product.price}">
-                        Add to Cart
+            popupHTML += `
+                <div class="upsellai-popup-product">
+                    <a href="${product.url}" target="_blank" style="display: block; text-decoration: none;">
+                        <img src="${product.image}" alt="${product.name}" class="upsellai-popup-product-image" style="cursor: pointer;" />
+                    </a>
+                    <a href="${product.url}" target="_blank" style="text-decoration: none; color: inherit;">
+                        <h3 class="upsellai-popup-product-name" style="cursor: pointer;">${product.name}</h3>
+                    </a>
+                    <p class="upsellai-popup-product-price">$${product.price}</p>
+                    <p class="upsellai-popup-product-reason">${product.reason}</p>
+                    <button class="upsellai-popup-add-to-cart" data-product-id="${product.id}" data-price="${product.price}">
+                        Adaugă în Coș
                     </button>
                 </div>
             `;
         });
         
-        html += '</div>';
-        recommendationsEl.innerHTML = html;
-        recommendationsEl.style.display = 'block';
+        popupHTML += `
+                </div>
+            </div>
+        `;
         
-        // Attach event listeners
-        const buttons = recommendationsEl.querySelectorAll('.upsellai-add-to-cart');
+        overlay.innerHTML = popupHTML;
+        document.body.appendChild(overlay);
+        
+        // Show with animation
+        setTimeout(() => {
+            overlay.classList.add('active');
+        }, 10);
+        
+        // Close on overlay click (just close, don't suppress future pop-ups)
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+            }
+        });
+        
+        // Close button (just close, don't suppress future pop-ups)
+        const closeBtn = overlay.querySelector('.upsellai-popup-close');
+        if (closeBtn) {
+            closeBtn.onclick = (e) => {
+                e.preventDefault();
+                overlay.remove();
+            };
+        }
+        
+        // Attach event listeners to buttons
+        const buttons = overlay.querySelectorAll('.upsellai-popup-add-to-cart');
         buttons.forEach(button => {
             button.addEventListener('click', handleAddToCart);
         });
@@ -185,14 +245,24 @@
                     jQuery(document.body).trigger('added_to_cart', [data.fragments, data.cart_hash]);
                 }
                 
-                alert('✅ Product added to cart!');
+                alert('✅ Produs adăugat în coș!');
+                
+                // Save timestamp when user added to cart
+                sessionStorage.setItem('upsellai_last_added_to_cart', Date.now().toString());
+                console.log('🚀 UpSell AI: User added to cart. Pop-ups suppressed for 1 minute.');
+                
+                // Close pop-up
+                const popup = document.getElementById('upsellai-popup');
+                if (popup) {
+                    popup.remove();
+                }
             }
         } catch (error) {
             console.error('Add to cart error:', error);
-            alert('Failed to add product to cart');
+            alert('Eroare la adăugarea în coș');
         } finally {
             button.disabled = false;
-            button.textContent = 'Add to Cart';
+            button.textContent = 'Adaugă în Coș';
         }
     }
     

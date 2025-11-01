@@ -168,6 +168,30 @@ class Settings {
                 
                 <hr />
                 
+                <!-- Product Sync Section -->
+                <h2><?php _e('Product Sync', 'upsellai'); ?></h2>
+                <p><?php _e('Sync your WooCommerce products with UpSell AI dashboard.', 'upsellai'); ?></p>
+                
+                <?php
+                $last_sync = get_option('upsellai_last_product_sync');
+                if ($last_sync) {
+                    echo '<p><strong>' . __('Last Sync:', 'upsellai') . '</strong> ' . date('Y-m-d H:i:s', $last_sync) . '</p>';
+                }
+                ?>
+                
+                <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+                    <?php wp_nonce_field('upsellai_sync_products'); ?>
+                    <input type="hidden" name="action" value="upsellai_sync_products" />
+                    <p class="submit">
+                        <button type="submit" class="button button-secondary">
+                            <span class="dashicons dashicons-update" style="margin-top: 3px;"></span>
+                            <?php _e('Sync Products Now', 'upsellai'); ?>
+                        </button>
+                    </p>
+                </form>
+                
+                <hr />
+                
                 <h2><?php _e('Quick Stats', 'upsellai'); ?></h2>
                 <div class="upsellai-stats">
                     <p><?php _e('View detailed analytics in your', 'upsellai'); ?> 
