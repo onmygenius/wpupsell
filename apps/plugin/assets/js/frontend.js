@@ -187,6 +187,12 @@
         // Show with animation
         setTimeout(() => {
             overlay.classList.add('active');
+            console.log('✅ UpSell AI: Pop-up displayed');
+            
+            // Track impression for each product
+            state.recommendations.forEach(product => {
+                trackEvent('impression', product.id, product.name);
+            });
         }, 10);
         
         // Close on overlay click (just close, don't suppress future pop-ups)
@@ -208,17 +214,25 @@
         // Attach event listeners to buttons
         const buttons = overlay.querySelectorAll('.upsellai-popup-add-to-cart');
         buttons.forEach(button => {
-            button.addEventListener('click', handleAddToCart);
+            button.addEventListener('click', (e) => {
+                const productId = button.dataset.productId;
+                const price = button.dataset.price;
+                
+                // Track click
+                const product = state.recommendations.find(r => r.id === productId);
+                if (product) {
+                    trackEvent('click', productId, product.name);
+                }
+                
+                handleAddToCart(productId, price);
+            });
         });
     }
     
     // Handle add to cart
-    async function handleAddToCart(e) {
-        const button = e.target;
-        if (button.disabled) return;
-        
-        const productId = button.dataset.productId;
-        const price = button.dataset.price;
+    async function handleAddToCart(productId, price) {
+        const button = document.querySelector(`[data-product-id="${productId}"]`);
+        if (!button) return;
         
         button.disabled = true;
         button.textContent = 'Adding...';
@@ -287,6 +301,28 @@
             } catch (error) {
                 console.error('Track impression error:', error);
             }
+    }
+    
+    // Track funnel events
+    async function trackEvent(eventType, productId = null, productName = null) {
+        try {
+            console.log('📊 Tracking event:', { eventType, productId, productName });
+            
+            await fetch('https://wpupsell-dashboard.vercel.app/api/tracking', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    storeId: upsellaiData.storeId,
+                    eventType,
+                    productId: productId ? productId.toString() : null,
+                    productName: productName || null,
+                }),
+            });
+        } catch (error) {
+            console.error('Track event error:', error);
+        }
     }
     
     // Track conversion
