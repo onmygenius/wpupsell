@@ -123,12 +123,13 @@ function getSimpleRecommendations(product, availableProducts) {
   console.log('Available products count:', availableProducts.length);
   
   // Filter out current product
-  const otherProducts = availableProducts.filter(p => p.id !== product.productId);
+  const otherProducts = availableProducts.filter(p => p.id !== product.id && p.id !== product.productId);
   console.log('Other products (excluding current):', otherProducts.length);
   
   if (otherProducts.length === 0) {
-    console.log('No other products available!');
-    return [];
+    console.log('⚠️ No other products available! Returning all products as fallback...');
+    // Return all products if no filtering worked
+    return availableProducts.slice(0, 3).map(p => p.id);
   }
   
   // Strategy 1: Same category
@@ -216,6 +217,7 @@ module.exports = async (req, res) => {
 
     // Use product data from request (sent by plugin)
     const product = {
+      id: productId,
       productId,
       name: productName || 'Unknown Product',
       category: productCategory || 'general',
