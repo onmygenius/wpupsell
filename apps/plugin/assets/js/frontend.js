@@ -12,7 +12,10 @@
         loading: false,
         recommendations: [],
         error: null,
-        recommendationId: null
+        recommendationId: null,
+        exitIntentShown: false,
+        scrollTriggered: false,
+        popupShown: false
     };
     
     // DOM Elements
@@ -115,34 +118,117 @@
             }
     }
     
-    // Render recommendations in elegant pop-up
+    // Check frequency cap (max 3 per day)
+    function checkFrequencyCap() {
+        const today = new Date().toDateString();
+        const popupData = localStorage.getItem('upsellai_popup_data');
+        
+        if (popupData) {
+            const data = JSON.parse(popupData);
+            if (data.date === today && data.count >= 3) {
+                console.log('🚀 UpSell AI: Frequency cap reached (3 per day)');
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    // Increment popup counter
+    function incrementPopupCounter() {
+        const today = new Date().toDateString();
+        const popupData = localStorage.getItem('upsellai_popup_data');
+        
+        let data = { date: today, count: 1 };
+        if (popupData) {
+            const existing = JSON.parse(popupData);
+            if (existing.date === today) {
+                data.count = existing.count + 1;
+            }
+        }
+        localStorage.setItem('upsellai_popup_data', JSON.stringify(data));
+    }
+    
+    // Render recommendations with smart triggers
     function renderRecommendations() {
         hideLoading();
+        
+        // Check frequency cap
+        if (!checkFrequencyCap()) {
+            return;
+        }
         
         // Check if user added to cart recently (within 1 minute)
         const lastAddedToCart = sessionStorage.getItem('upsellai_last_added_to_cart');
         if (lastAddedToCart) {
             const timeSinceAdded = Date.now() - parseInt(lastAddedToCart);
-            const oneMinute = 60 * 1000; // 1 minute in milliseconds
+            const oneMinute = 60 * 1000;
             
             if (timeSinceAdded < oneMinute) {
                 const remainingSeconds = Math.ceil((oneMinute - timeSinceAdded) / 1000);
-                console.log(`🚀 UpSell AI: Pop-up suppressed. User added to cart ${remainingSeconds}s ago. Will show again in ${remainingSeconds}s`);
+                console.log(`🚀 UpSell AI: Pop-up suppressed. Cooldown: ${remainingSeconds}s`);
                 return;
             } else {
-                // More than 1 minute passed, clear the flag
                 sessionStorage.removeItem('upsellai_last_added_to_cart');
             }
         }
         
-        // Wait 3 seconds before showing pop-up
+        // Setup smart triggers
+        setupSmartTriggers();
+    }
+    
+    // Setup smart triggers: Exit Intent, Scroll, Time
+    function setupSmartTriggers() {
+        // Exit Intent
+        document.addEventListener('mouseleave', handleExitIntent);
+        
+        // Scroll Trigger (50%)
+        window.addEventListener('scroll', handleScrollTrigger);
+        
+        // Fallback: Time-based (5 seconds)
         setTimeout(() => {
-            showPopup();
-        }, 3000);
+            if (!state.popupShown) {
+                console.log('🚀 UpSell AI: Time trigger (5s)');
+                showPopup();
+            }
+        }, 5000);
+    }
+    
+    // Exit Intent Handler
+    function handleExitIntent(e) {
+        if (state.exitIntentShown || state.popupShown) return;
+        
+        // Check if mouse is leaving from top
+        if (e.clientY <= 0) {
+            state.exitIntentShown = true;
+            console.log('🚀 UpSell AI: Exit intent detected!');
+            showPopup('exit');
+            document.removeEventListener('mouseleave', handleExitIntent);
+        }
+    }
+    
+    // Scroll Trigger Handler
+    function handleScrollTrigger() {
+        if (state.scrollTriggered || state.popupShown) return;
+        
+        const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+        
+        if (scrollPercent >= 50) {
+            state.scrollTriggered = true;
+            console.log('🚀 UpSell AI: Scroll trigger (50%)');
+            showPopup('scroll');
+            window.removeEventListener('scroll', handleScrollTrigger);
+        }
     }
     
     // Show pop-up with recommendations
-    function showPopup() {
+    function showPopup(trigger = 'time') {
+        if (state.popupShown) return;
+        
+        state.popupShown = true;
+        incrementPopupCounter();
+        
+        console.log(`🚀 UpSell AI: Showing popup (trigger: ${trigger})`);
+        
         // Create pop-up overlay
         const overlay = document.createElement('div');
         overlay.className = 'upsellai-popup-overlay';
