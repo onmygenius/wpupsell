@@ -13,6 +13,8 @@ const stats = ref({
   products: 0
 });
 
+const currency = ref('LEI'); // Default currency
+
 const categoryData = ref<any[]>([]);
 const topProducts = ref<any[]>([]);
 
@@ -66,6 +68,9 @@ onMounted(async () => {
     if (statsData.success) {
       stats.value.totalSales = statsData.stats.totalRevenue;
       stats.value.orders = statsData.stats.orders;
+      
+      // Get currency from store (default to LEI for Romanian stores)
+      currency.value = statsData.stats.currency || 'LEI';
     }
   } catch (error) {
     console.error('Failed to load stats:', error);
@@ -94,7 +99,7 @@ onMounted(async () => {
           <span class="text-xs font-medium text-green-400">+23%</span>
         </div>
         <p class="text-sm text-gray-400 mb-1">Total Sales</p>
-        <p class="text-2xl font-bold text-white">${{ stats.totalSales.toLocaleString() }}</p>
+        <p class="text-2xl font-bold text-white">{{ stats.totalSales.toLocaleString() }} {{ currency }}</p>
         <p class="text-xs text-gray-500 mt-2">No conversions yet</p>
       </div>
 

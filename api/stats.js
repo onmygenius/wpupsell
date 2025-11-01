@@ -76,6 +76,7 @@ module.exports = async (req, res) => {
           totalRevenue: Math.round(totalRevenue * 100) / 100,
           orders,
           conversions: orders,
+          currency: 'LEI', // TODO: Get from store settings
         }
       });
     } catch (error) {
