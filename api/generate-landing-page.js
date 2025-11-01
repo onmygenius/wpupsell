@@ -32,12 +32,33 @@ Product Information:
 
 Your task: Generate a complete, high-converting landing page structure in JSON format.
 
-STEP 1: Detect the LANGUAGE from the product name (Romanian, English, etc.)
-STEP 2: Detect the industry (jewelry, auto parts, fashion, hotels, tourism, electronics, etc.)
-STEP 3: Adapt tone and style for that industry
-STEP 4: Generate persuasive, conversion-focused content IN THE SAME LANGUAGE as the product name
+CRITICAL INSTRUCTIONS:
 
-IMPORTANT: ALL content must be in the SAME language as the product name! If product name is in Romanian, generate ALL content in Romanian. If in English, generate ALL in English.
+1. LANGUAGE DETECTION:
+   - Analyze product name language (Romanian, English, etc.)
+   - Generate ALL content in the SAME language
+   - NO mixed languages allowed!
+
+2. INDUSTRY DETECTION:
+   - Identify industry: jewelry, auto, fashion, hotels, tourism, electronics, etc.
+   - Adapt tone, vocabulary, and emotional triggers
+
+3. CONTENT QUALITY REQUIREMENTS:
+   - ADVANCED copywriting techniques
+   - EMOTIONAL storytelling
+   - SPECIFIC details (not generic)
+   - PERSUASIVE language
+   - CREATE desire and urgency
+   - ADDRESS objections
+   - BUILD trust and credibility
+
+4. WRITING STYLE:
+   - Use power words and sensory language
+   - Paint vivid pictures
+   - Focus on transformation and benefits
+   - Create emotional connection
+   - Use social proof effectively
+   - Make it feel exclusive and premium
 
 Return ONLY a JSON object with this EXACT structure:
 {
@@ -46,50 +67,42 @@ Return ONLY a JSON object with this EXACT structure:
     "subheadline": "Supporting text that creates urgency (max 20 words)",
     "cta": "Action-oriented button text (max 3 words)"
   },
-  "description": "Detailed, persuasive product description (2-3 paragraphs, max 150 words). Focus on benefits, emotions, and transformation. Make it compelling and conversion-focused.",
+  "description": "ADVANCED product description (3-4 paragraphs, 200-250 words). Requirements: 1) Start with emotional hook, 2) Paint vivid picture of ownership experience, 3) Use sensory language (how it looks, feels, makes you feel), 4) Address transformation (before/after), 5) Create desire through storytelling, 6) End with powerful statement. AVOID generic phrases! Be specific and compelling.",
   "benefits": [
-    {"icon": "✨", "title": "Benefit 1 (max 5 words)", "description": "Detailed benefit description (max 25 words)"},
-    {"icon": "💎", "title": "Benefit 2 (max 5 words)", "description": "Detailed benefit description (max 25 words)"},
-    {"icon": "🎁", "title": "Benefit 3 (max 5 words)", "description": "Detailed benefit description (max 25 words)"},
-    {"icon": "🚀", "title": "Benefit 4 (max 5 words)", "description": "Detailed benefit description (max 25 words)"}
+    {"icon": "✨", "title": "Compelling benefit title (3-5 words)", "description": "DETAILED benefit explanation (35-40 words). Focus on TRANSFORMATION and EMOTIONAL impact. Use specific examples. Explain HOW it improves their life. Make it tangible and desirable."},
+    {"icon": "💎", "title": "Compelling benefit title (3-5 words)", "description": "DETAILED benefit explanation (35-40 words). Focus on TRANSFORMATION and EMOTIONAL impact. Use specific examples. Explain HOW it improves their life. Make it tangible and desirable."},
+    {"icon": "🎁", "title": "Compelling benefit title (3-5 words)", "description": "DETAILED benefit explanation (35-40 words). Focus on TRANSFORMATION and EMOTIONAL impact. Use specific examples. Explain HOW it improves their life. Make it tangible and desirable."},
+    {"icon": "🚀", "title": "Compelling benefit title (3-5 words)", "description": "DETAILED benefit explanation (35-40 words). Focus on TRANSFORMATION and EMOTIONAL impact. Use specific examples. Explain HOW it improves their life. Make it tangible and desirable."}
   ],
-  "urgency": {
-    "text": "Scarcity message (e.g., 'Only 3 left in stock! Order now!')",
-    "type": "stock",
-    "countdown": false
-  },
+  "urgency": null,
   "socialProof": {
     "rating": 4.8,
     "reviewCount": 127,
     "testimonials": [
-      {"name": "Realistic customer name", "text": "Authentic testimonial (max 40 words)", "rating": 5},
-      {"name": "Another customer name", "text": "Different authentic testimonial (max 40 words)", "rating": 5}
+      {"name": "Realistic Romanian/English name (based on language)", "text": "DETAILED, authentic testimonial (50-60 words). Include: 1) What problem they had, 2) Why they chose this product, 3) Specific results they got, 4) How it made them FEEL. Make it personal and believable.", "rating": 5},
+      {"name": "Different realistic name", "text": "DIFFERENT detailed testimonial (50-60 words). Focus on DIFFERENT aspect of product. Include specific details and emotional impact. Make it unique from first testimonial.", "rating": 5}
     ]
   },
   "features": [
-    "Feature 1 - specific and measurable (e.g., 'Premium stainless steel construction')",
-    "Feature 2 - specific and measurable",
-    "Feature 3 - specific and measurable",
-    "Feature 4 - specific and measurable",
-    "Feature 5 - specific and measurable"
+    "SPECIFIC feature with technical details and benefit (e.g., 'Premium 18K gold-plated stainless steel - hypoallergenic and tarnish-resistant for lifetime beauty')",
+    "SPECIFIC feature with measurements/specs and benefit",
+    "SPECIFIC feature with quality indicators and benefit",
+    "SPECIFIC feature with unique selling point and benefit",
+    "SPECIFIC feature with craftsmanship detail and benefit",
+    "SPECIFIC feature with warranty/guarantee detail"
   ],
   "guarantee": {
-    "title": "30-Day Money-Back Guarantee",
-    "description": "Detailed guarantee text that removes risk (max 30 words)"
+    "title": "Industry-appropriate guarantee title (e.g., '30-Day Satisfaction Guarantee' for jewelry)",
+    "description": "COMPELLING guarantee description (40-50 words). Explain: 1) What's covered, 2) How easy it is, 3) Why they offer it (confidence in quality), 4) Remove ALL risk. Make customer feel 100% safe buying."
   },
   "faq": [
-    {"question": "Common question 1?", "answer": "Detailed, helpful answer (max 50 words)"},
-    {"question": "Common question 2?", "answer": "Detailed, helpful answer (max 50 words)"},
-    {"question": "Common question 3?", "answer": "Detailed, helpful answer (max 50 words)"},
-    {"question": "Common question 4?", "answer": "Detailed, helpful answer (max 50 words)"},
-    {"question": "Common question 5?", "answer": "Detailed, helpful answer (max 50 words)"}
+    {"question": "Industry-specific question addressing main objection", "answer": "COMPREHENSIVE answer (60-70 words). Address concern completely. Provide specific details. Build confidence. Turn objection into selling point."},
+    {"question": "Question about quality/authenticity", "answer": "DETAILED answer with specifics (60-70 words). Mention certifications, materials, craftsmanship. Build trust."},
+    {"question": "Question about delivery/shipping", "answer": "CLEAR answer with timeline and details (60-70 words). Remove uncertainty."},
+    {"question": "Question about returns/guarantee", "answer": "REASSURING answer (60-70 words). Make it sound easy and risk-free."},
+    {"question": "Question about care/maintenance", "answer": "HELPFUL answer with specific tips (60-70 words). Show you care about long-term satisfaction."}
   ],
-  "trustBadges": [
-    "Free Shipping",
-    "30-Day Returns",
-    "Secure Payment",
-    "24/7 Support"
-  ]
+  "trustBadges": []
 }
 
 IMPORTANT: 

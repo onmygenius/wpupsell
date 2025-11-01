@@ -79,53 +79,34 @@ function generateLandingPageHTML(product, content) {
         
         .cta-button {
             display: inline-block;
-            background: #10b981;
-            color: white;
+            background: white;
+            color: #1f2937;
             padding: 18px 48px;
             font-size: 1.25rem;
             font-weight: 700;
-            border: none;
-            border-radius: 8px;
+            border: 3px solid #1f2937;
+            border-radius: 12px;
             cursor: pointer;
             text-decoration: none;
             transition: all 0.3s;
-            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         }
         
         .cta-button:hover {
-            background: #059669;
+            background: #1f2937;
+            color: white;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
         }
         
-        /* Urgency Banner */
+        /* Urgency Banner - Hidden by default */
         .urgency {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 15px 20px;
-            margin: 30px auto;
-            max-width: 600px;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: 600;
-            color: #92400e;
+            display: none;
         }
         
-        /* Trust Badges */
+        /* Trust Badges - Hidden */
         .trust-badges {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            flex-wrap: wrap;
-            margin: 40px 0;
-        }
-        
-        .trust-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.95rem;
-            color: #6b7280;
+            display: none;
         }
         
         /* Description Section */
