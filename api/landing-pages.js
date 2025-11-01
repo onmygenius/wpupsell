@@ -134,7 +134,7 @@ module.exports = async (req, res) => {
         const storeUrl = storeData.url || storeData.siteUrl || '';
         
         // Regenerate HTML with updated content
-        const { generateLandingPageHTML } = require('./lib/html-template');
+        const { generateLandingPageHTML } = require('../lib/html-template');
         const html = generateLandingPageHTML(product, content, storeUrl);
         
         await db

@@ -1,4 +1,4 @@
-import { getDb } from './lib/firebase-admin.ts';
+import { getDb } from '../lib/firebase-admin.ts';
 
 export default async function handler(req, res) {
   // Set CORS headers

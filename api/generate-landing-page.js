@@ -14,7 +14,7 @@ function getGroq() {
   return groqInstance;
 }
 
-const { generateLandingPageHTML } = require('./lib/html-template');
+const { generateLandingPageHTML } = require('../lib/html-template');
 
 // AI generates landing page content
 async function generateLandingPageContent(product) {
