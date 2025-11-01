@@ -5,12 +5,10 @@ class Client {
     
     private $api_url;
     private $api_key;
-    private $store_id;
     
     public function __construct() {
         $this->api_url = UPSELLAI_API_URL;
         $this->api_key = get_option('upsellai_api_key', '');
-        $this->store_id = get_option('upsellai_store_id', '');
         
         // Sync products on product save
         add_action('woocommerce_update_product', [$this, 'sync_product'], 10, 1);
@@ -21,13 +19,13 @@ class Client {
      * Get AI recommendations for a product
      */
     public function get_recommendations($product_id, $current_product, $available_products, $user_id = null) {
-        if (empty($this->api_key) || empty($this->store_id)) {
-            error_log('UpSell AI: API key or Store ID not configured');
-            return ['error' => 'API key or Store ID not configured'];
+        if (empty($this->api_key)) {
+            error_log('UpSell AI: API key not configured');
+            return ['error' => 'API key not configured'];
         }
         
         $request_data = [
-            'storeId' => $this->store_id,
+            'apiKey' => $this->api_key,
             'productId' => (string) $product_id,
             'productName' => $current_product->get_name(),
             'productCategory' => $this->get_product_category($current_product),
@@ -41,7 +39,6 @@ class Client {
         error_log('UpSell AI: Request data - Products count: ' . count($available_products));
         error_log('UpSell AI: Full request body: ' . json_encode($request_data, JSON_PRETTY_PRINT));
         error_log('UpSell AI: API Key (first 10 chars): ' . substr($this->api_key, 0, 10) . '...');
-        error_log('UpSell AI: Store ID: ' . $this->store_id);
         
         $response = wp_remote_post($this->api_url . '/recommendations', [
             'headers' => [
@@ -111,8 +108,8 @@ class Client {
      * Track conversion
      */
     public function track_conversion($recommendation_id, $product_id, $converted = true, $revenue = 0, $user_id = null) {
-        if (empty($this->api_key) || empty($this->store_id)) {
-            error_log('UpSell AI: Cannot track conversion - API key or Store ID not configured');
+        if (empty($this->api_key)) {
+            error_log('UpSell AI: Cannot track conversion - API key not configured');
             return false;
         }
         
@@ -124,7 +121,7 @@ class Client {
                 'Authorization' => 'Bearer ' . $this->api_key,
             ],
             'body' => json_encode([
-                'storeId' => $this->store_id,
+                'apiKey' => $this->api_key,
                 'recommendationId' => $recommendation_id,
                 'productId' => (string) $product_id,
                 'converted' => $converted,

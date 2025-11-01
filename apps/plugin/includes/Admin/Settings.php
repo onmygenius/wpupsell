@@ -23,7 +23,6 @@ class Settings {
     
     public function register_settings() {
         register_setting('upsellai_settings', 'upsellai_api_key');
-        register_setting('upsellai_settings', 'upsellai_store_id');
         register_setting('upsellai_settings', 'upsellai_enabled');
         register_setting('upsellai_settings', 'upsellai_display_location');
         register_setting('upsellai_settings', 'upsellai_max_recommendations');

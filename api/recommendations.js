@@ -184,7 +184,7 @@ module.exports = async (req, res) => {
   try {
     console.log('Request body:', JSON.stringify(req.body, null, 2));
     const { 
-      storeId, 
+      apiKey, 
       productId, 
       productName,
       productCategory,
@@ -194,7 +194,7 @@ module.exports = async (req, res) => {
     } = req.body;
 
     console.log('Parsed data:');
-    console.log('- storeId:', storeId);
+    console.log('- apiKey:', apiKey ? apiKey.substring(0, 15) + '...' : 'N/A');
     console.log('- productId:', productId);
     console.log('- productName:', productName);
     console.log('- productCategory:', productCategory);
@@ -202,9 +202,9 @@ module.exports = async (req, res) => {
     console.log('- availableProducts count:', availableProducts?.length);
     console.log('- userId:', userId);
 
-    if (!storeId || !productId) {
-      console.error('Validation failed: Missing storeId or productId');
-      return res.status(400).json({ error: 'Missing required fields: storeId, productId' });
+    if (!apiKey || !productId) {
+      console.error('Validation failed: Missing apiKey or productId');
+      return res.status(400).json({ error: 'Missing required fields: apiKey, productId' });
     }
 
     if (!availableProducts || !Array.isArray(availableProducts)) {

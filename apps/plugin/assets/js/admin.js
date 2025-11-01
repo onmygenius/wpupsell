@@ -5,21 +5,8 @@
 jQuery(document).ready(function($) {
     'use strict';
     
-    // Copy Store ID to clipboard
-    $('#upsellai_store_id').on('click', function() {
-        this.select();
-        document.execCommand('copy');
-        
-        // Show tooltip
-        const tooltip = $('<span class="upsellai-tooltip">Copied!</span>');
-        $(this).after(tooltip);
-        
-        setTimeout(function() {
-            tooltip.fadeOut(function() {
-                $(this).remove();
-            });
-        }, 2000);
-    });
+    // Admin functionality
+    // Store ID removed - using API Key only
     
     // Validate API key format
     $('#upsellai_api_key').on('blur', function() {
