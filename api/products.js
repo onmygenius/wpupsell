@@ -83,12 +83,13 @@ async function handleSync(req, res) {
     const db = admin.firestore();
     const batch = db.batch();
     
-    // Update store's last sync time
+    // Create or update store's last sync time
     const storeRef = db.collection('stores').doc(storeId);
-    batch.update(storeRef, {
+    batch.set(storeRef, {
       lastProductSync: new Date(),
       totalProducts: products.length,
-    });
+      updatedAt: new Date(),
+    }, { merge: true }); // merge: true creates if not exists
     
     // Save each product
     console.log('📦 Starting to save products to Firebase...');
