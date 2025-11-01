@@ -14,6 +14,8 @@ function getGroq() {
   return groqInstance;
 }
 
+const { generateLandingPageHTML } = require('./lib/html-template');
+
 // AI generates landing page content
 async function generateLandingPageContent(product) {
   try {
@@ -41,30 +43,49 @@ Return ONLY a JSON object with this EXACT structure:
     "subheadline": "Supporting text that creates urgency (max 20 words)",
     "cta": "Action-oriented button text (max 3 words)"
   },
+  "description": "Detailed, persuasive product description (2-3 paragraphs, max 150 words). Focus on benefits, emotions, and transformation. Make it compelling and conversion-focused.",
   "benefits": [
-    {"icon": "✨", "title": "Benefit 1", "description": "Short description"},
-    {"icon": "💎", "title": "Benefit 2", "description": "Short description"},
-    {"icon": "🎁", "title": "Benefit 3", "description": "Short description"}
+    {"icon": "✨", "title": "Benefit 1 (max 5 words)", "description": "Detailed benefit description (max 25 words)"},
+    {"icon": "💎", "title": "Benefit 2 (max 5 words)", "description": "Detailed benefit description (max 25 words)"},
+    {"icon": "🎁", "title": "Benefit 3 (max 5 words)", "description": "Detailed benefit description (max 25 words)"},
+    {"icon": "🚀", "title": "Benefit 4 (max 5 words)", "description": "Detailed benefit description (max 25 words)"}
   ],
   "urgency": {
-    "text": "Scarcity message (e.g., 'Only 3 left in stock!')",
-    "type": "stock" // or "time", "demand"
+    "text": "Scarcity message (e.g., 'Only 3 left in stock! Order now!')",
+    "type": "stock",
+    "countdown": false
   },
   "socialProof": {
     "rating": 4.8,
     "reviewCount": 127,
-    "testimonial": "Realistic customer testimonial (max 30 words)"
+    "testimonials": [
+      {"name": "Realistic customer name", "text": "Authentic testimonial (max 40 words)", "rating": 5},
+      {"name": "Another customer name", "text": "Different authentic testimonial (max 40 words)", "rating": 5}
+    ]
   },
   "features": [
-    "Feature 1 - specific and measurable",
+    "Feature 1 - specific and measurable (e.g., 'Premium stainless steel construction')",
     "Feature 2 - specific and measurable",
-    "Feature 3 - specific and measurable"
+    "Feature 3 - specific and measurable",
+    "Feature 4 - specific and measurable",
+    "Feature 5 - specific and measurable"
   ],
-  "guarantee": "Money-back guarantee text (max 15 words)",
+  "guarantee": {
+    "title": "30-Day Money-Back Guarantee",
+    "description": "Detailed guarantee text that removes risk (max 30 words)"
+  },
   "faq": [
-    {"question": "Common question 1?", "answer": "Clear, concise answer"},
-    {"question": "Common question 2?", "answer": "Clear, concise answer"},
-    {"question": "Common question 3?", "answer": "Clear, concise answer"}
+    {"question": "Common question 1?", "answer": "Detailed, helpful answer (max 50 words)"},
+    {"question": "Common question 2?", "answer": "Detailed, helpful answer (max 50 words)"},
+    {"question": "Common question 3?", "answer": "Detailed, helpful answer (max 50 words)"},
+    {"question": "Common question 4?", "answer": "Detailed, helpful answer (max 50 words)"},
+    {"question": "Common question 5?", "answer": "Detailed, helpful answer (max 50 words)"}
+  ],
+  "trustBadges": [
+    "Free Shipping",
+    "30-Day Returns",
+    "Secure Payment",
+    "24/7 Support"
   ]
 }
 
@@ -195,6 +216,9 @@ module.exports = async (req, res) => {
         .collection('landingPages')
         .doc();
       
+      // Generate HTML from content
+      const html = generateLandingPageHTML(product, content);
+      
       const landingPageData = {
         id: landingPageRef.id,
         productId,
@@ -204,6 +228,7 @@ module.exports = async (req, res) => {
         urlPrefix: urlPrefix || '',
         fullUrl: urlPrefix ? `/${urlPrefix}/${pageSlug}` : `/${pageSlug}`,
         content,
+        html,
         status: 'draft',
         views: 0,
         addToCarts: 0,

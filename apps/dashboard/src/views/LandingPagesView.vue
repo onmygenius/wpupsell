@@ -145,6 +145,28 @@ async function generateLandingPage() {
     generating.value = false;
   }
 }
+
+function viewHTML(page: any) {
+  if (page.html) {
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(page.html);
+      newWindow.document.close();
+    }
+  }
+}
+
+function downloadHTML(page: any) {
+  if (page.html) {
+    const blob = new Blob([page.html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${page.pageSlug}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+}
 </script>
 
 <template>
@@ -208,11 +230,19 @@ async function generateLandingPage() {
           </div>
           
           <div class="flex items-center gap-2">
-            <button class="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition" title="Preview">
+            <button 
+              @click="viewHTML(page)"
+              class="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition" 
+              title="View HTML"
+            >
               👁️
             </button>
-            <button class="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition" title="Edit">
-              ✏️
+            <button 
+              @click="downloadHTML(page)"
+              class="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition" 
+              title="Download HTML"
+            >
+              💾
             </button>
             <button class="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition" title="Stats">
               📊
