@@ -167,6 +167,36 @@ function downloadHTML(page: any) {
     URL.revokeObjectURL(url);
   }
 }
+
+async function deleteLandingPage(pageId: string) {
+  if (!confirm('Sigur vrei să ștergi această landing page?')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/landing-pages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'delete',
+        storeId: STORE_ID,
+        landingPageId: pageId,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('Landing page șters cu succes!');
+      await loadLandingPages();
+    } else {
+      alert('Eroare la ștergere: ' + data.error);
+    }
+  } catch (error) {
+    console.error('Failed to delete landing page:', error);
+    alert('Eroare la ștergere');
+  }
+}
 </script>
 
 <template>
@@ -215,8 +245,8 @@ function downloadHTML(page: any) {
       >
         <div class="flex items-start justify-between">
           <div class="flex-1">
-            <h3 class="text-xl font-semibold text-white mb-2">{{ page.title }}</h3>
-            <p class="text-sm text-blue-400 mb-3">🔗 {{ page.url }}</p>
+            <h3 class="text-xl font-semibold text-white mb-2">{{ page.pageTitle || 'Untitled' }}</h3>
+            <p class="text-sm text-blue-400 mb-3">🔗 {{ page.fullUrl || page.pageSlug }}</p>
             
             <div class="flex items-center gap-4 text-sm">
               <span :class="['px-3 py-1 rounded-full text-xs font-medium', 
@@ -247,7 +277,11 @@ function downloadHTML(page: any) {
             <button class="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition" title="Stats">
               📊
             </button>
-            <button class="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition" title="Delete">
+            <button 
+              @click="deleteLandingPage(page.id)"
+              class="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition" 
+              title="Delete"
+            >
               🗑️
             </button>
           </div>

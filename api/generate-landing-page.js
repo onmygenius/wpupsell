@@ -32,9 +32,12 @@ Product Information:
 
 Your task: Generate a complete, high-converting landing page structure in JSON format.
 
-STEP 1: Auto-detect the industry (jewelry, auto parts, fashion, hotels, tourism, electronics, etc.)
-STEP 2: Adapt tone and style for that industry
-STEP 3: Generate persuasive, conversion-focused content
+STEP 1: Detect the LANGUAGE from the product name (Romanian, English, etc.)
+STEP 2: Detect the industry (jewelry, auto parts, fashion, hotels, tourism, electronics, etc.)
+STEP 3: Adapt tone and style for that industry
+STEP 4: Generate persuasive, conversion-focused content IN THE SAME LANGUAGE as the product name
+
+IMPORTANT: ALL content must be in the SAME language as the product name! If product name is in Romanian, generate ALL content in Romanian. If in English, generate ALL in English.
 
 Return ONLY a JSON object with this EXACT structure:
 {

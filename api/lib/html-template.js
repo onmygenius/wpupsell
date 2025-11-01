@@ -28,6 +28,12 @@ function generateLandingPageHTML(product, content) {
         }
         
         .container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .content-wrapper {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
@@ -35,10 +41,11 @@ function generateLandingPageHTML(product, content) {
         
         /* Hero Section */
         .hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #ffffff;
+            color: #1f2937;
             padding: 80px 20px;
             text-align: center;
+            border-bottom: 1px solid #e5e7eb;
         }
         
         .hero h1 {
@@ -46,12 +53,13 @@ function generateLandingPageHTML(product, content) {
             font-weight: 800;
             margin-bottom: 20px;
             line-height: 1.2;
+            color: #1f2937;
         }
         
         .hero p {
             font-size: 1.25rem;
             margin-bottom: 30px;
-            opacity: 0.95;
+            color: #6b7280;
         }
         
         .product-image {
@@ -117,7 +125,7 @@ function generateLandingPageHTML(product, content) {
             align-items: center;
             gap: 8px;
             font-size: 0.95rem;
-            color: rgba(255,255,255,0.9);
+            color: #6b7280;
         }
         
         /* Description Section */
@@ -149,10 +157,16 @@ function generateLandingPageHTML(product, content) {
         
         .benefits-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 30px;
             max-width: 1000px;
             margin: 0 auto;
+        }
+        
+        @media (max-width: 768px) {
+            .benefits-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
         .benefit-card {
@@ -303,28 +317,65 @@ function generateLandingPageHTML(product, content) {
         }
         
         .faq-item {
-            border-bottom: 1px solid #e5e7eb;
-            padding: 25px 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .faq-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
         
         .faq-question {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 600;
-            margin-bottom: 10px;
+            padding: 20px;
             color: #1f2937;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        
+        .faq-question:hover {
+            background: #f9fafb;
+        }
+        
+        .faq-icon {
+            font-size: 1.5rem;
+            color: #667eea;
+            transition: transform 0.3s;
+        }
+        
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
         }
         
         .faq-answer {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s;
             color: #6b7280;
             line-height: 1.6;
         }
         
+        .faq-item.active .faq-answer {
+            padding: 0 20px 20px 20px;
+            max-height: 500px;
+        }
+        
         /* Final CTA */
         .final-cta {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #f9fafb;
+            color: #1f2937;
             padding: 80px 20px;
             text-align: center;
+            border-top: 1px solid #e5e7eb;
         }
         
         .final-cta h2 {
@@ -352,7 +403,7 @@ function generateLandingPageHTML(product, content) {
 <body>
     <!-- Hero Section -->
     <section class="hero">
-        <div class="container">
+        <div class="content-wrapper">
             <h1>${hero.headline}</h1>
             <p>${hero.subheadline}</p>
             
@@ -372,7 +423,7 @@ function generateLandingPageHTML(product, content) {
     
     <!-- Description -->
     <section class="description">
-        <div class="container">
+        <div class="content-wrapper">
             <div class="description-content">
                 ${description}
             </div>
@@ -381,7 +432,7 @@ function generateLandingPageHTML(product, content) {
     
     <!-- Benefits -->
     <section class="benefits">
-        <div class="container">
+        <div class="content-wrapper">
             <h2 class="section-title">De ce să alegi ${product.name}?</h2>
             <div class="benefits-grid">
                 ${benefits.map(benefit => `
@@ -397,7 +448,7 @@ function generateLandingPageHTML(product, content) {
     
     <!-- Social Proof -->
     <section class="social-proof">
-        <div class="container">
+        <div class="content-wrapper">
             <h2 class="section-title">Ce spun clienții noștri</h2>
             <div class="rating">
                 <div class="stars">${'★'.repeat(Math.floor(socialProof.rating))}${'☆'.repeat(5 - Math.floor(socialProof.rating))}</div>
@@ -417,7 +468,7 @@ function generateLandingPageHTML(product, content) {
     
     <!-- Features -->
     <section class="features">
-        <div class="container">
+        <div class="content-wrapper">
             <h2 class="section-title">Specificații</h2>
             <div class="features-list">
                 ${features.map(feature => `
@@ -432,7 +483,7 @@ function generateLandingPageHTML(product, content) {
     
     <!-- Guarantee -->
     <section class="guarantee">
-        <div class="container">
+        <div class="content-wrapper">
             <div class="guarantee-content">
                 <div class="guarantee-icon">🛡️</div>
                 <h2 class="guarantee-title">${guarantee.title}</h2>
@@ -443,13 +494,16 @@ function generateLandingPageHTML(product, content) {
     
     <!-- FAQ -->
     <section class="faq">
-        <div class="container">
+        <div class="content-wrapper">
             <h2 class="section-title">Întrebări Frecvente</h2>
             <div class="faq-list">
-                ${faq.map(item => `
-                    <div class="faq-item">
-                        <h3 class="faq-question">${item.question}</h3>
-                        <p class="faq-answer">${item.answer}</p>
+                ${faq.map((item, index) => `
+                    <div class="faq-item" id="faq-${index}">
+                        <div class="faq-question" onclick="toggleFAQ(${index})">
+                            <span>${item.question}</span>
+                            <span class="faq-icon">+</span>
+                        </div>
+                        <div class="faq-answer">${item.answer}</div>
                     </div>
                 `).join('')}
             </div>
@@ -458,44 +512,36 @@ function generateLandingPageHTML(product, content) {
     
     <!-- Final CTA -->
     <section class="final-cta">
-        <div class="container">
+        <div class="content-wrapper">
             <h2>Gata să comanzi?</h2>
             <p style="font-size: 1.25rem; margin-bottom: 30px;">${hero.subheadline}</p>
             <button class="cta-button" onclick="addToCart(${product.productId})">${hero.cta}</button>
         </div>
     </section>
     
-    <!-- WooCommerce Add to Cart Script -->
+    <!-- Scripts -->
     <script>
-        function addToCart(productId) {
-            // WooCommerce AJAX add to cart
-            var data = {
-                action: 'woocommerce_ajax_add_to_cart',
-                product_id: productId,
-                quantity: 1
-            };
+        // FAQ Accordion
+        function toggleFAQ(index) {
+            const item = document.getElementById('faq-' + index);
+            const allItems = document.querySelectorAll('.faq-item');
             
-            fetch('/wp-admin/admin-ajax.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert('Eroare: ' + data.error);
-                } else {
-                    // Redirect to cart or show success message
-                    alert('Produs adăugat în coș!');
-                    window.location.href = '/cos/';
+            // Close all other items
+            allItems.forEach((el, i) => {
+                if (i !== index) {
+                    el.classList.remove('active');
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Eroare la adăugarea în coș');
             });
+            
+            // Toggle current item
+            item.classList.toggle('active');
+        }
+        
+        // WooCommerce Add to Cart
+        function addToCart(productId) {
+            // Simple redirect to product page with add-to-cart parameter
+            // This works with any WooCommerce setup
+            window.location.href = '/?add-to-cart=' + productId;
         }
     </script>
 </body>
