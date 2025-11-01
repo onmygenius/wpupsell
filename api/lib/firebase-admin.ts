@@ -31,14 +31,14 @@ export const getAuth = () => {
 
 // Backward compatibility
 export const db = new Proxy({} as any, {
-  get(target, prop) {
-    return getDb()[prop];
+  get(target: any, prop: string | symbol) {
+    return (getDb() as any)[prop];
   }
 });
 
 export const auth = new Proxy({} as any, {
-  get(target, prop) {
-    return getAuth()[prop];
+  get(target: any, prop: string | symbol) {
+    return (getAuth() as any)[prop];
   }
 });
 

@@ -1,59 +1,122 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
-const STORE_ID = localStorage.getItem('storeId') || null;
 
 const stores = ref<any[]>([]);
 const loading = ref(true);
+const editingStore = ref(false);
+const editForm = ref({
+  name: '',
+  url: '',
+  apiKey: ''
+});
 
 onMounted(async () => {
+  await loadStore();
+});
+
+async function loadStore() {
   try {
-    // Load products to get store stats
-    const response = await fetch(`${API_URL}/products`, {
+    loading.value = true;
+    const storeId = localStorage.getItem('storeId');
+    
+    if (!storeId) {
+      console.error('No storeId found');
+      loading.value = false;
+      return;
+    }
+    
+    // Load store from Firebase
+    const storeDoc = await getDoc(doc(db, 'stores', storeId));
+    
+    if (!storeDoc.exists()) {
+      console.error('Store not found');
+      loading.value = false;
+      return;
+    }
+    
+    const storeData = storeDoc.data();
+    
+    // Load products to get count
+    const productsResponse = await fetch(`${API_URL}/products`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'list', storeId: STORE_ID }),
+      body: JSON.stringify({ action: 'list', storeId }),
     });
     
-    const data = await response.json();
+    const productsData = await productsResponse.json();
     
     // Load stats from conversions
     const statsResponse = await fetch(`${API_URL}/stats`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ storeId: STORE_ID }),
+      body: JSON.stringify({ storeId }),
     });
     
     const statsData = await statsResponse.json();
     
-    if (data.success) {
-      // Create store object with real data
-      stores.value = [{
-        storeId: STORE_ID,
-        name: 'Bijuteria Regala',
-        url: 'https://bijuteriaregala.ro',
-        apiKey: 'sk_live_***',
-        plan: 'growth',
-        status: 'active',
-        userId: 'user_demo',
-        createdAt: new Date('2025-11-01'),
-        stats: {
-          totalRevenue: statsData.success ? statsData.stats.totalRevenue : 0,
-          upsellRevenue: statsData.success ? statsData.stats.totalRevenue : 0,
-          conversions: statsData.success ? statsData.stats.conversions : 0,
-          conversionRate: 0, // TODO: calculated from impressions
-          totalProducts: data.products.length,
-          currency: statsData.success ? statsData.stats.currency : 'LEI'
-        }
-      }];
-    }
+    // Merge store data with stats
+    stores.value = [{
+      ...storeData,
+      stats: {
+        totalRevenue: statsData.success ? statsData.stats.totalRevenue : 0,
+        upsellRevenue: statsData.success ? statsData.stats.totalRevenue : 0,
+        conversions: statsData.success ? statsData.stats.conversions : 0,
+        conversionRate: 0,
+        totalProducts: productsData.success ? productsData.products.length : 0,
+        currency: statsData.success ? statsData.stats.currency : 'LEI'
+      }
+    }];
+    
   } catch (error) {
-    console.error('Failed to load stores:', error);
+    console.error('Failed to load store:', error);
   } finally {
     loading.value = false;
   }
-});
+}
+
+function openEditModal() {
+  if (stores.value.length > 0) {
+    const store = stores.value[0];
+    editForm.value = {
+      name: store.name || '',
+      url: store.url || '',
+      apiKey: store.apiKey || ''
+    };
+    editingStore.value = true;
+  }
+}
+
+function closeEditModal() {
+  editingStore.value = false;
+}
+
+async function saveStore() {
+  try {
+    const storeId = localStorage.getItem('storeId');
+    if (!storeId) return;
+    
+    // Update in Firebase
+    await updateDoc(doc(db, 'stores', storeId), {
+      name: editForm.value.name,
+      url: editForm.value.url,
+      apiKey: editForm.value.apiKey,
+      updatedAt: new Date()
+    });
+    
+    // Reload store
+    await loadStore();
+    closeEditModal();
+    
+    alert('Store updated successfully!');
+  } catch (error) {
+    console.error('Failed to update store:', error);
+    alert('Failed to update store');
+  }
+}
 
 const getStatusColor = (status: string) => {
   switch(status) {
@@ -82,9 +145,12 @@ const getPlanBadge = (plan: string) => {
         <h1 class="text-3xl font-bold text-white">Stores</h1>
         <p class="text-gray-400 mt-1">Manage your connected WooCommerce stores</p>
       </div>
-      <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
-        <span class="text-xl">+</span>
-        <span>Add Store</span>
+      <button 
+        @click="openEditModal"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+      >
+        <span class="text-xl">⚙️</span>
+        <span>Edit Store</span>
       </button>
     </div>
 
@@ -169,14 +235,14 @@ const getPlanBadge = (plan: string) => {
 
         <!-- Actions -->
         <div class="flex gap-2">
-          <button class="flex-1 bg-blue-600/20 text-blue-400 px-3 py-2 rounded-lg hover:bg-blue-600/30 transition text-sm">
-            View Details
+          <button 
+            @click="openEditModal"
+            class="flex-1 bg-blue-600/20 text-blue-400 px-3 py-2 rounded-lg hover:bg-blue-600/30 transition text-sm"
+          >
+            Edit Details
           </button>
           <button class="bg-gray-800/50 text-gray-400 px-3 py-2 rounded-lg hover:bg-gray-800 transition text-sm">
             ⚙️
-          </button>
-          <button class="bg-red-600/20 text-red-400 px-3 py-2 rounded-lg hover:bg-red-600/30 transition text-sm">
-            🗑️
           </button>
         </div>
 
@@ -184,6 +250,68 @@ const getPlanBadge = (plan: string) => {
         <p class="text-xs text-gray-500 mt-4">
           Created {{ store.createdAt.toLocaleDateString() }}
         </p>
+      </div>
+    </div>
+
+    <!-- Edit Store Modal -->
+    <div 
+      v-if="editingStore"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      @click.self="closeEditModal"
+    >
+      <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6 max-w-md w-full">
+        <h3 class="text-xl font-bold text-white mb-4">Edit Store Details</h3>
+        
+        <div class="space-y-4">
+          <!-- Store Name -->
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">Store Name</label>
+            <input 
+              v-model="editForm.name"
+              type="text"
+              placeholder="My Store"
+              class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          
+          <!-- Store URL -->
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">WooCommerce URL</label>
+            <input 
+              v-model="editForm.url"
+              type="url"
+              placeholder="https://yourstore.com"
+              class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          
+          <!-- API Key -->
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">API Key</label>
+            <input 
+              v-model="editForm.apiKey"
+              type="text"
+              placeholder="sk_live_..."
+              class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="flex gap-3 mt-6">
+          <button 
+            @click="closeEditModal"
+            class="flex-1 px-4 py-2 bg-gray-800 text-gray-400 rounded-lg hover:bg-gray-700 transition"
+          >
+            Cancel
+          </button>
+          <button 
+            @click="saveStore"
+            class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            Save Changes
+          </button>
+        </div>
       </div>
     </div>
   </div>
