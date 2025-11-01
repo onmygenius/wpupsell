@@ -19,7 +19,7 @@ async function getAIRecommendations(product, availableProducts) {
     const prompt = `
 You are an intelligent AI sales assistant with the ability to auto-detect the industry and adapt your communication style.
 
-FIRST, analyze these products and detect the industry/niche:
+ANALYZE these products and detect the industry/niche:
 
 Customer is viewing:
 - Product: ${product.name}
@@ -29,34 +29,45 @@ Customer is viewing:
 Available products to recommend:
 ${availableProducts.map(p => `- ${p.name} (${p.price} ${p.currency || 'LEI'}) - ${p.category}`).join('\n')}
 
-STEP 1: Detect the industry (jewelry, auto parts, fashion, hotels, tourism, electronics, etc.)
-STEP 2: Adapt your tone and style:
-- Jewelry: Elegant, luxurious, emotional, romantic
-- Auto Parts: Technical, practical, compatibility-focused
-- Fashion: Trendy, stylish, confidence-building
-- Hotels/Tourism: Relaxing, experiential, adventure-focused
-- Electronics: Tech-savvy, feature-focused, innovative
+YOUR TASK:
 
-STEP 3: Select 3 products that complement the current product based on:
-- Industry-specific logic (matching sets, compatible parts, outfit completion, package deals, etc.)
-- Price range compatibility
-- Customer intent
+1. DETECT the industry (jewelry, auto parts, fashion, tourism, electronics, construction, toys, cosmetics, sports, books, furniture, pharmacy, etc.)
 
-STEP 4: For EACH product, write a unique, persuasive message (max 15 words) that:
-- Uses industry-appropriate language and tone
-- Mentions the SPECIFIC product name
-- Creates urgency or FOMO
-- Uses emotional triggers relevant to the industry
-- Feels personal and exclusive
+2. GENERATE a unique, creative pop-up experience:
+   - popupTitle: Catchy title (8-12 words) that creates excitement and matches the industry vibe
+   - popupSubtitle: Persuasive subtitle (6-10 words) that explains the value
 
-Return ONLY a JSON array with this EXACT format:
-[
-  {"id": "product_id", "reason": "Industry-appropriate persuasive message"},
-  {"id": "product_id", "reason": "Different industry-appropriate message"},
-  {"id": "product_id", "reason": "Another unique industry-appropriate message"}
-]
+3. SELECT 3 products that complement the current product
 
-IMPORTANT: Each message MUST be unique, mention specific product names, and create urgency!
+4. For EACH product, write a UNIQUE persuasive message (max 15 words) that:
+   - Uses industry-appropriate language and emotional triggers
+   - Mentions the SPECIFIC product name
+   - Creates urgency or FOMO
+   - Feels personal and exclusive
+   - Is DIFFERENT from other messages (no repetition!)
+
+INDUSTRY-SPECIFIC EXAMPLES:
+
+Jewelry: "✨ Completează-ți colecția cu eleganță" / "Bijuterii care se potrivesc stilului tău"
+Auto: "🔧 Piese perfecte pentru mașina ta" / "Compatibile 100% cu vehiculul tău"
+Fashion: "👗 Stilul tău, completat perfect" / "Ținute care te definesc"
+Tourism: "🌴 Aventura ta continuă aici" / "Experiențe de neuitat te așteaptă"
+Toys: "🎮 Distracție fără limite" / "Jucării care aduc zâmbete"
+Construction: "🏗️ Tot ce îți trebuie pentru proiect" / "Materiale de calitate, preț corect"
+
+Return ONLY a JSON object with this EXACT format:
+{
+  "industry": "detected_industry",
+  "popupTitle": "Creative catchy title with emoji",
+  "popupSubtitle": "Persuasive subtitle",
+  "recommendations": [
+    {"id": "product_id", "reason": "Unique persuasive message"},
+    {"id": "product_id", "reason": "Different unique message"},
+    {"id": "product_id", "reason": "Another unique message"}
+  ]
+}
+
+CRITICAL: Each message MUST be unique and creative! No repetition!
 `;
 
     const groq = getGroq();
@@ -82,8 +93,8 @@ IMPORTANT: Each message MUST be unique, mention specific product names, and crea
     // Try to extract JSON from response (AI might add extra text)
     let jsonStr = response.trim();
     
-    // Find JSON array in response
-    const jsonMatch = jsonStr.match(/\[.*\]/s);
+    // Find JSON object or array in response
+    const jsonMatch = jsonStr.match(/\{.*\}|\[.*\]/s);
     if (jsonMatch) {
       jsonStr = jsonMatch[0];
     }
@@ -91,20 +102,38 @@ IMPORTANT: Each message MUST be unique, mention specific product names, and crea
     console.log('🤖 Extracted JSON string:', jsonStr);
     
     try {
-      const recommendations = JSON.parse(jsonStr);
-      console.log('🤖 Groq AI recommendations:', recommendations);
+      const aiResponse = JSON.parse(jsonStr);
+      console.log('🤖 Groq AI response:', aiResponse);
       
-      // Validate structure
-      if (!Array.isArray(recommendations)) {
-        console.error('❌ AI response is not an array');
-        return null;
+      // Check if it's the new format (object with industry, popupTitle, etc.)
+      if (aiResponse.industry && aiResponse.recommendations) {
+        console.log('🤖 New format detected!');
+        console.log('🤖 Industry:', aiResponse.industry);
+        console.log('🤖 Popup Title:', aiResponse.popupTitle);
+        console.log('🤖 Popup Subtitle:', aiResponse.popupSubtitle);
+        
+        // Validate recommendations
+        const validRecs = aiResponse.recommendations.filter(rec => rec.id && rec.reason);
+        console.log(`🤖 Valid recommendations: ${validRecs.length}/${aiResponse.recommendations.length}`);
+        
+        return {
+          industry: aiResponse.industry,
+          popupTitle: aiResponse.popupTitle,
+          popupSubtitle: aiResponse.popupSubtitle,
+          recommendations: validRecs
+        };
       }
       
-      // Validate each recommendation has id and reason
-      const validRecs = recommendations.filter(rec => rec.id && rec.reason);
-      console.log(`🤖 Valid recommendations: ${validRecs.length}/${recommendations.length}`);
+      // Fallback: old format (array)
+      if (Array.isArray(aiResponse)) {
+        console.log('🤖 Old format detected (array)');
+        const validRecs = aiResponse.filter(rec => rec.id && rec.reason);
+        console.log(`🤖 Valid recommendations: ${validRecs.length}/${aiResponse.length}`);
+        return { recommendations: validRecs };
+      }
       
-      return validRecs;
+      console.error('❌ AI response format not recognized');
+      return null;
     } catch (parseError) {
       console.error('❌ JSON parse failed:', parseError.message);
       console.error('❌ Attempted to parse:', jsonStr);
@@ -227,15 +256,27 @@ module.exports = async (req, res) => {
     console.log('Product object created:', JSON.stringify(product, null, 2));
 
     // Try AI recommendations first (hybrid strategy)
-    let aiRecommendations = null;
+    let aiResponse = null;
     let algorithm = 'simple-rules';
+    let popupTitle = '🎁 Ofertă Specială Pentru Tine!';
+    let popupSubtitle = 'Am găsit ceva perfect pentru tine';
     
     if (process.env.GROQ_API_KEY) {
       console.log('🤖 Groq API Key found, trying AI recommendations...');
-      aiRecommendations = await getAIRecommendations(product, availableProducts);
-      if (aiRecommendations && aiRecommendations.length > 0) {
+      aiResponse = await getAIRecommendations(product, availableProducts);
+      if (aiResponse && aiResponse.recommendations && aiResponse.recommendations.length > 0) {
         algorithm = 'groq-ai';
         console.log('✅ Using AI recommendations');
+        
+        // Use AI-generated popup title and subtitle if available
+        if (aiResponse.popupTitle) {
+          popupTitle = aiResponse.popupTitle;
+          console.log('✅ Using AI popup title:', popupTitle);
+        }
+        if (aiResponse.popupSubtitle) {
+          popupSubtitle = aiResponse.popupSubtitle;
+          console.log('✅ Using AI popup subtitle:', popupSubtitle);
+        }
       }
     } else {
       console.log('⚠️  No Groq API Key found, skipping AI');
@@ -243,7 +284,7 @@ module.exports = async (req, res) => {
     
     // Fallback to simple rules if AI failed or no API key
     let recommendations = [];
-    if (!aiRecommendations || aiRecommendations.length === 0) {
+    if (!aiResponse || !aiResponse.recommendations || aiResponse.recommendations.length === 0) {
       console.log('📊 Falling back to simple rule-based recommendations...');
       const recommendedIds = getSimpleRecommendations(product, availableProducts);
       algorithm = 'simple-rules';
@@ -258,10 +299,10 @@ module.exports = async (req, res) => {
     } else {
       // Get full product details for AI recommendations with reasons
       console.log('🔍 Processing AI recommendations...');
-      console.log('🔍 AI recommendations:', JSON.stringify(aiRecommendations, null, 2));
+      console.log('🔍 AI recommendations:', JSON.stringify(aiResponse.recommendations, null, 2));
       console.log('🔍 Available product IDs:', availableProducts.map(p => p.id));
       
-      recommendations = aiRecommendations
+      recommendations = aiResponse.recommendations
         .map(rec => {
           console.log(`🔍 Looking for product ID: "${rec.id}" (type: ${typeof rec.id})`);
           const product = availableProducts.find(p => {
@@ -307,6 +348,8 @@ module.exports = async (req, res) => {
         id: product.productId,
         name: product.name,
       },
+      popupTitle: popupTitle,
+      popupSubtitle: popupSubtitle,
       recommendations: recommendations.map(r => ({
         id: r.id,
         name: r.name,

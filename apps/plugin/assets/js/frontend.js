@@ -86,9 +86,13 @@
                     console.log('🚀 UpSell AI: ✅ Success!');
                     state.recommendations = data.data.recommendations || [];
                     state.recommendationId = data.data.recommendation_id;
+                    state.popupTitle = data.data.popupTitle || '🎁 Ofertă Specială Pentru Tine!';
+                    state.popupSubtitle = data.data.popupSubtitle || 'Am găsit ceva perfect pentru tine';
                     
                     console.log('🚀 UpSell AI: Recommendations count:', state.recommendations.length);
                     console.log('🚀 UpSell AI: Recommendation ID:', state.recommendationId);
+                    console.log('🚀 UpSell AI: Popup Title:', state.popupTitle);
+                    console.log('🚀 UpSell AI: Popup Subtitle:', state.popupSubtitle);
                     console.log('🚀 UpSell AI: Recommendations:', state.recommendations);
                     
                     if (state.recommendations.length > 0) {
@@ -207,13 +211,13 @@
         overlay.className = 'upsellai-popup-overlay';
         overlay.id = 'upsellai-popup';
         
-        // Build pop-up HTML
+        // Build pop-up HTML with dynamic title and subtitle
         let popupHTML = `
             <div class="upsellai-popup-container">
                 <button class="upsellai-popup-close" onclick="document.getElementById('upsellai-popup').remove()">×</button>
                 <div class="upsellai-popup-content">
-                    <h2 class="upsellai-popup-title">🎁 Ofertă Specială Pentru Tine!</h2>
-                    <p class="upsellai-popup-subtitle">Am găsit ceva perfect pentru tine</p>
+                    <h2 class="upsellai-popup-title">${state.popupTitle || '🎁 Ofertă Specială Pentru Tine!'}</h2>
+                    <p class="upsellai-popup-subtitle">${state.popupSubtitle || 'Am găsit ceva perfect pentru tine'}</p>
         `;
         
         // Add each product
