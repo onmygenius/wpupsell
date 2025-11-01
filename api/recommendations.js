@@ -119,11 +119,15 @@ IMPORTANT: Each message MUST be unique, mention specific product names, and crea
 // Simple fallback recommendation logic - no external dependencies
 function getSimpleRecommendations(product, availableProducts) {
   console.log('Using simple fallback recommendations');
+  console.log('Product:', product);
+  console.log('Available products count:', availableProducts.length);
   
   // Filter out current product
   const otherProducts = availableProducts.filter(p => p.id !== product.productId);
+  console.log('Other products (excluding current):', otherProducts.length);
   
   if (otherProducts.length === 0) {
+    console.log('No other products available!');
     return [];
   }
   
@@ -131,17 +135,30 @@ function getSimpleRecommendations(product, availableProducts) {
   const sameCategoryProducts = otherProducts.filter(
     p => p.category === product.category
   );
+  console.log('Same category products:', sameCategoryProducts.length);
   
   // Strategy 2: Similar price range (±50%)
   const similarPriceProducts = otherProducts.filter(
     p => Math.abs(p.price - product.price) < product.price * 0.5
   );
+  console.log('Similar price products:', similarPriceProducts.length);
   
   // Combine and deduplicate
-  const recommended = [...new Set([...sameCategoryProducts, ...similarPriceProducts])];
+  let recommended = [...new Set([...sameCategoryProducts, ...similarPriceProducts])];
+  console.log('Combined recommendations:', recommended.length);
   
-  // Return top 3
-  return recommended.slice(0, 3).map(p => p.id);
+  // FALLBACK: If no matches found, return ANY 3 random products!
+  if (recommended.length === 0) {
+    console.log('⚠️ No matches found! Returning random products...');
+    recommended = otherProducts;
+  }
+  
+  // Shuffle and return top 3
+  const shuffled = recommended.sort(() => Math.random() - 0.5);
+  const final = shuffled.slice(0, 3);
+  console.log('Final recommendations:', final.length);
+  
+  return final.map(p => p.id);
 }
 
 module.exports = async (req, res) => {
