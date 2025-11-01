@@ -126,6 +126,23 @@ function copyToClipboard(text: string) {
   });
 }
 
+function formatDate(date: any) {
+  if (!date) return '';
+  // Handle Firebase Timestamp
+  if (date.toDate) {
+    return date.toDate().toLocaleDateString();
+  }
+  // Handle regular Date
+  if (date instanceof Date) {
+    return date.toLocaleDateString();
+  }
+  // Handle timestamp seconds
+  if (date._seconds) {
+    return new Date(date._seconds * 1000).toLocaleDateString();
+  }
+  return '';
+}
+
 const getStatusColor = (status: string) => {
   switch(status) {
     case 'active': return 'bg-green-600/20 text-green-400';
@@ -264,8 +281,8 @@ const getPlanBadge = (plan: string) => {
         </div>
 
         <!-- Created Date -->
-        <p class="text-xs text-gray-500 mt-4">
-          Created {{ store.createdAt.toLocaleDateString() }}
+        <p class="text-xs text-gray-500 mt-4" v-if="store.createdAt">
+          Created {{ formatDate(store.createdAt) }}
         </p>
       </div>
     </div>
