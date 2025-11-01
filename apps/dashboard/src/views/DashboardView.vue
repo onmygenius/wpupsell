@@ -18,27 +18,23 @@ const topProducts = ref<any[]>([]);
 
 onMounted(async () => {
   try {
-    // Load products
-    const response = await fetch(`${API_URL}/products`, {
+    // Load products count
+    const productsResponse = await fetch(`${API_URL}/products`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'list', storeId: STORE_ID }),
     });
     
-    const data = await response.json();
-    if (data.success) {
-      const products = data.products;
+    const productsData = await productsResponse.json();
+    if (productsData.success) {
+      stats.value.products = productsData.products.length;
       
-      // Real stats from products
-      stats.value.products = products.length;
-      stats.value.enabledProducts = products.filter((p: any) => p.enabled).length;
-      
-      // Sales and orders = 0 (no conversions yet)
-      stats.value.totalSales = 0;
-      stats.value.orders = 0;
+      // Calculate stats from products
+      const enabledProducts = productsData.products.filter((p: any) => p.enabled);
+      stats.value.enabledProducts = enabledProducts.length;
       
       // Calculate category distribution
-      const categories = products.reduce((acc: any, p: any) => {
+      const categories = productsData.products.reduce((acc: any, p: any) => {
         acc[p.category] = (acc[p.category] || 0) + 1;
         return acc;
       }, {});
@@ -46,17 +42,30 @@ onMounted(async () => {
       categoryData.value = Object.entries(categories).map(([name, count]) => ({
         name,
         count,
-        percentage: ((count as number / products.length) * 100).toFixed(1)
+        percentage: ((count as number / productsData.products.length) * 100).toFixed(1)
       }));
       
       // Top products by price (since we don't have sales data yet)
-      topProducts.value = products
+      topProducts.value = productsData.products
         .sort((a: any, b: any) => b.price - a.price)
         .slice(0, 4)
         .map((p: any) => ({
           name: p.name,
           price: p.price
         }));
+    }
+    
+    // Load conversions stats
+    const statsResponse = await fetch(`${API_URL}/stats`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ storeId: STORE_ID }),
+    });
+    
+    const statsData = await statsResponse.json();
+    if (statsData.success) {
+      stats.value.totalSales = statsData.stats.totalRevenue;
+      stats.value.orders = statsData.stats.orders;
     }
   } catch (error) {
     console.error('Failed to load stats:', error);
