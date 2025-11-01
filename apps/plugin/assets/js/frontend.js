@@ -239,13 +239,14 @@
             if (data.error) {
                 alert('Failed to add product to cart');
             } else {
-                await trackConversion(productId, price, true);
-                
                 if (typeof jQuery !== 'undefined') {
                     jQuery(document.body).trigger('added_to_cart', [data.fragments, data.cart_hash]);
                 }
                 
                 alert('✅ Produs adăugat în coș!');
+                
+                // Track conversion
+                await trackConversion(productId, price, true);
                 
                 // Save timestamp when user added to cart
                 sessionStorage.setItem('upsellai_last_added_to_cart', Date.now().toString());
@@ -290,24 +291,37 @@
     
     // Track conversion
     async function trackConversion(productId, price, converted) {
-            try {
-                await fetch(upsellaiData.ajaxUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams({
-                        action: 'upsellai_track_conversion',
-                        nonce: upsellaiData.nonce,
-                        recommendation_id: state.recommendationId,
-                        product_id: productId,
-                        converted: converted,
-                        revenue: price,
-                    }),
-                });
-            } catch (error) {
-                console.error('Track conversion error:', error);
+        try {
+            console.log('📊 Tracking conversion:', { productId, price, converted });
+            
+            // Get product name from recommendations
+            const product = state.recommendations.find(r => r.id === productId);
+            const productName = product ? product.name : 'Unknown Product';
+            
+            // Send to our API
+            const response = await fetch('https://wpupsell-dashboard.vercel.app/api/conversions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    storeId: upsellaiData.storeId,
+                    productId: productId.toString(),
+                    productName: productName,
+                    price: parseFloat(price),
+                    converted: converted,
+                }),
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                console.log('✅ Conversion tracked successfully');
+            } else {
+                console.error('❌ Failed to track conversion:', data.message);
             }
+        } catch (error) {
+            console.error('Track conversion error:', error);
+        }
     }
     
     // UI helpers
