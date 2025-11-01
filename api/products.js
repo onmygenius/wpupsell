@@ -91,13 +91,13 @@ async function handleSync(req, res) {
       updatedAt: new Date(),
     }, { merge: true }); // merge: true creates if not exists
     
-    // Save each product
-    console.log('📦 Starting to save products to Firebase...');
+    // Save each product in subcollection
+    console.log('📦 Starting to save products to Firebase subcollection...');
     let savedCount = 0;
     for (const product of products) {
-      const productRef = db.collection('products').doc(`${storeId}_${product.id}`);
+      // Save in subcollection: stores/{storeId}/products/{productId}
+      const productRef = db.collection('stores').doc(storeId).collection('products').doc(product.id);
       batch.set(productRef, {
-        storeId,
         productId: product.id,
         name: product.name,
         category: product.category,
@@ -167,9 +167,8 @@ async function handleList(req, res) {
     }
     
     const db = admin.firestore();
-    const snapshot = await db.collection('products')
-      .where('storeId', '==', storeId)
-      .get();
+    // Read from subcollection: stores/{storeId}/products
+    const snapshot = await db.collection('stores').doc(storeId).collection('products').get();
     
     const products = [];
     snapshot.forEach(doc => {
@@ -227,7 +226,8 @@ async function handleUpdate(req, res) {
     }
     
     const db = admin.firestore();
-    const productRef = db.collection('products').doc(`${storeId}_${productId}`);
+    // Update in subcollection: stores/{storeId}/products/{productId}
+    const productRef = db.collection('stores').doc(storeId).collection('products').doc(productId);
     
     await productRef.update({
       enabled: enabled !== false,
