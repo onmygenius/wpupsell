@@ -41,6 +41,7 @@ const chartOptions = computed(() => ({
     }
   },
   series: [{
+    type: 'pie',
     name: 'Products',
     colorByPoint: true,
     data: props.data.length > 0 ? props.data.map((item, index) => ({
@@ -58,6 +59,6 @@ const chartOptions = computed(() => ({
 
 <template>
   <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
-    <Chart :options="chartOptions" />
+    <Chart :options="chartOptions as any" />
   </div>
 </template>
