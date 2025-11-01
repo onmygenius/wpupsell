@@ -38,20 +38,14 @@ module.exports = async (req, res) => {
 
 // Handle product sync from plugin
 async function handleSync(req, res) {
-  const { storeId, products, apiKey } = req.body;
+  const { apiKey, products } = req.body;
   
-  console.log('📦 Sync request:', { storeId, productsCount: products?.length, hasApiKey: !!apiKey });
+  console.log('📦 Sync request:', { apiKey: apiKey ? apiKey.substring(0, 15) + '...' : 'N/A', productsCount: products?.length });
   console.log('📦 First 3 products:', products?.slice(0, 3).map(p => ({ id: p.id, name: p.name })));
   
-  if (!storeId || !products || !Array.isArray(products)) {
+  if (!apiKey || !products || !Array.isArray(products)) {
     return res.status(400).json({ 
-      error: 'Missing required fields: storeId, products (array)' 
-    });
-  }
-  
-  if (!apiKey) {
-    return res.status(400).json({ 
-      error: 'Missing API Key' 
+      error: 'Missing required fields: apiKey, products (array)' 
     });
   }
   
@@ -103,37 +97,26 @@ async function handleSync(req, res) {
     }
     
     const storeDoc = storesSnapshot.docs[0];
-    const realStoreId = storeDoc.id;
-    const storeData = storeDoc.data();
+    const storeId = storeDoc.id;
     
-    console.log('✅ Found store:', realStoreId, 'Current storeId in doc:', storeData.storeId);
+    console.log('✅ Found store:', storeId);
     
-    // 2. Update storeId if different (from userId to plugin storeId)
+    // Update store metadata
     const batch = db.batch();
-    const storeRef = db.collection('stores').doc(realStoreId);
+    const storeRef = db.collection('stores').doc(storeId);
     
-    if (storeData.storeId !== storeId) {
-      console.log('🔄 Updating storeId from', storeData.storeId, 'to', storeId);
-      batch.update(storeRef, {
-        storeId: storeId, // Update to plugin's storeId
-        lastProductSync: new Date(),
-        totalProducts: products.length,
-        updatedAt: new Date(),
-      });
-    } else {
-      batch.set(storeRef, {
-        lastProductSync: new Date(),
-        totalProducts: products.length,
-        updatedAt: new Date(),
-      }, { merge: true });
-    }
+    batch.set(storeRef, {
+      lastProductSync: new Date(),
+      totalProducts: products.length,
+      updatedAt: new Date(),
+    }, { merge: true });
     
-    // Save each product in subcollection (use realStoreId, not plugin storeId)
+    // Save each product in subcollection
     console.log('📦 Starting to save products to Firebase subcollection...');
     let savedCount = 0;
     for (const product of products) {
-      // Save in subcollection: stores/{realStoreId}/products/{productId}
-      const productRef = db.collection('stores').doc(realStoreId).collection('products').doc(product.id);
+      // Save in subcollection: stores/{storeId}/products/{productId}
+      const productRef = db.collection('stores').doc(storeId).collection('products').doc(product.id);
       batch.set(productRef, {
         productId: product.id,
         name: product.name,
@@ -152,15 +135,13 @@ async function handleSync(req, res) {
     await batch.commit();
     console.log('✅ Batch committed successfully!');
     
-    console.log(`✅ Synced ${savedCount} products for store ${realStoreId}`);
+    console.log(`✅ Synced ${savedCount} products for store ${storeId}`);
     
-    // Update localStorage storeId in response
     return res.status(200).json({
       success: true,
       message: 'Products synced successfully',
       synced: savedCount,
-      storeId: realStoreId, // Return real storeId for dashboard
-      pluginStoreId: storeId, // Plugin's storeId for reference
+      storeId: storeId,
     });
   } catch (error) {
     console.error('Firebase sync error:', error);

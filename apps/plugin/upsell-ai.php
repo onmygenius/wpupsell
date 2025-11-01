@@ -3,7 +3,7 @@
  * Plugin Name: UpSell AI - AI Recommendations
  * Plugin URI: https://upsellai.net
  * Description: Increase WooCommerce sales by 25-40% with AI-powered upsell and cross-sell recommendations
- * Version: 1.3.3
+ * Version: 1.4.0
  * Author: UpSell AI
  * Author URI: https://upsellai.net
  * Text Domain: upsell-ai
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('UPSELLAI_VERSION', '1.3.3');
+define('UPSELLAI_VERSION', '1.4.0');
 define('UPSELLAI_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('UPSELLAI_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('UPSELLAI_API_URL', 'https://wpupsell-dashboard.vercel.app/api');
@@ -73,9 +73,7 @@ register_activation_hook(__FILE__, function() {
     if (!get_option('upsellai_api_key')) {
         add_option('upsellai_api_key', '');
     }
-    if (!get_option('upsellai_store_id')) {
-        add_option('upsellai_store_id', 'store_' . wp_generate_password(12, false));
-    }
+    // Store ID removed - we use API Key for identification
     if (!get_option('upsellai_enabled')) {
         add_option('upsellai_enabled', '1');
     }

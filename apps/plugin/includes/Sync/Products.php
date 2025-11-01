@@ -8,12 +8,10 @@ namespace UpsellAI\Sync;
 class Products {
     private $api_url;
     private $api_key;
-    private $store_id;
     
     public function __construct() {
         $this->api_url = UPSELLAI_API_URL;
         $this->api_key = get_option('upsellai_api_key');
-        $this->store_id = get_option('upsellai_store_id');
         
         // Hook into settings save
         add_action('update_option_upsellai_api_key', [$this, 'trigger_sync'], 10, 2);
@@ -66,8 +64,8 @@ class Products {
      * Sync all products to API
      */
     public function sync_products() {
-        if (empty($this->api_key) || empty($this->store_id)) {
-            error_log('UpSell AI: Cannot sync - API key or Store ID not configured');
+        if (empty($this->api_key)) {
+            error_log('UpSell AI: Cannot sync - API key not configured');
             return [
                 'success' => false,
                 'message' => 'API key or Store ID not configured'
@@ -113,8 +111,7 @@ class Products {
             ],
             'body' => json_encode([
                 'action' => 'sync',
-                'storeId' => $this->store_id,
-                'apiKey' => $this->api_key, // Send API Key for validation
+                'apiKey' => $this->api_key,
                 'products' => $formatted_products,
             ]),
             'timeout' => 60,

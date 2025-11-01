@@ -40,7 +40,7 @@ class Recommendations {
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('upsellai_nonce'),
             'productId' => get_the_ID(),
-            'storeId' => get_option('upsellai_store_id'),
+            'apiKey' => get_option('upsellai_api_key'),
         ];
         
         error_log('🚀 UpSell AI: Localizing script with data: ' . print_r($data, true));

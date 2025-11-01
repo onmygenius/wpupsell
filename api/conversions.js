@@ -19,13 +19,13 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { storeId, productId, productName, price, converted } = req.body;
+    const { apiKey, productId, productName, price, converted } = req.body;
     
-    console.log('💰 Conversion request:', { storeId, productId, productName, price, converted });
+    console.log('💰 Conversion request:', { apiKey: apiKey ? apiKey.substring(0, 15) + '...' : 'N/A', productId, productName, price, converted });
     
-    if (!storeId || !productId || !price) {
+    if (!apiKey || !productId || !price) {
       return res.status(400).json({ 
-        error: 'Missing required fields: storeId, productId, price' 
+        error: 'Missing required fields: apiKey, productId, price' 
       });
     }
 
@@ -56,6 +56,25 @@ module.exports = async (req, res) => {
       }
       
       const db = admin.firestore();
+      
+      // Find store by API Key
+      console.log('🔍 Finding store with API Key...');
+      const storesSnapshot = await db.collection('stores')
+        .where('apiKey', '==', apiKey)
+        .limit(1)
+        .get();
+      
+      if (storesSnapshot.empty) {
+        console.log('❌ No store found with this API Key');
+        return res.status(401).json({ 
+          error: 'Invalid API Key' 
+        });
+      }
+      
+      const storeDoc = storesSnapshot.docs[0];
+      const storeId = storeDoc.id;
+      
+      console.log('✅ Found store:', storeId);
       
       // Save conversion in subcollection: stores/{storeId}/conversions/{conversionId}
       const conversionRef = db.collection('stores').doc(storeId).collection('conversions').doc();

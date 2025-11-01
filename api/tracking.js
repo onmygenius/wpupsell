@@ -18,13 +18,13 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { storeId, eventType, productId, productName } = req.body;
+    const { apiKey, eventType, productId, productName } = req.body;
     
-    console.log('📊 Tracking event:', { storeId, eventType, productId, productName });
+    console.log('📊 Tracking event:', { apiKey: apiKey ? apiKey.substring(0, 15) + '...' : 'N/A', eventType, productId, productName });
     
-    if (!storeId || !eventType) {
+    if (!apiKey || !eventType) {
       return res.status(400).json({ 
-        error: 'Missing required fields: storeId, eventType' 
+        error: 'Missing required fields: apiKey, eventType' 
       });
     }
 
@@ -63,6 +63,25 @@ module.exports = async (req, res) => {
       }
       
       const db = admin.firestore();
+      
+      // Find store by API Key
+      console.log('🔍 Finding store with API Key...');
+      const storesSnapshot = await db.collection('stores')
+        .where('apiKey', '==', apiKey)
+        .limit(1)
+        .get();
+      
+      if (storesSnapshot.empty) {
+        console.log('❌ No store found with this API Key');
+        return res.status(401).json({ 
+          error: 'Invalid API Key' 
+        });
+      }
+      
+      const storeDoc = storesSnapshot.docs[0];
+      const storeId = storeDoc.id;
+      
+      console.log('✅ Found store:', storeId);
       
       // Save event in subcollection: stores/{storeId}/events/{eventId}
       const eventRef = db.collection('stores').doc(storeId).collection('events').doc();

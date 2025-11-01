@@ -48,7 +48,6 @@ class Settings {
             check_admin_referer('upsellai_settings_nonce');
             
             update_option('upsellai_api_key', sanitize_text_field($_POST['upsellai_api_key']));
-            update_option('upsellai_store_id', sanitize_text_field($_POST['upsellai_store_id']));
             update_option('upsellai_enabled', isset($_POST['upsellai_enabled']) ? '1' : '0');
             update_option('upsellai_display_location', sanitize_text_field($_POST['upsellai_display_location']));
             update_option('upsellai_max_recommendations', absint($_POST['upsellai_max_recommendations']));
@@ -57,7 +56,6 @@ class Settings {
         }
         
         $api_key = get_option('upsellai_api_key', '');
-        $store_id = get_option('upsellai_store_id', '');
         $enabled = get_option('upsellai_enabled', '1');
         $display_location = get_option('upsellai_display_location', 'product_page');
         $max_recommendations = get_option('upsellai_max_recommendations', '3');
@@ -85,23 +83,6 @@ class Settings {
                                 <p class="description">
                                     <?php _e('Get your API key from', 'upsellai'); ?> 
                                     <a href="https://upsellai-dashboard.vercel.app/settings" target="_blank">UpSell AI Dashboard</a>
-                                </p>
-                            </td>
-                        </tr>
-                        
-                        <tr>
-                            <th scope="row">
-                                <label for="upsellai_store_id"><?php _e('Store ID', 'upsellai'); ?></label>
-                            </th>
-                            <td>
-                                <input type="text" 
-                                       id="upsellai_store_id" 
-                                       name="upsellai_store_id" 
-                                       value="<?php echo esc_attr($store_id); ?>" 
-                                       class="regular-text" 
-                                       readonly />
-                                <p class="description">
-                                    <?php _e('Your unique store identifier (auto-generated)', 'upsellai'); ?>
                                 </p>
                             </td>
                         </tr>

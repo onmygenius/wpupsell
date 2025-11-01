@@ -39,7 +39,7 @@
             console.log('🚀 UpSell AI: Starting loadRecommendations()');
             console.log('🚀 UpSell AI: AJAX URL:', upsellaiData.ajaxUrl);
             console.log('🚀 UpSell AI: Product ID:', upsellaiData.productId);
-            console.log('🚀 UpSell AI: Store ID:', upsellaiData.storeId);
+            console.log('🚀 UpSell AI: API Key:', upsellaiData.apiKey ? upsellaiData.apiKey.substring(0, 15) + '...' : 'N/A');
             console.log('🚀 UpSell AI: Nonce:', upsellaiData.nonce);
             
             state.loading = true;
@@ -373,7 +373,7 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    storeId: upsellaiData.storeId,
+                    apiKey: upsellaiData.apiKey,
                     eventType,
                     productId: productId ? productId.toString() : null,
                     productName: productName || null,
@@ -400,7 +400,7 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    storeId: upsellaiData.storeId,
+                    apiKey: upsellaiData.apiKey,
                     productId: productId.toString(),
                     productName: productName,
                     price: parseFloat(price),
