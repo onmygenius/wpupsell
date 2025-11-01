@@ -278,6 +278,19 @@ module.exports = async (req, res) => {
         .filter(p => p !== null);
       
       console.log('🔍 Final recommendations count:', recommendations.length);
+      
+      // If AI recommendations didn't match any products, fallback to simple
+      if (recommendations.length === 0) {
+        console.log('⚠️ AI recommendations matched 0 products! Falling back to simple...');
+        const recommendedIds = getSimpleRecommendations(product, availableProducts);
+        algorithm = 'simple-rules-fallback';
+        recommendations = availableProducts
+          .filter(p => recommendedIds.includes(p.id))
+          .map(p => ({
+            ...p,
+            reason: 'Recomandat pe baza similarității produsului'
+          }));
+      }
     }
     
     console.log('Final recommendations:', recommendations.length);
