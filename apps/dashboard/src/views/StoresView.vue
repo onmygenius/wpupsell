@@ -17,6 +17,16 @@ onMounted(async () => {
     });
     
     const data = await response.json();
+    
+    // Load stats from conversions
+    const statsResponse = await fetch(`${API_URL}/stats`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ storeId: STORE_ID }),
+    });
+    
+    const statsData = await statsResponse.json();
+    
     if (data.success) {
       // Create store object with real data
       stores.value = [{
@@ -29,11 +39,12 @@ onMounted(async () => {
         userId: 'user_demo',
         createdAt: new Date('2025-11-01'),
         stats: {
-          totalRevenue: 0, // TODO: from conversions
-          upsellRevenue: 0, // TODO: from conversions
-          conversions: 0, // TODO: from conversions
-          conversionRate: 0, // TODO: calculated
-          totalProducts: data.products.length
+          totalRevenue: statsData.success ? statsData.stats.totalRevenue : 0,
+          upsellRevenue: statsData.success ? statsData.stats.totalRevenue : 0,
+          conversions: statsData.success ? statsData.stats.conversions : 0,
+          conversionRate: 0, // TODO: calculated from impressions
+          totalProducts: data.products.length,
+          currency: statsData.success ? statsData.stats.currency : 'LEI'
         }
       }];
     }
@@ -93,7 +104,7 @@ const getPlanBadge = (plan: string) => {
       </div>
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
         <p class="text-sm text-gray-400 mb-1">Total Revenue</p>
-        <p class="text-3xl font-bold text-gray-500">$0</p>
+        <p class="text-3xl font-bold text-white">{{ stores.reduce((sum, s) => sum + (s.stats.totalRevenue || 0), 0) }} {{ stores[0]?.stats.currency || 'LEI' }}</p>
       </div>
     </div>
 
@@ -126,25 +137,26 @@ const getPlanBadge = (plan: string) => {
         </div>
 
         <!-- Stats -->
-        <div class="grid grid-cols-2 gap-4 mb-4 pb-4 border-gray-800">
+        <div class="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-gray-800">
           <div>
             <p class="text-xs text-gray-400 mb-1">Products</p>
             <p class="text-lg font-semibold text-white">{{ store.stats.totalProducts || 0 }}</p>
           </div>
           <div>
             <p class="text-xs text-gray-400 mb-1">Revenue</p>
-            <p class="text-lg font-semibold text-gray-500">${{ store.stats.totalRevenue }}</p>
+            <p :class="['text-lg font-semibold', store.stats.totalRevenue > 0 ? 'text-green-400' : 'text-gray-500']">{{ store.stats.totalRevenue }} {{ store.stats.currency || 'LEI' }}</p>
           </div>
           <div>
             <p class="text-xs text-gray-400 mb-1">Conversions</p>
-            <p class="text-lg font-semibold text-gray-500">{{ store.stats.conversions }}</p>
+            <p :class="['text-lg font-semibold', store.stats.conversions > 0 ? 'text-white' : 'text-gray-500']">{{ store.stats.conversions }}</p>
           </div>
           <div>
             <p class="text-xs text-gray-400 mb-1">Conv. Rate</p>
             <p class="text-lg font-semibold text-gray-500">{{ store.stats.conversionRate }}%</p>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-4">Track conversions to see revenue & stats</p>
+        <p class="text-xs text-green-400 mb-4" v-if="store.stats.conversions > 0">{{ store.stats.conversions }} AI recommendations converted</p>
+        <p class="text-xs text-gray-500 mb-4" v-else>No conversions yet</p>
 
         <!-- API Key -->
         <div class="mb-4">

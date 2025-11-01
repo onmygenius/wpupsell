@@ -57,16 +57,46 @@ module.exports = async (req, res) => {
         .doc(storeId)
         .collection('conversions')
         .where('converted', '==', true)
+        .orderBy('createdAt', 'desc')
         .get();
       
       let totalRevenue = 0;
       let orders = 0;
+      const productConversions = {};
+      const recentConversions = [];
       
       conversionsSnapshot.forEach(doc => {
         const data = doc.data();
         totalRevenue += data.price || 0;
         orders++;
+        
+        // Track conversions per product
+        const productId = data.productId;
+        if (!productConversions[productId]) {
+          productConversions[productId] = {
+            productId,
+            name: data.productName || 'Unknown',
+            conversions: 0,
+            revenue: 0
+          };
+        }
+        productConversions[productId].conversions++;
+        productConversions[productId].revenue += data.price || 0;
+        
+        // Recent conversions (last 5)
+        if (recentConversions.length < 5) {
+          recentConversions.push({
+            productName: data.productName || 'Unknown',
+            price: data.price || 0,
+            createdAt: data.createdAt,
+          });
+        }
       });
+      
+      // Sort products by conversions
+      const topProducts = Object.values(productConversions)
+        .sort((a, b) => b.conversions - a.conversions)
+        .slice(0, 4);
       
       console.log(`📊 Stats for ${storeId}: ${orders} orders, $${totalRevenue} revenue`);
       
@@ -77,6 +107,8 @@ module.exports = async (req, res) => {
           orders,
           conversions: orders,
           currency: 'LEI', // TODO: Get from store settings
+          topProducts,
+          recentConversions,
         }
       });
     } catch (error) {

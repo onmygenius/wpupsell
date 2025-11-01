@@ -17,6 +17,7 @@ const currency = ref('LEI'); // Default currency
 
 const categoryData = ref<any[]>([]);
 const topProducts = ref<any[]>([]);
+const recentActivity = ref<any[]>([]);
 
 onMounted(async () => {
   try {
@@ -47,14 +48,7 @@ onMounted(async () => {
         percentage: ((count as number / productsData.products.length) * 100).toFixed(1)
       }));
       
-      // Top products by price (since we don't have sales data yet)
-      topProducts.value = productsData.products
-        .sort((a: any, b: any) => b.price - a.price)
-        .slice(0, 4)
-        .map((p: any) => ({
-          name: p.name,
-          price: p.price
-        }));
+      // Top products will be populated from stats API
     }
     
     // Load conversions stats
@@ -71,6 +65,16 @@ onMounted(async () => {
       
       // Get currency from store (default to LEI for Romanian stores)
       currency.value = statsData.stats.currency || 'LEI';
+      
+      // Get recent conversions for activity feed
+      if (statsData.stats.recentConversions) {
+        recentActivity.value = statsData.stats.recentConversions.slice(0, 5);
+      }
+      
+      // Get top products by conversions
+      if (statsData.stats.topProducts) {
+        topProducts.value = statsData.stats.topProducts;
+      }
     }
   } catch (error) {
     console.error('Failed to load stats:', error);
@@ -264,12 +268,12 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Top Products -->
+        <!-- Top Recommended Products by AI -->
         <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
-          <h2 class="text-xl font-semibold text-white mb-6">Top Products (by price)</h2>
+          <h2 class="text-xl font-semibold text-white mb-6">Top Recommended Products by AI</h2>
           <div class="space-y-3">
             <div v-if="topProducts.length === 0" class="text-center text-gray-500 py-4">
-              No products yet
+              No conversions yet
             </div>
             <div 
               v-for="product in topProducts" 
@@ -277,7 +281,7 @@ onMounted(async () => {
               class="flex items-center justify-between"
             >
               <span class="text-sm text-gray-400 truncate mr-2">{{ product.name }}</span>
-              <span class="text-sm font-semibold text-white">${{ product.price }}</span>
+              <span class="text-sm font-semibold text-green-400">{{ product.conversions }} sales</span>
             </div>
           </div>
         </div>
