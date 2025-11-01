@@ -128,9 +128,14 @@ module.exports = async (req, res) => {
         
         const product = productDoc.exists ? productDoc.data() : {};
         
+        // Get store URL
+        const storeDoc = await db.collection('stores').doc(storeId).get();
+        const storeData = storeDoc.exists ? storeDoc.data() : {};
+        const storeUrl = storeData.url || storeData.siteUrl || '';
+        
         // Regenerate HTML with updated content
         const { generateLandingPageHTML } = require('./lib/html-template');
-        const html = generateLandingPageHTML(product, content);
+        const html = generateLandingPageHTML(product, content, storeUrl);
         
         await db
           .collection('stores')

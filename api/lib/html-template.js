@@ -1,8 +1,11 @@
 // HTML Template Generator for Landing Pages
 // Generates high-converting HTML from AI-generated content
 
-function generateLandingPageHTML(product, content) {
+function generateLandingPageHTML(product, content, storeUrl = '') {
   const { hero, description, benefits, urgency, socialProof, features, guarantee, faq, trustBadges } = content;
+  
+  // Ensure storeUrl ends without trailing slash
+  const baseUrl = storeUrl ? storeUrl.replace(/\/$/, '') : '';
   
   return `
 <!DOCTYPE html>
@@ -257,33 +260,9 @@ function generateLandingPageHTML(product, content) {
             flex-shrink: 0;
         }
         
-        /* Guarantee */
+        /* Guarantee - Hidden */
         .guarantee {
-            background: #ecfdf5;
-            padding: 60px 20px;
-            text-align: center;
-        }
-        
-        .guarantee-content {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        
-        .guarantee-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-        }
-        
-        .guarantee-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 15px;
-            color: #065f46;
-        }
-        
-        .guarantee-description {
-            font-size: 1.1rem;
-            color: #047857;
+            display: none;
         }
         
         /* FAQ */
@@ -381,7 +360,7 @@ function generateLandingPageHTML(product, content) {
         }
     </style>
 </head>
-<body>
+<body data-store-url="${baseUrl}">
     <!-- Hero Section -->
     <section class="hero">
         <div class="content-wrapper">
@@ -462,17 +441,6 @@ function generateLandingPageHTML(product, content) {
         </div>
     </section>
     
-    <!-- Guarantee -->
-    <section class="guarantee">
-        <div class="content-wrapper">
-            <div class="guarantee-content">
-                <div class="guarantee-icon">🛡️</div>
-                <h2 class="guarantee-title">${guarantee.title}</h2>
-                <p class="guarantee-description">${guarantee.description}</p>
-            </div>
-        </div>
-    </section>
-    
     <!-- FAQ -->
     <section class="faq">
         <div class="content-wrapper">
@@ -520,9 +488,10 @@ function generateLandingPageHTML(product, content) {
         
         // WooCommerce Add to Cart
         function addToCart(productId) {
-            // Simple redirect to product page with add-to-cart parameter
-            // This works with any WooCommerce setup
-            window.location.href = '/?add-to-cart=' + productId;
+            // Get store URL from data attribute or use current domain
+            const storeUrl = document.body.getAttribute('data-store-url') || window.location.origin;
+            // Redirect to store with add-to-cart parameter
+            window.location.href = storeUrl + '/?add-to-cart=' + productId;
         }
     </script>
 </body>

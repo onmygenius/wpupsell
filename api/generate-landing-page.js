@@ -91,10 +91,7 @@ Return ONLY a JSON object with this EXACT structure:
     "SPECIFIC feature with craftsmanship detail and benefit",
     "SPECIFIC feature with warranty/guarantee detail"
   ],
-  "guarantee": {
-    "title": "Industry-appropriate guarantee title (e.g., '30-Day Satisfaction Guarantee' for jewelry)",
-    "description": "COMPELLING guarantee description (40-50 words). Explain: 1) What's covered, 2) How easy it is, 3) Why they offer it (confidence in quality), 4) Remove ALL risk. Make customer feel 100% safe buying."
-  },
+  "guarantee": null,
   "faq": [
     {"question": "Industry-specific question addressing main objection", "answer": "COMPREHENSIVE answer (60-70 words). Address concern completely. Provide specific details. Build confidence. Turn objection into selling point."},
     {"question": "Question about quality/authenticity", "answer": "DETAILED answer with specifics (60-70 words). Mention certifications, materials, craftsmanship. Build trust."},
@@ -232,8 +229,13 @@ module.exports = async (req, res) => {
         .collection('landingPages')
         .doc();
       
+      // Get store URL from Firebase
+      const storeDoc = await db.collection('stores').doc(storeId).get();
+      const storeData = storeDoc.exists ? storeDoc.data() : {};
+      const storeUrl = storeData.url || storeData.siteUrl || '';
+      
       // Generate HTML from content
-      const html = generateLandingPageHTML(product, content);
+      const html = generateLandingPageHTML(product, content, storeUrl);
       
       const landingPageData = {
         id: landingPageRef.id,
