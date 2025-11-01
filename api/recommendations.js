@@ -1,3 +1,73 @@
+const Groq = require('groq-sdk');
+
+let groqInstance = null;
+
+function getGroq() {
+  if (!groqInstance) {
+    groqInstance = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
+    });
+  }
+  return groqInstance;
+}
+
+// AI-powered recommendations using Groq
+async function getAIRecommendations(product, availableProducts) {
+  try {
+    console.log('🤖 Using Groq AI for recommendations...');
+    
+    const prompt = `
+You are an AI recommendation engine for an e-commerce store.
+
+Current Product:
+- ID: ${product.productId}
+- Name: ${product.name}
+- Category: ${product.category}
+- Price: $${product.price}
+
+Available Products:
+${availableProducts.map(p => `- ${p.id}: ${p.name} (${p.category}) - $${p.price}`).join('\n')}
+
+Task: Recommend 3 products that would be good upsells or cross-sells for the current product.
+Consider:
+1. Complementary products (accessories, add-ons)
+2. Higher-value alternatives (upsells)
+3. Related products in same/similar category
+
+Return ONLY product IDs as a JSON array, nothing else.
+Example: ["prod_002", "prod_005", "prod_008"]
+`;
+
+    const groq = getGroq();
+    const completion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a helpful e-commerce recommendation assistant. Always respond with valid JSON arrays of product IDs.',
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0.7,
+      max_tokens: 100,
+    });
+
+    const response = completion.choices[0]?.message?.content || '[]';
+    console.log('🤖 Groq AI raw response:', response);
+    
+    const productIds = JSON.parse(response.trim());
+    console.log('🤖 Groq AI recommended IDs:', productIds);
+
+    return productIds;
+  } catch (error) {
+    console.error('❌ Groq AI error:', error.message);
+    return null; // Return null to trigger fallback
+  }
+}
+
 // Simple fallback recommendation logic - no external dependencies
 function getSimpleRecommendations(product, availableProducts) {
   console.log('Using simple fallback recommendations');
@@ -89,9 +159,28 @@ module.exports = async (req, res) => {
     
     console.log('Product object created:', JSON.stringify(product, null, 2));
 
-    // Get simple recommendations (no AI, no external deps)
-    console.log('Getting simple recommendations...');
-    const recommendedIds = getSimpleRecommendations(product, availableProducts);
+    // Try AI recommendations first (hybrid strategy)
+    let recommendedIds = null;
+    let algorithm = 'simple-rules';
+    
+    if (process.env.GROQ_API_KEY) {
+      console.log('🤖 Groq API Key found, trying AI recommendations...');
+      recommendedIds = await getAIRecommendations(product, availableProducts);
+      if (recommendedIds && recommendedIds.length > 0) {
+        algorithm = 'groq-ai';
+        console.log('✅ Using AI recommendations');
+      }
+    } else {
+      console.log('⚠️  No Groq API Key found, skipping AI');
+    }
+    
+    // Fallback to simple rules if AI failed or no API key
+    if (!recommendedIds || recommendedIds.length === 0) {
+      console.log('📊 Falling back to simple rule-based recommendations...');
+      recommendedIds = getSimpleRecommendations(product, availableProducts);
+      algorithm = 'simple-rules';
+    }
+    
     console.log('Recommended IDs:', recommendedIds);
 
     // Get full product details for recommendations
@@ -119,7 +208,7 @@ module.exports = async (req, res) => {
         price: r.price,
         reason: 'AI recommended based on product similarity',
       })),
-      algorithm: 'simple-rules',
+      algorithm: algorithm,
       timestamp: new Date().toISOString(),
     };
     
