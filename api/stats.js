@@ -57,13 +57,12 @@ module.exports = async (req, res) => {
         .doc(storeId)
         .collection('conversions')
         .where('converted', '==', true)
-        .orderBy('createdAt', 'desc')
         .get();
       
       let totalRevenue = 0;
       let orders = 0;
       const productConversions = {};
-      const recentConversions = [];
+      const allConversions = [];
       
       conversionsSnapshot.forEach(doc => {
         const data = doc.data();
@@ -83,15 +82,22 @@ module.exports = async (req, res) => {
         productConversions[productId].conversions++;
         productConversions[productId].revenue += data.price || 0;
         
-        // Recent conversions (last 5)
-        if (recentConversions.length < 5) {
-          recentConversions.push({
-            productName: data.productName || 'Unknown',
-            price: data.price || 0,
-            createdAt: data.createdAt,
-          });
-        }
+        // Collect all conversions for sorting
+        allConversions.push({
+          productName: data.productName || 'Unknown',
+          price: data.price || 0,
+          createdAt: data.createdAt,
+        });
       });
+      
+      // Sort by date and get last 5
+      const recentConversions = allConversions
+        .sort((a, b) => {
+          const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return timeB - timeA;
+        })
+        .slice(0, 5);
       
       // Sort products by conversions
       const topProducts = Object.values(productConversions)
