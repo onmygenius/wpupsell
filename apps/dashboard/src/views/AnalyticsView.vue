@@ -1,18 +1,53 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Chart } from 'highcharts-vue';
 
-// Mock data - will be replaced with real Firestore data
+const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
+const STORE_ID = 'store_fHg74QwLurg5';
+
+const loading = ref(true);
 const analytics = ref({
-  totalRevenue: 24567,
-  upsellRevenue: 8945,
-  conversions: 456,
-  impressions: 1234,
-  conversionRate: 32.5,
-  avgOrderValue: 53.87
+  totalRevenue: 0,
+  upsellRevenue: 0,
+  conversions: 0,
+  impressions: 0,
+  conversionRate: 0,
+  avgOrderValue: 0
 });
 
-// Revenue Chart (Line)
+const topProducts = ref<any[]>([]);
+
+onMounted(async () => {
+  try {
+    // Load products
+    const response = await fetch(`${API_URL}/products`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'list', storeId: STORE_ID }),
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      // Top products by price (since we don't have conversion data yet)
+      topProducts.value = data.products
+        .sort((a: any, b: any) => b.price - a.price)
+        .slice(0, 5)
+        .map((p: any) => ({
+          productId: p.productId,
+          name: p.name,
+          conversions: 0,
+          revenue: 0,
+          conversionRate: 0
+        }));
+    }
+  } catch (error) {
+    console.error('Failed to load analytics:', error);
+  } finally {
+    loading.value = false;
+  }
+});
+
+// Revenue Chart (Line) - No data yet
 const revenueChartOptions = ref<any>({
   chart: {
     type: 'line',
@@ -22,6 +57,10 @@ const revenueChartOptions = ref<any>({
   title: {
     text: 'Revenue Over Time',
     style: { color: '#ffffff', fontSize: '18px', fontWeight: 'bold' }
+  },
+  subtitle: {
+    text: 'Track conversions to see revenue data',
+    style: { color: '#9ca3af', fontSize: '12px' }
   },
   xAxis: {
     categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -35,16 +74,16 @@ const revenueChartOptions = ref<any>({
   legend: { itemStyle: { color: '#9ca3af' } },
   series: [{
     name: 'Total Revenue',
-    data: [3200, 4100, 3800, 5200, 4800, 6100, 5400],
+    data: [0, 0, 0, 0, 0, 0, 0],
     color: '#3b82f6'
   }, {
     name: 'Upsell Revenue',
-    data: [1200, 1500, 1300, 1900, 1700, 2200, 1950],
+    data: [0, 0, 0, 0, 0, 0, 0],
     color: '#10b981'
   }]
 });
 
-// Conversion Funnel (Bar)
+// Conversion Funnel (Bar) - No data yet
 const conversionChartOptions = ref<any>({
   chart: {
     type: 'bar',
@@ -54,6 +93,10 @@ const conversionChartOptions = ref<any>({
   title: {
     text: 'Conversion Funnel',
     style: { color: '#ffffff', fontSize: '18px', fontWeight: 'bold' }
+  },
+  subtitle: {
+    text: 'Track conversions to see funnel data',
+    style: { color: '#9ca3af', fontSize: '12px' }
   },
   xAxis: {
     categories: ['Impressions', 'Clicks', 'Add to Cart', 'Conversions'],
@@ -67,19 +110,11 @@ const conversionChartOptions = ref<any>({
   legend: { enabled: false },
   series: [{
     name: 'Funnel',
-    data: [1234, 856, 612, 456],
+    data: [0, 0, 0, 0],
     color: '#8b5cf6'
   }]
 });
 
-// Top Products (mock data - will come from Firestore topProducts array)
-const topProducts = ref([
-  { productId: 'prod_001', name: 'iPhone 15 Pro', conversions: 124, revenue: 123876, conversionRate: 42.5 },
-  { productId: 'prod_002', name: 'Husă iPhone', conversions: 98, revenue: 4410, conversionRate: 87.2 },
-  { productId: 'prod_003', name: 'AirPods Pro', conversions: 67, revenue: 16683, conversionRate: 38.1 },
-  { productId: 'prod_004', name: 'MacBook Air M2', conversions: 45, revenue: 44955, conversionRate: 28.9 },
-  { productId: 'prod_005', name: 'Apple Watch', conversions: 34, revenue: 13566, conversionRate: 31.2 }
-]);
 </script>
 
 <template>
@@ -108,25 +143,25 @@ const topProducts = ref([
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
         <p class="text-sm text-gray-400 mb-1">Total Revenue</p>
         <p class="text-3xl font-bold text-white">${{ analytics.totalRevenue.toLocaleString() }}</p>
-        <p class="text-xs text-green-400 mt-2">+18% from last period</p>
+        <p class="text-xs text-gray-500 mt-2">No conversions tracked yet</p>
       </div>
 
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
         <p class="text-sm text-gray-400 mb-1">Upsell Revenue</p>
         <p class="text-3xl font-bold text-white">${{ analytics.upsellRevenue.toLocaleString() }}</p>
-        <p class="text-xs text-green-400 mt-2">+25% from last period</p>
+        <p class="text-xs text-gray-500 mt-2">No conversions tracked yet</p>
       </div>
 
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
         <p class="text-sm text-gray-400 mb-1">Conversion Rate</p>
         <p class="text-3xl font-bold text-white">{{ analytics.conversionRate }}%</p>
-        <p class="text-xs text-green-400 mt-2">+5.2% from last period</p>
+        <p class="text-xs text-gray-500 mt-2">No conversions tracked yet</p>
       </div>
 
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
         <p class="text-sm text-gray-400 mb-1">Avg Order Value</p>
         <p class="text-3xl font-bold text-white">${{ analytics.avgOrderValue }}</p>
-        <p class="text-xs text-green-400 mt-2">+12% from last period</p>
+        <p class="text-xs text-gray-500 mt-2">No conversions tracked yet</p>
       </div>
     </div>
 
@@ -163,10 +198,10 @@ const topProducts = ref([
               class="border-b border-gray-800 hover:bg-gray-800/30 transition"
             >
               <td class="py-4 text-white">{{ product.name }}</td>
-              <td class="py-4 text-right text-white">{{ product.conversions }}</td>
-              <td class="py-4 text-right text-white">${{ product.revenue.toLocaleString() }}</td>
+              <td class="py-4 text-right text-gray-500">{{ product.conversions }}</td>
+              <td class="py-4 text-right text-gray-500">${{ product.revenue }}</td>
               <td class="py-4 text-right">
-                <span class="text-green-400">{{ product.conversionRate }}%</span>
+                <span class="text-gray-500">{{ product.conversionRate }}%</span>
               </td>
             </tr>
           </tbody>
