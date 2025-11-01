@@ -1,22 +1,42 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 
-// const API_URL = 'https://wpupsell-dashboard.vercel.app/api';
-// const STORE_ID = 'store_fHg74QwLurg5'; // TODO: Get from auth
+const API_URL = 'https://wpupsell-dashboard.vercel.app/api';
+const STORE_ID = 'store_fHg74QwLurg5'; // TODO: Get from auth
 
 const loading = ref(true);
 const landingPages = ref<any[]>([]);
 const showGenerateModal = ref(false);
+const products = ref<any[]>([]);
+const searchQuery = ref('');
+const selectedProduct = ref<any>(null);
+const pageTitle = ref('');
+const pageSlug = ref('');
+const urlPrefix = ref('oferte');
+const generating = ref(false);
 
 onMounted(async () => {
-  await loadLandingPages();
+  await Promise.all([
+    loadLandingPages(),
+    loadProducts()
+  ]);
 });
 
 async function loadLandingPages() {
   try {
-    // TODO: Implement API call
-    // For now, mock data
-    landingPages.value = [];
+    const response = await fetch(`${API_URL}/landing-pages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        action: 'list',
+        storeId: STORE_ID 
+      }),
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      landingPages.value = data.landingPages || [];
+    }
   } catch (error) {
     console.error('Failed to load landing pages:', error);
   } finally {
@@ -24,12 +44,106 @@ async function loadLandingPages() {
   }
 }
 
+async function loadProducts() {
+  try {
+    const response = await fetch(`${API_URL}/products`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        action: 'list',
+        storeId: STORE_ID 
+      }),
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      products.value = data.products || [];
+    }
+  } catch (error) {
+    console.error('Failed to load products:', error);
+  }
+}
+
 function openGenerateModal() {
   showGenerateModal.value = true;
+  searchQuery.value = '';
+  selectedProduct.value = null;
+  pageTitle.value = '';
+  pageSlug.value = '';
+  urlPrefix.value = 'oferte';
 }
 
 function closeGenerateModal() {
   showGenerateModal.value = false;
+}
+
+function selectProduct(product: any) {
+  selectedProduct.value = product;
+  pageTitle.value = `${product.name} - Ofertă Specială`;
+  pageSlug.value = product.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '') + '-oferta';
+}
+
+function sanitizeSlug() {
+  pageSlug.value = pageSlug.value
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+const filteredProducts = computed(() => {
+  if (!searchQuery.value) return products.value.slice(0, 10);
+  
+  const query = searchQuery.value.toLowerCase();
+  return products.value
+    .filter(p => p.name.toLowerCase().includes(query))
+    .slice(0, 10);
+});
+
+const previewUrl = computed(() => {
+  const prefix = urlPrefix.value ? `${urlPrefix.value}/` : '';
+  return `bijuteriaregala.ro/${prefix}${pageSlug.value}`;
+});
+
+async function generateLandingPage() {
+  if (!selectedProduct.value || !pageTitle.value || !pageSlug.value) {
+    alert('Please fill all required fields');
+    return;
+  }
+  
+  generating.value = true;
+  
+  try {
+    const response = await fetch(`${API_URL}/generate-landing-page`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        productId: selectedProduct.value.productId,
+        pageTitle: pageTitle.value,
+        pageSlug: pageSlug.value,
+        urlPrefix: urlPrefix.value,
+        storeId: STORE_ID,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('Landing page generated successfully!');
+      closeGenerateModal();
+      await loadLandingPages();
+    } else {
+      alert('Failed to generate landing page: ' + data.error);
+    }
+  } catch (error) {
+    console.error('Failed to generate landing page:', error);
+    alert('Failed to generate landing page');
+  } finally {
+    generating.value = false;
+  }
 }
 </script>
 
@@ -118,15 +232,38 @@ function closeGenerateModal() {
         
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-400 mb-2">Select Product</label>
-            <select class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none">
-              <option>Select a product...</option>
-            </select>
+            <label class="block text-sm font-medium text-gray-400 mb-2">Search Product</label>
+            <input 
+              v-model="searchQuery"
+              type="text" 
+              placeholder="Search by product name..."
+              class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none"
+            />
+            
+            <!-- Product Dropdown -->
+            <div v-if="searchQuery && filteredProducts.length > 0" class="mt-2 bg-[#0f1535] border border-gray-800 rounded-lg max-h-60 overflow-y-auto">
+              <button
+                v-for="product in filteredProducts"
+                :key="product.productId"
+                @click="selectProduct(product)"
+                class="w-full text-left px-4 py-3 hover:bg-gray-800 transition border-b border-gray-800 last:border-b-0"
+              >
+                <p class="text-white font-medium">{{ product.name }}</p>
+                <p class="text-sm text-gray-400">{{ product.price }} LEI - {{ product.category }}</p>
+              </button>
+            </div>
+            
+            <!-- Selected Product -->
+            <div v-if="selectedProduct" class="mt-2 bg-green-600/20 border border-green-600/50 rounded-lg px-4 py-3">
+              <p class="text-green-400 font-medium">✅ Selected: {{ selectedProduct.name }}</p>
+              <p class="text-sm text-gray-400">{{ selectedProduct.price }} LEI</p>
+            </div>
           </div>
           
           <div>
             <label class="block text-sm font-medium text-gray-400 mb-2">Page Title</label>
             <input 
+              v-model="pageTitle"
               type="text" 
               placeholder="Lănțișor Perla Eleganței - Ofertă Specială"
               class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none"
@@ -136,6 +273,8 @@ function closeGenerateModal() {
           <div>
             <label class="block text-sm font-medium text-gray-400 mb-2">URL Slug</label>
             <input 
+              v-model="pageSlug"
+              @input="sanitizeSlug"
               type="text" 
               placeholder="lantisor-perla-elegantei-oferta"
               class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none"
@@ -145,7 +284,7 @@ function closeGenerateModal() {
           
           <div>
             <label class="block text-sm font-medium text-gray-400 mb-2">URL Prefix (optional)</label>
-            <select class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none">
+            <select v-model="urlPrefix" class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none">
               <option value="">No prefix</option>
               <option value="oferte">oferte</option>
               <option value="promo">promo</option>
@@ -156,7 +295,7 @@ function closeGenerateModal() {
           
           <div class="bg-[#0f1535] border border-gray-800 rounded-lg p-4">
             <label class="block text-sm font-medium text-gray-400 mb-1">Preview URL:</label>
-            <p class="text-blue-400">🔗 bijuteriaregala.ro/oferte/lantisor-perla-elegantei-oferta</p>
+            <p class="text-blue-400">🔗 {{ previewUrl }}</p>
           </div>
         </div>
         
@@ -168,9 +307,11 @@ function closeGenerateModal() {
             Cancel
           </button>
           <button 
-            class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+            @click="generateLandingPage"
+            :disabled="generating"
+            class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            🎨 Generate Landing Page
+            {{ generating ? '⏳ Generating...' : '🎨 Generate Landing Page' }}
           </button>
         </div>
       </div>

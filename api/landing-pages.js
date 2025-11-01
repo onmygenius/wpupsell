@@ -56,7 +56,6 @@ module.exports = async (req, res) => {
           .collection('stores')
           .doc(storeId)
           .collection('landingPages')
-          .orderBy('createdAt', 'desc')
           .get();
         
         const landingPages = [];
