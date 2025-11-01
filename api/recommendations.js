@@ -194,12 +194,27 @@ module.exports = async (req, res) => {
         }));
     } else {
       // Get full product details for AI recommendations with reasons
+      console.log('🔍 Processing AI recommendations...');
+      console.log('🔍 AI recommendations:', JSON.stringify(aiRecommendations, null, 2));
+      console.log('🔍 Available product IDs:', availableProducts.map(p => p.id));
+      
       recommendations = aiRecommendations
         .map(rec => {
-          const product = availableProducts.find(p => p.id === rec.id);
+          console.log(`🔍 Looking for product ID: "${rec.id}" (type: ${typeof rec.id})`);
+          const product = availableProducts.find(p => {
+            console.log(`  Comparing with: "${p.id}" (type: ${typeof p.id})`);
+            return p.id === rec.id || p.id == rec.id; // Try both strict and loose equality
+          });
+          if (product) {
+            console.log(`  ✅ Found product: ${product.name}`);
+          } else {
+            console.log(`  ❌ Product not found for ID: ${rec.id}`);
+          }
           return product ? { ...product, reason: rec.reason } : null;
         })
         .filter(p => p !== null);
+      
+      console.log('🔍 Final recommendations count:', recommendations.length);
     }
     
     console.log('Final recommendations:', recommendations.length);
