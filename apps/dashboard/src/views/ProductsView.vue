@@ -1,48 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 
-// Mock data - will be replaced with real API call
-const products = ref([
-  {
-    id: '1',
-    productId: '123',
-    storeId: 'store_001',
-    name: 'Lănțișor "Perla Eleganței" – Rafinament în cea mai pură formă',
-    category: 'Lanturi',
-    price: 2850,
-    stock: 15,
-    image: 'https://bijuteriaregala.ro/wp-content/uploads/2024/01/lantisor.jpg',
-    url: 'https://bijuteriaregala.ro/product/lantisor-perla',
-    enabled: true,
-    syncedAt: new Date('2025-11-01T06:00:00'),
-  },
-  {
-    id: '2',
-    productId: '124',
-    storeId: 'store_001',
-    name: 'Brățara "Panther Luxe" – Puterea eleganței într-o brățară de aur',
-    category: 'Bratari',
-    price: 5500,
-    stock: 8,
-    image: 'https://bijuteriaregala.ro/wp-content/uploads/2024/01/bratara.jpg',
-    url: 'https://bijuteriaregala.ro/product/bratara-panther',
-    enabled: true,
-    syncedAt: new Date('2025-11-01T06:00:00'),
-  },
-  {
-    id: '3',
-    productId: '125',
-    storeId: 'store_001',
-    name: 'Cercei "Golden Whisper" – Eleganță care prinde viață',
-    category: 'Cercei',
-    price: 2200,
-    stock: 3,
-    image: 'https://bijuteriaregala.ro/wp-content/uploads/2024/01/cercei.jpg',
-    url: 'https://bijuteriaregala.ro/product/cercei-golden',
-    enabled: false,
-    syncedAt: new Date('2025-11-01T06:00:00'),
-  },
-]);
+// API Configuration
+const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
+const STORE_ID = 'store_fHg74QwLurg5'; // TODO: Get from auth/store selection
+
+// Real data from API
+const products = ref([]);
 
 const loading = ref(false);
 const syncing = ref(false);
@@ -75,37 +39,95 @@ const stats = computed(() => ({
 
 // Toggle product enabled/disabled
 const toggleProduct = async (product: any) => {
+  const previousState = product.enabled;
   product.enabled = !product.enabled;
-  // TODO: Call API to update
-  console.log('Toggle product:', product.id, product.enabled);
+  
+  try {
+    const response = await fetch(`${API_URL}/products`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'update',
+        storeId: STORE_ID,
+        productId: product.productId,
+        enabled: product.enabled,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      // Revert on error
+      product.enabled = previousState;
+      console.error('Failed to update product:', data.message);
+      alert('Failed to update product');
+    }
+  } catch (error) {
+    // Revert on error
+    product.enabled = previousState;
+    console.error('Toggle error:', error);
+    alert('Failed to update product');
+  }
 };
 
 // Sync products
 const syncProducts = async () => {
   syncing.value = true;
   try {
-    // TODO: Call API to sync
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Note: Sync is triggered from plugin, this just reloads
+    await loadProducts();
     lastSync.value = new Date();
-    console.log('Products synced!');
+    alert('Products refreshed! Note: Sync happens automatically from your WooCommerce store.');
   } catch (error) {
     console.error('Sync error:', error);
+    alert('Failed to refresh products');
   } finally {
     syncing.value = false;
   }
 };
 
-// Load products on mount
-onMounted(async () => {
+// Load products from API
+const loadProducts = async () => {
   loading.value = true;
   try {
-    // TODO: Load products from API
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const response = await fetch(`${API_URL}/products`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'list',
+        storeId: STORE_ID,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      products.value = data.products.map((p: any) => ({
+        ...p,
+        syncedAt: p.syncedAt ? new Date(p.syncedAt._seconds * 1000) : new Date(),
+      }));
+      
+      // Update last sync time from first product
+      if (products.value.length > 0 && products.value[0].syncedAt) {
+        lastSync.value = products.value[0].syncedAt;
+      }
+    } else {
+      console.error('Failed to load products:', data.message);
+    }
   } catch (error) {
     console.error('Load error:', error);
   } finally {
     loading.value = false;
   }
+};
+
+// Load products on mount
+onMounted(() => {
+  loadProducts();
 });
 
 // Format date
