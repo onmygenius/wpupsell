@@ -19,6 +19,7 @@ const navigation = [
   { name: 'Dashboard', path: '/', icon: '📊' },
   { name: 'Analytics', path: '/analytics', icon: '📈' },
   { name: 'Stores', path: '/stores', icon: '🏪' },
+  { name: 'Products', path: '/products', icon: '📦' },
   { name: 'Settings', path: '/settings', icon: '⚙️' }
 ];
 

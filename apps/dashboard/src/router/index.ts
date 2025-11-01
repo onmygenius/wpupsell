@@ -23,6 +23,12 @@ const router = createRouter({
       meta: { title: 'Stores' }
     },
     {
+      path: '/products',
+      name: 'products',
+      component: () => import('../views/ProductsView.vue'),
+      meta: { title: 'Products' }
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('../views/SettingsView.vue'),
