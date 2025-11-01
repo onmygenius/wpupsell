@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 
-const API_URL = 'https://wpupsell-dashboard.vercel.app/api';
-const STORE_ID = 'store_fHg74QwLurg5'; // TODO: Get from auth
+// const API_URL = 'https://wpupsell-dashboard.vercel.app/api';
+// const STORE_ID = 'store_fHg74QwLurg5'; // TODO: Get from auth
 
 const loading = ref(true);
 const landingPages = ref<any[]>([]);
