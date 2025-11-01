@@ -41,12 +41,15 @@ async function handleSync(req, res) {
   const { storeId, products } = req.body;
   
   console.log('📦 Sync request:', { storeId, productsCount: products?.length });
+  console.log('📦 First 3 products:', products?.slice(0, 3).map(p => ({ id: p.id, name: p.name })));
   
   if (!storeId || !products || !Array.isArray(products)) {
     return res.status(400).json({ 
       error: 'Missing required fields: storeId, products (array)' 
     });
   }
+  
+  console.log('📦 Validation passed, products count:', products.length);
 
   // Load Firebase (lazy)
   const hasFirebase = process.env.FIREBASE_PROJECT_ID && 
@@ -88,6 +91,7 @@ async function handleSync(req, res) {
     });
     
     // Save each product
+    console.log('📦 Starting to save products to Firebase...');
     let savedCount = 0;
     for (const product of products) {
       const productRef = db.collection('products').doc(`${storeId}_${product.id}`);
@@ -106,7 +110,9 @@ async function handleSync(req, res) {
       savedCount++;
     }
     
+    console.log('📦 Added', savedCount, 'products to batch, committing...');
     await batch.commit();
+    console.log('✅ Batch committed successfully!');
     
     console.log(`✅ Synced ${savedCount} products for store ${storeId}`);
     

@@ -101,6 +101,10 @@ class Products {
             ];
         }
         
+        error_log('UpSell AI: Formatted ' . count($formatted_products) . ' products');
+        error_log('UpSell AI: First product: ' . json_encode($formatted_products[0] ?? []));
+        error_log('UpSell AI: Sending to API: ' . $this->api_url . '/products');
+        
         // Send to API
         $response = wp_remote_post($this->api_url . '/products', [
             'headers' => [
