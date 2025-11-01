@@ -49,11 +49,8 @@ export const useAuthStore = defineStore('auth', () => {
       
       // Create user profile in Firestore
       await createUserProfile(userCredential.user, name);
-      
-      // Setup store after registration
-      await setupStore(userCredential.user.uid);
 
-      router.push('/');
+      router.push('/stores'); // Redirect to Stores to create store
       return { success: true };
     } catch (err: any) {
       error.value = err.message;
@@ -69,10 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
       loading.value = true;
       error.value = null;
 
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      
-      // Setup store after login
-      await setupStore(userCredential.user.uid);
+      await signInWithEmailAndPassword(auth, email, password);
       
       router.push('/');
       return { success: true };
@@ -116,40 +110,6 @@ export const useAuthStore = defineStore('auth', () => {
       Math.random().toString(36).charAt(2)
     ).join('');
     return prefix + randomString;
-  }
-
-  // Setup store for user (1 user = 1 store)
-  async function setupStore(userId: string) {
-    try {
-      // Check if store exists
-      const storeDoc = await getDoc(doc(db, 'stores', userId));
-      
-      if (!storeDoc.exists()) {
-        // Create default store with storeId = userId
-        await setDoc(doc(db, 'stores', userId), {
-          storeId: userId,
-          userId: userId,
-          name: 'My Store',
-          url: '',
-          apiKey: generateApiKey(),
-          plan: 'starter',
-          status: 'active',
-          createdAt: new Date(),
-          stats: {
-            totalRevenue: 0,
-            totalProducts: 0,
-            conversions: 0,
-            conversionRate: 0,
-            currency: 'LEI'
-          }
-        });
-      }
-      
-      // Set storeId in localStorage
-      localStorage.setItem('storeId', userId);
-    } catch (err) {
-      console.error('Failed to setup store:', err);
-    }
   }
 
   // Get user profile

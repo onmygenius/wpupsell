@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { useAuthStore } from '../stores/auth';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
+const authStore = useAuthStore();
 
 const stores = ref<any[]>([]);
 const loading = ref(true);
 const editingStore = ref(false);
+const creatingStore = ref(false);
 const editForm = ref({
   name: '',
   url: '',
@@ -24,7 +27,7 @@ async function loadStore() {
     const storeId = localStorage.getItem('storeId');
     
     if (!storeId) {
-      console.error('No storeId found');
+      // No store yet - user needs to create one
       loading.value = false;
       return;
     }
@@ -33,7 +36,8 @@ async function loadStore() {
     const storeDoc = await getDoc(doc(db, 'stores', storeId));
     
     if (!storeDoc.exists()) {
-      console.error('Store not found');
+      // Store doesn't exist - clear localStorage
+      localStorage.removeItem('storeId');
       loading.value = false;
       return;
     }
@@ -99,11 +103,10 @@ async function saveStore() {
     const storeId = localStorage.getItem('storeId');
     if (!storeId) return;
     
-    // Update in Firebase
+    // Update in Firebase (API Key is readonly, don't update it)
     await updateDoc(doc(db, 'stores', storeId), {
       name: editForm.value.name,
       url: editForm.value.url,
-      apiKey: editForm.value.apiKey,
       updatedAt: new Date()
     });
     
@@ -116,6 +119,61 @@ async function saveStore() {
     console.error('Failed to update store:', error);
     alert('Failed to update store');
   }
+}
+
+async function createStore() {
+  try {
+    creatingStore.value = true;
+    const userId = authStore.userId;
+    
+    if (!userId) {
+      alert('Please login first');
+      return;
+    }
+    
+    // Generate API Key
+    const apiKey = generateApiKey();
+    
+    // Create store in Firebase with userId as document ID
+    await setDoc(doc(db, 'stores', userId), {
+      storeId: userId,
+      userId: userId,
+      name: 'My Store',
+      url: '',
+      apiKey: apiKey,
+      plan: 'starter',
+      status: 'active',
+      createdAt: new Date(),
+      stats: {
+        totalRevenue: 0,
+        totalProducts: 0,
+        conversions: 0,
+        conversionRate: 0,
+        currency: 'LEI'
+      }
+    });
+    
+    // Set storeId in localStorage
+    localStorage.setItem('storeId', userId);
+    
+    // Reload store
+    await loadStore();
+    
+    alert('Store created successfully! Copy your API Key and paste it in your WooCommerce plugin.');
+  } catch (error) {
+    console.error('Failed to create store:', error);
+    alert('Failed to create store');
+  } finally {
+    creatingStore.value = false;
+  }
+}
+
+function generateApiKey(): string {
+  const prefix = 'sk_live_';
+  const randomString = Array.from({ length: 32 }, () => 
+    Math.random().toString(36).charAt(2)
+  ).join('');
+  return prefix + randomString;
 }
 
 function copyToClipboard(text: string) {
@@ -171,6 +229,16 @@ const getPlanBadge = (plan: string) => {
         <p class="text-gray-400 mt-1">Manage your connected WooCommerce stores</p>
       </div>
       <button 
+        v-if="stores.length === 0"
+        @click="createStore"
+        :disabled="creatingStore"
+        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2 disabled:opacity-50"
+      >
+        <span class="text-xl">+</span>
+        <span>{{ creatingStore ? 'Creating...' : 'Create Store' }}</span>
+      </button>
+      <button 
+        v-else
         @click="openEditModal"
         class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
       >
@@ -199,8 +267,24 @@ const getPlanBadge = (plan: string) => {
       </div>
     </div>
 
+    <!-- Empty State -->
+    <div v-if="!loading && stores.length === 0" class="text-center py-12">
+      <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-12">
+        <div class="text-6xl mb-4">🏪</div>
+        <h3 class="text-2xl font-bold text-white mb-2">No Store Yet</h3>
+        <p class="text-gray-400 mb-6">Create your first store to start using UpSell AI</p>
+        <button 
+          @click="createStore"
+          :disabled="creatingStore"
+          class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+        >
+          {{ creatingStore ? 'Creating...' : '+ Create Your First Store' }}
+        </button>
+      </div>
+    </div>
+
     <!-- Stores Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div v-if="stores.length > 0" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
       <div 
         v-for="store in stores" 
         :key="store.storeId"
@@ -319,15 +403,24 @@ const getPlanBadge = (plan: string) => {
             />
           </div>
           
-          <!-- API Key -->
+          <!-- API Key (readonly) -->
           <div>
-            <label class="block text-sm font-medium text-gray-400 mb-2">API Key</label>
-            <input 
-              v-model="editForm.apiKey"
-              type="text"
-              placeholder="sk_live_..."
-              class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <label class="block text-sm font-medium text-gray-400 mb-2">API Key (read-only)</label>
+            <div class="flex items-center gap-2">
+              <input 
+                v-model="editForm.apiKey"
+                type="text"
+                readonly
+                class="flex-1 px-4 py-2 bg-gray-800/30 border border-gray-700 rounded-lg text-gray-400 cursor-not-allowed"
+              />
+              <button 
+                @click="copyToClipboard(editForm.apiKey)"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                📋 Copy
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">API Key cannot be changed</p>
           </div>
         </div>
         
