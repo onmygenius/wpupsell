@@ -9,14 +9,17 @@ const STORE_ID = 'store_fHg74QwLurg5'; // TODO: Get from auth
 const loading = ref(true);
 const stats = ref({
   totalSales: 0,
-  activeUsers: 0,
+  enabledProducts: 0,
   orders: 0,
   products: 0
 });
 
+const categoryData = ref<any[]>([]);
+const topProducts = ref<any[]>([]);
+
 onMounted(async () => {
   try {
-    // Load products count
+    // Load products
     const response = await fetch(`${API_URL}/products`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -25,15 +28,36 @@ onMounted(async () => {
     
     const data = await response.json();
     if (data.success) {
-      stats.value.products = data.products.length;
+      const products = data.products;
       
-      // Calculate stats from products
-      const enabledProducts = data.products.filter((p: any) => p.enabled);
-      stats.value.activeUsers = enabledProducts.length;
+      // Real stats from products
+      stats.value.products = products.length;
+      stats.value.enabledProducts = products.filter((p: any) => p.enabled).length;
       
-      // Mock data for now (TODO: get from conversions collection)
-      stats.value.totalSales = 24567;
-      stats.value.orders = 456;
+      // Sales and orders = 0 (no conversions yet)
+      stats.value.totalSales = 0;
+      stats.value.orders = 0;
+      
+      // Calculate category distribution
+      const categories = products.reduce((acc: any, p: any) => {
+        acc[p.category] = (acc[p.category] || 0) + 1;
+        return acc;
+      }, {});
+      
+      categoryData.value = Object.entries(categories).map(([name, count]) => ({
+        name,
+        count,
+        percentage: ((count as number / products.length) * 100).toFixed(1)
+      }));
+      
+      // Top products by price (since we don't have sales data yet)
+      topProducts.value = products
+        .sort((a: any, b: any) => b.price - a.price)
+        .slice(0, 4)
+        .map((p: any) => ({
+          name: p.name,
+          price: p.price
+        }));
     }
   } catch (error) {
     console.error('Failed to load stats:', error);
@@ -63,7 +87,7 @@ onMounted(async () => {
         </div>
         <p class="text-sm text-gray-400 mb-1">Total Sales</p>
         <p class="text-2xl font-bold text-white">${{ stats.totalSales.toLocaleString() }}</p>
-        <p class="text-xs text-green-400 mt-2">+23% from last month</p>
+        <p class="text-xs text-gray-500 mt-2">No conversions yet</p>
       </div>
 
       <!-- Active Users -->
@@ -75,8 +99,8 @@ onMounted(async () => {
           <span class="text-xs font-medium text-red-400">-5%</span>
         </div>
         <p class="text-sm text-gray-400 mb-1">Enabled Products</p>
-        <p class="text-2xl font-bold text-white">{{ stats.activeUsers }}</p>
-        <p class="text-xs text-green-400 mt-2">Products with recommendations</p>
+        <p class="text-2xl font-bold text-white">{{ stats.enabledProducts }}</p>
+        <p class="text-xs text-gray-400 mt-2">Products with recommendations</p>
       </div>
 
       <!-- Orders -->
@@ -89,7 +113,7 @@ onMounted(async () => {
         </div>
         <p class="text-sm text-gray-400 mb-1">Orders</p>
         <p class="text-2xl font-bold text-white">{{ stats.orders }}</p>
-        <p class="text-xs text-green-400 mt-2">+8% from yesterday</p>
+        <p class="text-xs text-gray-500 mt-2">No orders yet</p>
       </div>
 
       <!-- Products -->
@@ -220,23 +244,18 @@ onMounted(async () => {
 
         <!-- Top Products -->
         <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
-          <h3 class="text-lg font-semibold text-white mb-4">Top Products</h3>
+          <h2 class="text-xl font-semibold text-white mb-6">Top Products (by price)</h2>
           <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-400">iPhone 15 Pro</span>
-              <span class="text-sm font-semibold text-white">$524</span>
+            <div v-if="topProducts.length === 0" class="text-center text-gray-500 py-4">
+              No products yet
             </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-400">MacBook Air M2</span>
-              <span class="text-sm font-semibold text-white">$999</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-400">AirPods Pro</span>
-              <span class="text-sm font-semibold text-white">$1177</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-400">iPad Air</span>
-              <span class="text-sm font-semibold text-white">$1413</span>
+            <div 
+              v-for="product in topProducts" 
+              :key="product.name"
+              class="flex items-center justify-between"
+            >
+              <span class="text-sm text-gray-400 truncate mr-2">{{ product.name }}</span>
+              <span class="text-sm font-semibold text-white">${{ product.price }}</span>
             </div>
           </div>
         </div>
