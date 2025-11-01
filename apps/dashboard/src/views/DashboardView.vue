@@ -1,29 +1,42 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { db } from '../firebase/config';
-import { collection, getDocs } from 'firebase/firestore';
 import PieDonutChart from '../components/charts/PieDonutChart.vue';
 import DonutChart from '../components/charts/DonutChart.vue';
 
-const isConnected = ref(false);
+const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
+const STORE_ID = 'store_fHg74QwLurg5'; // TODO: Get from auth
+
 const loading = ref(true);
 const stats = ref({
-  totalStores: 0,
-  totalRevenue: 0,
-  conversionRate: 0,
-  activeRecommendations: 0
+  totalSales: 0,
+  activeUsers: 0,
+  orders: 0,
+  products: 0
 });
 
 onMounted(async () => {
   try {
-    // Test Firestore connection
-    const storesCollection = collection(db, 'stores');
-    const snapshot = await getDocs(storesCollection);
-    isConnected.value = true;
-    stats.value.totalStores = snapshot.size;
+    // Load products count
+    const response = await fetch(`${API_URL}/products`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'list', storeId: STORE_ID }),
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      stats.value.products = data.products.length;
+      
+      // Calculate stats from products
+      const enabledProducts = data.products.filter((p: any) => p.enabled);
+      stats.value.activeUsers = enabledProducts.length;
+      
+      // Mock data for now (TODO: get from conversions collection)
+      stats.value.totalSales = 24567;
+      stats.value.orders = 456;
+    }
   } catch (error) {
-    console.error('Firebase connection error:', error);
-    isConnected.value = false;
+    console.error('Failed to load stats:', error);
   } finally {
     loading.value = false;
   }
@@ -49,7 +62,7 @@ onMounted(async () => {
           <span class="text-xs font-medium text-green-400">+23%</span>
         </div>
         <p class="text-sm text-gray-400 mb-1">Total Sales</p>
-        <p class="text-2xl font-bold text-white">$24,567</p>
+        <p class="text-2xl font-bold text-white">${{ stats.totalSales.toLocaleString() }}</p>
         <p class="text-xs text-green-400 mt-2">+23% from last month</p>
       </div>
 
@@ -61,9 +74,9 @@ onMounted(async () => {
           </div>
           <span class="text-xs font-medium text-red-400">-5%</span>
         </div>
-        <p class="text-sm text-gray-400 mb-1">Active Users</p>
-        <p class="text-2xl font-bold text-white">1,234</p>
-        <p class="text-xs text-red-400 mt-2">-5% from last week</p>
+        <p class="text-sm text-gray-400 mb-1">Enabled Products</p>
+        <p class="text-2xl font-bold text-white">{{ stats.activeUsers }}</p>
+        <p class="text-xs text-green-400 mt-2">Products with recommendations</p>
       </div>
 
       <!-- Orders -->
@@ -75,7 +88,7 @@ onMounted(async () => {
           <span class="text-xs font-medium text-green-400">+8%</span>
         </div>
         <p class="text-sm text-gray-400 mb-1">Orders</p>
-        <p class="text-2xl font-bold text-white">456</p>
+        <p class="text-2xl font-bold text-white">{{ stats.orders }}</p>
         <p class="text-xs text-green-400 mt-2">+8% from yesterday</p>
       </div>
 
@@ -88,8 +101,8 @@ onMounted(async () => {
           <span class="text-xs font-medium text-green-400">+4%</span>
         </div>
         <p class="text-sm text-gray-400 mb-1">Products</p>
-        <p class="text-2xl font-bold text-white">89</p>
-        <p class="text-xs text-green-400 mt-2">+4% than this week</p>
+        <p class="text-2xl font-bold text-white">{{ stats.products }}</p>
+        <p class="text-xs text-gray-400 mt-2">Total synced products</p>
       </div>
     </div>
 
