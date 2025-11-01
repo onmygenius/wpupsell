@@ -1,57 +1,48 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 
-// Mock stores data - will be replaced with real Firestore data
-const stores = ref([
-  {
-    storeId: 'store_001',
-    name: 'Alex Electronics',
-    url: 'https://alex-electronics.com',
-    apiKey: 'sk_live_abc123...',
-    plan: 'growth',
-    status: 'active',
-    userId: 'user_123',
-    createdAt: new Date('2025-09-15'),
-    stats: {
-      totalRevenue: 45678,
-      upsellRevenue: 12340,
-      conversions: 234,
-      conversionRate: 28.5
+const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
+const STORE_ID = 'store_fHg74QwLurg5';
+
+const stores = ref<any[]>([]);
+const loading = ref(true);
+
+onMounted(async () => {
+  try {
+    // Load products to get store stats
+    const response = await fetch(`${API_URL}/products`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'list', storeId: STORE_ID }),
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      // Create store object with real data
+      stores.value = [{
+        storeId: STORE_ID,
+        name: 'Bijuteria Regala',
+        url: 'https://bijuteriaregala.ro',
+        apiKey: 'sk_live_***',
+        plan: 'growth',
+        status: 'active',
+        userId: 'user_demo',
+        createdAt: new Date('2025-11-01'),
+        stats: {
+          totalRevenue: 0, // TODO: from conversions
+          upsellRevenue: 0, // TODO: from conversions
+          conversions: 0, // TODO: from conversions
+          conversionRate: 0, // TODO: calculated
+          totalProducts: data.products.length
+        }
+      }];
     }
-  },
-  {
-    storeId: 'store_002',
-    name: 'Fashion Boutique',
-    url: 'https://fashion-boutique.com',
-    apiKey: 'sk_live_def456...',
-    plan: 'starter',
-    status: 'trial',
-    userId: 'user_123',
-    createdAt: new Date('2025-10-20'),
-    stats: {
-      totalRevenue: 12450,
-      upsellRevenue: 3200,
-      conversions: 89,
-      conversionRate: 22.1
-    }
-  },
-  {
-    storeId: 'store_003',
-    name: 'Home Decor Shop',
-    url: 'https://homedecor.com',
-    apiKey: 'sk_live_ghi789...',
-    plan: 'pro',
-    status: 'active',
-    userId: 'user_123',
-    createdAt: new Date('2025-08-10'),
-    stats: {
-      totalRevenue: 67890,
-      upsellRevenue: 18900,
-      conversions: 456,
-      conversionRate: 35.2
-    }
+  } catch (error) {
+    console.error('Failed to load stores:', error);
+  } finally {
+    loading.value = false;
   }
-]);
+});
 
 const getStatusColor = (status: string) => {
   switch(status) {
@@ -97,12 +88,12 @@ const getPlanBadge = (plan: string) => {
         <p class="text-3xl font-bold text-white">{{ stores.filter(s => s.status === 'active').length }}</p>
       </div>
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
-        <p class="text-sm text-gray-400 mb-1">Total Revenue</p>
-        <p class="text-3xl font-bold text-white">${{ stores.reduce((sum, s) => sum + s.stats.totalRevenue, 0).toLocaleString() }}</p>
+        <p class="text-sm text-gray-400 mb-1">Total Products</p>
+        <p class="text-3xl font-bold text-white">{{ stores.reduce((sum, s) => sum + (s.stats.totalProducts || 0), 0) }}</p>
       </div>
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
-        <p class="text-sm text-gray-400 mb-1">Avg Conv. Rate</p>
-        <p class="text-3xl font-bold text-white">{{ (stores.reduce((sum, s) => sum + s.stats.conversionRate, 0) / stores.length).toFixed(1) }}%</p>
+        <p class="text-sm text-gray-400 mb-1">Total Revenue</p>
+        <p class="text-3xl font-bold text-gray-500">$0</p>
       </div>
     </div>
 
@@ -135,24 +126,25 @@ const getPlanBadge = (plan: string) => {
         </div>
 
         <!-- Stats -->
-        <div class="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-gray-800">
+        <div class="grid grid-cols-2 gap-4 mb-4 pb-4 border-gray-800">
           <div>
-            <p class="text-xs text-gray-400 mb-1">Revenue</p>
-            <p class="text-lg font-semibold text-white">${{ store.stats.totalRevenue.toLocaleString() }}</p>
+            <p class="text-xs text-gray-400 mb-1">Products</p>
+            <p class="text-lg font-semibold text-white">{{ store.stats.totalProducts || 0 }}</p>
           </div>
           <div>
-            <p class="text-xs text-gray-400 mb-1">Upsell</p>
-            <p class="text-lg font-semibold text-green-400">${{ store.stats.upsellRevenue.toLocaleString() }}</p>
+            <p class="text-xs text-gray-400 mb-1">Revenue</p>
+            <p class="text-lg font-semibold text-gray-500">${{ store.stats.totalRevenue }}</p>
           </div>
           <div>
             <p class="text-xs text-gray-400 mb-1">Conversions</p>
-            <p class="text-lg font-semibold text-white">{{ store.stats.conversions }}</p>
+            <p class="text-lg font-semibold text-gray-500">{{ store.stats.conversions }}</p>
           </div>
           <div>
             <p class="text-xs text-gray-400 mb-1">Conv. Rate</p>
-            <p class="text-lg font-semibold text-white">{{ store.stats.conversionRate }}%</p>
+            <p class="text-lg font-semibold text-gray-500">{{ store.stats.conversionRate }}%</p>
           </div>
         </div>
+        <p class="text-xs text-gray-500 mb-4">Track conversions to see revenue & stats</p>
 
         <!-- API Key -->
         <div class="mb-4">

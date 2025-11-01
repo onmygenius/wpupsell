@@ -1,15 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed } from 'vue';
 import { Chart } from 'highcharts-vue';
 
-const chartOptions = ref<any>({
+const props = defineProps<{
+  data: Array<{ name: string; count: number; percentage: string }>
+}>();
+
+const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#f97316'];
+
+const chartOptions = computed(() => ({
   chart: {
     type: 'pie',
     backgroundColor: 'transparent',
     height: 300
   },
   title: {
-    text: 'Sales by Category',
+    text: 'Products by Category',
     style: {
       color: '#ffffff',
       fontSize: '16px',
@@ -17,12 +23,7 @@ const chartOptions = ref<any>({
     }
   },
   tooltip: {
-    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-  },
-  accessibility: {
-    point: {
-      valueSuffix: '%'
-    }
+    pointFormat: '{series.name}: <b>{point.y} products ({point.percentage:.1f}%)</b>'
   },
   plotOptions: {
     pie: {
@@ -40,31 +41,19 @@ const chartOptions = ref<any>({
     }
   },
   series: [{
-    name: 'Sales',
+    name: 'Products',
     colorByPoint: true,
-    data: [{
-      name: 'Electronics',
-      y: 61.41,
-      color: '#3b82f6'
-    }, {
-      name: 'Clothing',
-      y: 11.84,
-      color: '#8b5cf6'
-    }, {
-      name: 'Food',
-      y: 10.85,
-      color: '#10b981'
-    }, {
-      name: 'Books',
-      y: 4.67,
-      color: '#f59e0b'
-    }, {
-      name: 'Other',
-      y: 11.23,
+    data: props.data.length > 0 ? props.data.map((item, index) => ({
+      name: item.name,
+      y: item.count,
+      color: colors[index % colors.length]
+    })) : [{
+      name: 'No data',
+      y: 1,
       color: '#6b7280'
     }]
   }]
-});
+}));
 </script>
 
 <template>

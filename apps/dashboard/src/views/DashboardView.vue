@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import PieDonutChart from '../components/charts/PieDonutChart.vue';
-import DonutChart from '../components/charts/DonutChart.vue';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
 const STORE_ID = 'store_fHg74QwLurg5'; // TODO: Get from auth
@@ -132,8 +131,15 @@ onMounted(async () => {
 
     <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <PieDonutChart />
-      <DonutChart />
+      <PieDonutChart :data="categoryData" />
+      
+      <!-- Performance Metrics - Coming Soon -->
+      <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6 flex items-center justify-center">
+        <div class="text-center">
+          <p class="text-xl font-semibold text-white mb-2">Performance Metrics</p>
+          <p class="text-sm text-gray-400">Coming soon - Track conversions to see metrics</p>
+        </div>
+      </div>
     </div>
 
     <!-- Recent Activity & Quick Stats -->
