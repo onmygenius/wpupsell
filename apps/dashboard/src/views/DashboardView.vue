@@ -100,7 +100,8 @@ onMounted(async () => {
         </div>
         <p class="text-sm text-gray-400 mb-1">Total Sales</p>
         <p class="text-2xl font-bold text-white">{{ stats.totalSales.toLocaleString() }} {{ currency }}</p>
-        <p class="text-xs text-gray-500 mt-2">No conversions yet</p>
+        <p class="text-xs text-green-400 mt-2" v-if="stats.orders > 0">{{ stats.orders }} upsell {{ stats.orders === 1 ? 'order' : 'orders' }}</p>
+        <p class="text-xs text-gray-500 mt-2" v-else>No conversions yet</p>
       </div>
 
       <!-- Active Users -->
@@ -126,7 +127,8 @@ onMounted(async () => {
         </div>
         <p class="text-sm text-gray-400 mb-1">Orders</p>
         <p class="text-2xl font-bold text-white">{{ stats.orders }}</p>
-        <p class="text-xs text-gray-500 mt-2">No orders yet</p>
+        <p class="text-xs text-green-400 mt-2" v-if="stats.orders > 0">From AI recommendations</p>
+        <p class="text-xs text-gray-500 mt-2" v-else>No orders yet</p>
       </div>
 
       <!-- Products -->
