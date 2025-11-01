@@ -114,6 +114,7 @@ class Products {
             'body' => json_encode([
                 'action' => 'sync',
                 'storeId' => $this->store_id,
+                'apiKey' => $this->api_key, // Send API Key for validation
                 'products' => $formatted_products,
             ]),
             'timeout' => 60,

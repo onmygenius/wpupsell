@@ -118,6 +118,14 @@ async function saveStore() {
   }
 }
 
+function copyToClipboard(text: string) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Copied to clipboard!');
+  }).catch(err => {
+    console.error('Failed to copy:', err);
+  });
+}
+
 const getStatusColor = (status: string) => {
   switch(status) {
     case 'active': return 'bg-green-600/20 text-green-400';
@@ -224,12 +232,21 @@ const getPlanBadge = (plan: string) => {
         <p class="text-xs text-green-400 mb-4" v-if="store.stats.conversions > 0">{{ store.stats.conversions }} AI recommendations converted</p>
         <p class="text-xs text-gray-500 mb-4" v-else>No conversions yet</p>
 
+        <!-- Store ID -->
+        <div class="mb-4">
+          <p class="text-xs text-gray-400 mb-1">Store ID</p>
+          <div class="flex items-center gap-2">
+            <code class="text-xs text-gray-300 bg-gray-800/50 px-2 py-1 rounded flex-1 truncate">{{ store.storeId }}</code>
+            <button class="text-gray-400 hover:text-white transition" @click="copyToClipboard(store.storeId)">📋</button>
+          </div>
+        </div>
+
         <!-- API Key -->
         <div class="mb-4">
           <p class="text-xs text-gray-400 mb-1">API Key</p>
           <div class="flex items-center gap-2">
             <code class="text-xs text-gray-300 bg-gray-800/50 px-2 py-1 rounded flex-1 truncate">{{ store.apiKey }}</code>
-            <button class="text-gray-400 hover:text-white transition">📋</button>
+            <button class="text-gray-400 hover:text-white transition" @click="copyToClipboard(store.apiKey)">📋</button>
           </div>
         </div>
 

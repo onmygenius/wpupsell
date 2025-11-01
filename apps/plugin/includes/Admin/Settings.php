@@ -48,6 +48,7 @@ class Settings {
             check_admin_referer('upsellai_settings_nonce');
             
             update_option('upsellai_api_key', sanitize_text_field($_POST['upsellai_api_key']));
+            update_option('upsellai_store_id', sanitize_text_field($_POST['upsellai_store_id']));
             update_option('upsellai_enabled', isset($_POST['upsellai_enabled']) ? '1' : '0');
             update_option('upsellai_display_location', sanitize_text_field($_POST['upsellai_display_location']));
             update_option('upsellai_max_recommendations', absint($_POST['upsellai_max_recommendations']));
