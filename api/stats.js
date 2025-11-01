@@ -63,6 +63,7 @@ module.exports = async (req, res) => {
       let orders = 0;
       const productConversions = {};
       const allConversions = [];
+      const dailyRevenue = {}; // Revenue per day
       
       conversionsSnapshot.forEach(doc => {
         const data = doc.data();
@@ -88,6 +89,16 @@ module.exports = async (req, res) => {
           price: data.price || 0,
           createdAt: data.createdAt,
         });
+        
+        // Track daily revenue
+        if (data.createdAt) {
+          const date = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+          const dayKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+          if (!dailyRevenue[dayKey]) {
+            dailyRevenue[dayKey] = 0;
+          }
+          dailyRevenue[dayKey] += data.price || 0;
+        }
       });
       
       // Sort by date and get last 5
@@ -104,6 +115,21 @@ module.exports = async (req, res) => {
         .sort((a, b) => b.conversions - a.conversions)
         .slice(0, 4);
       
+      // Prepare last 7 days data for charts
+      const last7Days = [];
+      const today = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dayKey = date.toISOString().split('T')[0];
+        const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
+        last7Days.push({
+          day: dayName,
+          date: dayKey,
+          revenue: dailyRevenue[dayKey] || 0
+        });
+      }
+      
       console.log(`📊 Stats for ${storeId}: ${orders} orders, $${totalRevenue} revenue`);
       
       return res.status(200).json({
@@ -115,6 +141,7 @@ module.exports = async (req, res) => {
           currency: 'LEI', // TODO: Get from store settings
           topProducts,
           recentConversions,
+          dailyRevenue: last7Days, // Last 7 days for charts
         }
       });
     } catch (error) {

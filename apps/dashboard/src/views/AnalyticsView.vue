@@ -39,6 +39,16 @@ onMounted(async () => {
       }
       
       currency.value = statsData.stats.currency || 'LEI';
+      
+      // Update charts with real data
+      if (statsData.stats.dailyRevenue) {
+        const days = statsData.stats.dailyRevenue.map((d: any) => d.day);
+        const revenues = statsData.stats.dailyRevenue.map((d: any) => d.revenue);
+        
+        revenueChartOptions.value.xAxis.categories = days;
+        revenueChartOptions.value.series[0].data = revenues;
+        revenueChartOptions.value.series[1].data = revenues; // Upsell = Total for now
+      }
     }
     
     // Load products
