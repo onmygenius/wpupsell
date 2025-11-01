@@ -36,8 +36,12 @@ class Client {
             'userId' => $user_id ?: 'guest_' . wp_generate_password(8, false),
         ];
         
+        error_log('UpSell AI: ========================================');
         error_log('UpSell AI: Sending request to ' . $this->api_url . '/recommendations');
         error_log('UpSell AI: Request data - Products count: ' . count($available_products));
+        error_log('UpSell AI: Full request body: ' . json_encode($request_data, JSON_PRETTY_PRINT));
+        error_log('UpSell AI: API Key (first 10 chars): ' . substr($this->api_key, 0, 10) . '...');
+        error_log('UpSell AI: Store ID: ' . $this->store_id);
         
         $response = wp_remote_post($this->api_url . '/recommendations', [
             'headers' => [
@@ -48,29 +52,57 @@ class Client {
             'timeout' => 30,
         ]);
         
+        error_log('UpSell AI: Request sent, waiting for response...');
+        
         if (is_wp_error($response)) {
             error_log('UpSell AI API Error: ' . $response->get_error_message());
             return ['error' => $response->get_error_message()];
         }
         
         $status_code = wp_remote_retrieve_response_code($response);
+        $response_headers = wp_remote_retrieve_headers($response);
         $body = wp_remote_retrieve_body($response);
         
+        error_log('UpSell AI: ========================================');
+        error_log('UpSell AI: Response received!');
         error_log('UpSell AI: Response status: ' . $status_code);
+        error_log('UpSell AI: Response headers: ' . print_r($response_headers->getAll(), true));
+        error_log('UpSell AI: Response body (raw): ' . $body);
+        error_log('UpSell AI: Response body length: ' . strlen($body) . ' bytes');
         
         if ($status_code !== 200) {
-            error_log('UpSell AI: API returned error status ' . $status_code . ': ' . $body);
-            return ['error' => 'API returned status ' . $status_code];
+            error_log('UpSell AI: ❌ ERROR - API returned status ' . $status_code);
+            error_log('UpSell AI: Error body: ' . $body);
+            
+            // Check for Vercel-specific errors
+            if (isset($response_headers['x-vercel-error'])) {
+                error_log('UpSell AI: Vercel Error: ' . $response_headers['x-vercel-error']);
+            }
+            if (isset($response_headers['x-vercel-id'])) {
+                error_log('UpSell AI: Vercel Request ID: ' . $response_headers['x-vercel-id']);
+            }
+            
+            return ['error' => 'API returned status ' . $status_code . ': ' . substr($body, 0, 200)];
         }
         
+        error_log('UpSell AI: Attempting to decode JSON...');
         $data = json_decode($body, true);
         
         if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log('UpSell AI: JSON decode error: ' . json_last_error_msg());
-            return ['error' => 'Invalid JSON response'];
+            error_log('UpSell AI: ❌ JSON decode error: ' . json_last_error_msg());
+            error_log('UpSell AI: Raw body that failed to decode: ' . $body);
+            return ['error' => 'Invalid JSON response: ' . json_last_error_msg()];
         }
         
+        error_log('UpSell AI: ✅ JSON decoded successfully');
+        error_log('UpSell AI: Response data structure: ' . print_r(array_keys($data), true));
         error_log('UpSell AI: Success - Received ' . (isset($data['recommendations']) ? count($data['recommendations']) : 0) . ' recommendations');
+        
+        if (isset($data['recommendations'])) {
+            error_log('UpSell AI: Recommendations IDs: ' . implode(', ', array_column($data['recommendations'], 'id')));
+        }
+        
+        error_log('UpSell AI: ========================================');
         
         return $data;
     }

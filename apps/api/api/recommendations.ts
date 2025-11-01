@@ -1,42 +1,34 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Lazy load helpers
-async function getFirebaseDb() {
-  const hasFirebase = process.env.FIREBASE_PROJECT_ID && 
-                      process.env.FIREBASE_CLIENT_EMAIL && 
-                      process.env.FIREBASE_PRIVATE_KEY;
+// Simple fallback recommendation logic - no external dependencies
+function getSimpleRecommendations(
+  product: { productId: string; category: string; price: number },
+  availableProducts: Array<{ id: string; name: string; category: string; price: number }>
+): string[] {
+  console.log('Using simple fallback recommendations');
   
-  if (!hasFirebase) {
-    console.log('Firebase not configured');
-    return null;
+  // Filter out current product
+  const otherProducts = availableProducts.filter(p => p.id !== product.productId);
+  
+  if (otherProducts.length === 0) {
+    return [];
   }
   
-  try {
-    const { db } = await import('../lib/firebase-admin');
-    console.log('Firebase loaded');
-    return db;
-  } catch (error) {
-    console.error('Firebase load failed:', error);
-    return null;
-  }
-}
-
-async function getGroqAI() {
-  const hasGroq = process.env.GROQ_API_KEY;
+  // Strategy 1: Same category
+  const sameCategoryProducts = otherProducts.filter(
+    p => p.category === product.category
+  );
   
-  if (!hasGroq) {
-    console.log('Groq not configured');
-    return null;
-  }
+  // Strategy 2: Similar price range (±50%)
+  const similarPriceProducts = otherProducts.filter(
+    p => Math.abs(p.price - product.price) < product.price * 0.5
+  );
   
-  try {
-    const { getAIRecommendations } = await import('../lib/groq-client');
-    console.log('Groq AI loaded');
-    return getAIRecommendations;
-  } catch (error) {
-    console.error('Groq load failed:', error);
-    return null;
-  }
+  // Combine and deduplicate
+  const recommended = [...new Set([...sameCategoryProducts, ...similarPriceProducts])];
+  
+  // Return top 3
+  return recommended.slice(0, 3).map(p => p.id);
 }
 
 export default async function handler(
@@ -105,51 +97,10 @@ export default async function handler(
     
     console.log('Product object created:', JSON.stringify(product, null, 2));
 
-    // 2. Get AI recommendations from Groq (or fallback)
-    let recommendedIds: string[] = [];
-    
-    console.log('Loading AI...');
-    const aiFunction = await getGroqAI();
-    
-    if (aiFunction) {
-      try {
-        console.log('Calling Groq AI...');
-        recommendedIds = await aiFunction({
-          productId: product.productId,
-          productName: product.name,
-          productCategory: product.category,
-          productPrice: product.price,
-          availableProducts,
-        });
-        console.log('AI returned IDs:', recommendedIds);
-      } catch (error) {
-        console.error('AI recommendations failed, using fallback:', error);
-      }
-    } else {
-      console.log('AI not available, will use fallback');
-    }
-    
-    // Fallback: simple rule-based recommendations
-    if (recommendedIds.length === 0 && availableProducts.length > 0) {
-      console.log('Using fallback recommendations...');
-      
-      // Recommend products from same category or similar price range
-      const sameCategoryProducts = availableProducts.filter(
-        p => p.category === product.category && p.id !== product.productId
-      );
-      console.log('Same category products:', sameCategoryProducts.length);
-      
-      const similarPriceProducts = availableProducts.filter(
-        p => Math.abs(p.price - product.price) < product.price * 0.5 && p.id !== product.productId
-      );
-      console.log('Similar price products:', similarPriceProducts.length);
-      
-      // Combine and take top 3
-      const fallbackProducts = [...new Set([...sameCategoryProducts, ...similarPriceProducts])];
-      recommendedIds = fallbackProducts.slice(0, 3).map(p => p.id);
-      
-      console.log('Fallback recommendations:', recommendedIds);
-    }
+    // 2. Get simple recommendations (no AI, no external deps)
+    console.log('Getting simple recommendations...');
+    const recommendedIds = getSimpleRecommendations(product, availableProducts);
+    console.log('Recommended IDs:', recommendedIds);
 
     // 3. Get full product details for recommendations
     console.log('Filtering products by recommended IDs...');
@@ -158,33 +109,9 @@ export default async function handler(
     );
     console.log('Filtered recommendations:', recommendations.length);
 
-    // 4. Save recommendation to Firestore for tracking (if available)
-    let recommendationId = 'temp_' + Date.now();
-    
-    console.log('Loading Firestore...');
-    const firebaseDb = await getFirebaseDb();
-    
-    if (firebaseDb) {
-      try {
-        console.log('Saving to Firestore...');
-        const recommendationDoc = await firebaseDb.collection('recommendations').add({
-          storeId,
-          productId,
-          userId: userId || 'anonymous',
-          recommendations: recommendedIds,
-          productName: product.name,
-          createdAt: new Date(),
-          converted: false,
-        });
-        recommendationId = recommendationDoc.id;
-        console.log('Saved to Firestore with ID:', recommendationId);
-      } catch (error) {
-        console.error('Failed to save to Firestore:', error);
-        // Continue anyway - tracking is optional
-      }
-    } else {
-      console.log('Firestore not available, using temp ID:', recommendationId);
-    }
+    // 4. Generate temp recommendation ID (no Firebase)
+    const recommendationId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    console.log('Generated temp recommendation ID:', recommendationId);
 
     // 5. Return recommendations
     const response = {
@@ -200,7 +127,7 @@ export default async function handler(
         price: r.price,
         reason: 'AI recommended based on product similarity',
       })),
-      algorithm: aiFunction ? 'groq-ai' : 'fallback',
+      algorithm: 'simple-rules',
       timestamp: new Date().toISOString(),
     };
     
