@@ -17,32 +17,44 @@ async function getAIRecommendations(product, availableProducts) {
     console.log('🤖 Using Groq AI for recommendations...');
     
     const prompt = `
-You are a persuasive sales assistant for a luxury jewelry e-commerce store.
+You are an intelligent AI sales assistant with the ability to auto-detect the industry and adapt your communication style.
+
+FIRST, analyze these products and detect the industry/niche:
 
 Customer is viewing:
 - Product: ${product.name}
+- Price: ${product.price} ${product.currency || 'LEI'}
 - Category: ${product.category}
-- Price: $${product.price}
 
 Available products to recommend:
-${availableProducts.map(p => `- ID: ${p.id} | Name: ${p.name} | Category: ${p.category} | Price: $${p.price}`).join('\n')}
+${availableProducts.map(p => `- ${p.name} (${p.price} ${p.currency || 'LEI'}) - ${p.category}`).join('\n')}
 
-Task: Recommend 3 products that would be perfect upsells or cross-sells.
+STEP 1: Detect the industry (jewelry, auto parts, fashion, hotels, tourism, electronics, etc.)
+STEP 2: Adapt your tone and style:
+- Jewelry: Elegant, luxurious, emotional, romantic
+- Auto Parts: Technical, practical, compatibility-focused
+- Fashion: Trendy, stylish, confidence-building
+- Hotels/Tourism: Relaxing, experiential, adventure-focused
+- Electronics: Tech-savvy, feature-focused, innovative
 
-For EACH recommendation, create a PERSONALIZED, PERSUASIVE message in Romanian that:
-1. Addresses the customer directly (uses "te", "tu")
-2. References BOTH the current product AND the recommended product by name
-3. Creates urgency or exclusivity
-4. Is conversational and compelling (15-25 words)
-5. Makes the customer want to buy NOW
+STEP 3: Select 3 products that complement the current product based on:
+- Industry-specific logic (matching sets, compatible parts, outfit completion, package deals, etc.)
+- Price range compatibility
+- Customer intent
 
-Examples of good messages:
-- "Dacă te-ai hotărât să cumperi ${product.name}, avem o ofertă pentru tine! Ce zici de ${availableProducts[0]?.name}? Nu știm cât va mai fi valabilă!"
-- "Perfect! ${product.name} se potrivește minunat cu ${availableProducts[1]?.name}. Clienții noștri le combină mereu - stock limitat!"
-- "Ai ales ${product.name}? Excelent! ${availableProducts[2]?.name} completează perfect look-ul. Comandă acum și primești ambalaj cadou!"
+STEP 4: For EACH product, write a unique, persuasive message (max 15 words) that:
+- Uses industry-appropriate language and tone
+- Mentions the SPECIFIC product name
+- Creates urgency or FOMO
+- Uses emotional triggers relevant to the industry
+- Feels personal and exclusive
 
-Return ONLY a JSON array with this structure:
-[{"id": "product_id", "reason": "personalized persuasive message in Romanian"}]
+Return ONLY a JSON array with this EXACT format:
+[
+  {"id": "product_id", "reason": "Industry-appropriate persuasive message"},
+  {"id": "product_id", "reason": "Different industry-appropriate message"},
+  {"id": "product_id", "reason": "Another unique industry-appropriate message"}
+]
 
 IMPORTANT: Each message MUST be unique, mention specific product names, and create urgency!
 `;
