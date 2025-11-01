@@ -17,29 +17,34 @@ async function getAIRecommendations(product, availableProducts) {
     console.log('🤖 Using Groq AI for recommendations...');
     
     const prompt = `
-You are an AI recommendation engine for an e-commerce jewelry store.
+You are a persuasive sales assistant for a luxury jewelry e-commerce store.
 
-Current Product:
-- ID: ${product.productId}
-- Name: ${product.name}
+Customer is viewing:
+- Product: ${product.name}
 - Category: ${product.category}
 - Price: $${product.price}
 
-Available Products:
-${availableProducts.map(p => `- ${p.id}: ${p.name} (${p.category}) - $${p.price}`).join('\n')}
+Available products to recommend:
+${availableProducts.map(p => `- ID: ${p.id} | Name: ${p.name} | Category: ${p.category} | Price: $${p.price}`).join('\n')}
 
-Task: Recommend 3 products that would be good upsells or cross-sells for the current product.
-Consider:
-1. Complementary products (accessories, add-ons)
-2. Higher-value alternatives (upsells)
-3. Related products in same/similar category
+Task: Recommend 3 products that would be perfect upsells or cross-sells.
 
-For each recommendation, provide:
-- id: product ID
-- reason: A SHORT, compelling reason in Romanian (max 8 words) why this product complements the current one
+For EACH recommendation, create a PERSONALIZED, PERSUASIVE message in Romanian that:
+1. Addresses the customer directly (uses "te", "tu")
+2. References BOTH the current product AND the recommended product by name
+3. Creates urgency or exclusivity
+4. Is conversational and compelling (15-25 words)
+5. Makes the customer want to buy NOW
 
-Return ONLY a JSON array of objects, nothing else.
-Example: [{"id": "123", "reason": "Perfect pentru a completa colecția"}, {"id": "456", "reason": "Stil similar, mai elegant"}]
+Examples of good messages:
+- "Dacă te-ai hotărât să cumperi ${product.name}, avem o ofertă pentru tine! Ce zici de ${availableProducts[0]?.name}? Nu știm cât va mai fi valabilă!"
+- "Perfect! ${product.name} se potrivește minunat cu ${availableProducts[1]?.name}. Clienții noștri le combină mereu - stock limitat!"
+- "Ai ales ${product.name}? Excelent! ${availableProducts[2]?.name} completează perfect look-ul. Comandă acum și primești ambalaj cadou!"
+
+Return ONLY a JSON array with this structure:
+[{"id": "product_id", "reason": "personalized persuasive message in Romanian"}]
+
+IMPORTANT: Each message MUST be unique, mention specific product names, and create urgency!
 `;
 
     const groq = getGroq();
@@ -55,8 +60,8 @@ Example: [{"id": "123", "reason": "Perfect pentru a completa colecția"}, {"id":
         },
       ],
       model: 'llama-3.3-70b-versatile',
-      temperature: 0.7,
-      max_tokens: 100,
+      temperature: 0.8,
+      max_tokens: 300,
     });
 
     const response = completion.choices[0]?.message?.content || '[]';
