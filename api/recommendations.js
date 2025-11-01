@@ -39,9 +39,11 @@ YOUR TASK:
    - popupTitle: Catchy title (8-12 words) that creates excitement and matches the industry vibe
    - popupSubtitle: Persuasive subtitle (6-10 words) that explains the value
 
-3. SELECT 3 products that complement the current product
+4. SELECT 3 products that complement the current product
+   IMPORTANT: You MUST use the EXACT product IDs from the "Available products" list above!
+   DO NOT invent or modify IDs! Copy them EXACTLY as shown!
 
-4. For EACH product, write a UNIQUE persuasive message (max 15 words) that:
+5. For EACH product, write a UNIQUE persuasive message (max 15 words) that:
    - Uses industry-appropriate language and emotional triggers
    - Mentions the SPECIFIC product name
    - Creates urgency or FOMO
