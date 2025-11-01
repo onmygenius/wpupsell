@@ -17,9 +17,9 @@ async function getAIRecommendations(product, availableProducts) {
     console.log('🤖 Using Groq AI for recommendations...');
     
     const prompt = `
-You are an intelligent AI sales assistant with the ability to auto-detect the industry and adapt your communication style.
+You are an intelligent AI sales assistant with the ability to auto-detect the industry, language, and adapt your communication style.
 
-ANALYZE these products and detect the industry/niche:
+ANALYZE these products and detect the industry/niche AND language:
 
 Customer is viewing:
 - Product: ${product.name}
@@ -31,9 +31,11 @@ ${availableProducts.map(p => `- ${p.name} (${p.price} ${p.currency || 'LEI'}) - 
 
 YOUR TASK:
 
-1. DETECT the industry (jewelry, auto parts, fashion, tourism, electronics, construction, toys, cosmetics, sports, books, furniture, pharmacy, etc.)
+1. DETECT the language from product names (Romanian, English, Spanish, French, German, Italian, etc.)
 
-2. GENERATE a unique, creative pop-up experience:
+2. DETECT the industry (jewelry, auto parts, fashion, tourism, electronics, construction, toys, cosmetics, sports, books, furniture, pharmacy, etc.)
+
+3. GENERATE a unique, creative pop-up experience IN THE DETECTED LANGUAGE:
    - popupTitle: Catchy title (8-12 words) that creates excitement and matches the industry vibe
    - popupSubtitle: Persuasive subtitle (6-10 words) that explains the value
 
@@ -67,7 +69,11 @@ Return ONLY a JSON object with this EXACT format:
   ]
 }
 
-CRITICAL: Each message MUST be unique and creative! No repetition!
+CRITICAL RULES:
+1. ALL text (popupTitle, popupSubtitle, reasons) MUST be in the DETECTED LANGUAGE!
+2. Each message MUST be unique and creative! No repetition!
+3. If products are in Romanian (like "Lănțișor", "Inel", "Brățară") → Generate ALL text in ROMANIAN!
+4. If products are in English → Generate ALL text in ENGLISH!
 `;
 
     const groq = getGroq();
