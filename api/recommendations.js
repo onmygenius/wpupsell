@@ -62,10 +62,37 @@ Example: [{"id": "123", "reason": "Perfect pentru a completa colecția"}, {"id":
     const response = completion.choices[0]?.message?.content || '[]';
     console.log('🤖 Groq AI raw response:', response);
     
-    const recommendations = JSON.parse(response.trim());
-    console.log('🤖 Groq AI recommendations:', recommendations);
-
-    return recommendations; // Array of {id, reason}
+    // Try to extract JSON from response (AI might add extra text)
+    let jsonStr = response.trim();
+    
+    // Find JSON array in response
+    const jsonMatch = jsonStr.match(/\[.*\]/s);
+    if (jsonMatch) {
+      jsonStr = jsonMatch[0];
+    }
+    
+    console.log('🤖 Extracted JSON string:', jsonStr);
+    
+    try {
+      const recommendations = JSON.parse(jsonStr);
+      console.log('🤖 Groq AI recommendations:', recommendations);
+      
+      // Validate structure
+      if (!Array.isArray(recommendations)) {
+        console.error('❌ AI response is not an array');
+        return null;
+      }
+      
+      // Validate each recommendation has id and reason
+      const validRecs = recommendations.filter(rec => rec.id && rec.reason);
+      console.log(`🤖 Valid recommendations: ${validRecs.length}/${recommendations.length}`);
+      
+      return validRecs;
+    } catch (parseError) {
+      console.error('❌ JSON parse failed:', parseError.message);
+      console.error('❌ Attempted to parse:', jsonStr);
+      return null;
+    }
   } catch (error) {
     console.error('❌ Groq AI error:', error.message);
     return null; // Return null to trigger fallback

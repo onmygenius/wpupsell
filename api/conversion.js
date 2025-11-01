@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+
 
 // Lazy load Firebase
 async function getFirebaseDb() {
@@ -21,9 +21,9 @@ async function getFirebaseDb() {
   }
 }
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
+module.exports = async function handler(
+  req,
+  res
 ) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -143,7 +143,7 @@ export default async function handler(
       success: true,
       message: 'Conversion tracked successfully',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Conversion tracking error:', error);
     return res.status(500).json({
       error: 'Internal server error',
