@@ -18,6 +18,20 @@ const currency = ref('LEI'); // Default currency
 const categoryData = ref<any[]>([]);
 const topProducts = ref<any[]>([]);
 const recentActivity = ref<any[]>([]);
+const conversionRate = ref(0);
+
+// Format time ago
+const formatTime = (timestamp: any) => {
+  if (!timestamp) return 'Just now';
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  const now = new Date();
+  const diff = Math.floor((now.getTime() - date.getTime()) / 1000); // seconds
+  
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+  return `${Math.floor(diff / 86400)} days ago`;
+};
 
 onMounted(async () => {
   try {
@@ -68,12 +82,23 @@ onMounted(async () => {
       
       // Get recent conversions for activity feed
       if (statsData.stats.recentConversions) {
-        recentActivity.value = statsData.stats.recentConversions.slice(0, 5);
+        recentActivity.value = statsData.stats.recentConversions.slice(0, 5).map((conv: any) => ({
+          type: 'conversion',
+          title: 'New AI sale',
+          description: conv.productName,
+          time: conv.createdAt,
+          icon: '✅'
+        }));
       }
       
       // Get top products by conversions
       if (statsData.stats.topProducts) {
         topProducts.value = statsData.stats.topProducts;
+      }
+      
+      // Calculate conversion rate from funnel
+      if (statsData.stats.funnel && statsData.stats.funnel.impressions > 0) {
+        conversionRate.value = Math.round((statsData.stats.funnel.conversions / statsData.stats.funnel.impressions) * 100 * 10) / 10;
       }
     }
   } catch (error) {
@@ -171,62 +196,22 @@ onMounted(async () => {
           <button class="text-sm text-blue-400 hover:text-blue-300 font-medium">View all</button>
         </div>
         
-        <div class="space-y-4">
-          <!-- Activity Item -->
-          <div class="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-800/30 transition">
-            <div class="w-10 h-10 bg-green-600/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span class="text-lg">✅</span>
+        <div class="space-y-4" v-if="recentActivity.length > 0">
+          <div v-for="(activity, index) in recentActivity" :key="index" class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-green-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">{{ activity.icon }}</span>
             </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-white">New sale reported</p>
-              <p class="text-xs text-gray-400 mt-1">Order #1234 completed</p>
+            <div class="flex-1">
+              <p class="text-sm font-medium text-white">{{ activity.title }}</p>
+              <p class="text-xs text-gray-400">{{ activity.description }}</p>
             </div>
-            <span class="text-xs text-gray-500">2 min ago</span>
+            <span class="text-xs text-gray-500">{{ formatTime(activity.time) }}</span>
           </div>
-
-          <div class="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-800/30 transition">
-            <div class="w-10 h-10 bg-blue-600/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span class="text-lg">👤</span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-white">New user registered</p>
-              <p class="text-xs text-gray-400 mt-1">john.doe@email.com joined</p>
-            </div>
-            <span class="text-xs text-gray-500">5 min ago</span>
-          </div>
-
-          <div class="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-800/30 transition">
-            <div class="w-10 h-10 bg-purple-600/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span class="text-lg">📦</span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-white">Product updated</p>
-              <p class="text-xs text-gray-400 mt-1">iPhone 15 Pro stock updated</p>
-            </div>
-            <span class="text-xs text-gray-500">10 min ago</span>
-          </div>
-
-          <div class="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-800/30 transition">
-            <div class="w-10 h-10 bg-orange-600/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span class="text-lg">⚙️</span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-white">System maintenance</p>
-              <p class="text-xs text-gray-400 mt-1">Scheduled backup completed</p>
-            </div>
-            <span class="text-xs text-gray-500">1 hour ago</span>
-          </div>
-
-          <div class="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-800/30 transition">
-            <div class="w-10 h-10 bg-red-600/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span class="text-lg">🔔</span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-white">New notification</p>
-              <p class="text-xs text-gray-400 mt-1">Multiple storage media</p>
-            </div>
-            <span class="text-xs text-gray-500">2 hours ago</span>
-          </div>
+        </div>
+        
+        <div v-else class="text-center py-8 text-gray-500">
+          <p>No recent activity</p>
+          <p class="text-xs mt-2">AI conversions will appear here</p>
         </div>
       </div>
 
@@ -234,35 +219,35 @@ onMounted(async () => {
       <div class="space-y-6">
         <!-- Performance -->
         <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
-          <h3 class="text-lg font-semibold text-white mb-4">Quick Stats</h3>
+          <h2 class="text-xl font-semibold text-white mb-6">Quick Stats</h2>
           <div class="space-y-4">
             <div>
               <div class="flex items-center justify-between mb-2">
-                <span class="text-sm text-gray-400">Conversion Rate</span>
-                <span class="text-sm font-semibold text-white">3.2%</span>
+                <span class="text-sm text-gray-400">AI Conversion Rate</span>
+                <span class="text-sm font-semibold text-white">{{ conversionRate }}%</span>
               </div>
               <div class="w-full bg-gray-800 rounded-full h-2">
-                <div class="bg-blue-600 h-2 rounded-full" style="width: 32%"></div>
+                <div class="bg-blue-600 h-2 rounded-full" :style="`width: ${Math.min(conversionRate * 10, 100)}%`"></div>
               </div>
             </div>
-
+            
             <div>
               <div class="flex items-center justify-between mb-2">
-                <span class="text-sm text-gray-400">Bounce Rate</span>
-                <span class="text-sm font-semibold text-white">45%</span>
+                <span class="text-sm text-gray-400">Total Orders</span>
+                <span class="text-sm font-semibold text-white">{{ stats.orders }}</span>
               </div>
               <div class="w-full bg-gray-800 rounded-full h-2">
-                <div class="bg-orange-500 h-2 rounded-full" style="width: 45%"></div>
+                <div class="bg-green-600 h-2 rounded-full" :style="`width: ${Math.min(stats.orders * 5, 100)}%`"></div>
               </div>
             </div>
-
+            
             <div>
               <div class="flex items-center justify-between mb-2">
-                <span class="text-sm text-gray-400">Page Views</span>
-                <span class="text-sm font-semibold text-white">8.7k</span>
+                <span class="text-sm text-gray-400">Enabled Products</span>
+                <span class="text-sm font-semibold text-white">{{ stats.enabledProducts }}</span>
               </div>
               <div class="w-full bg-gray-800 rounded-full h-2">
-                <div class="bg-green-600 h-2 rounded-full" style="width: 87%"></div>
+                <div class="bg-purple-600 h-2 rounded-full" :style="`width: ${Math.min((stats.enabledProducts / stats.products) * 100, 100)}%`"></div>
               </div>
             </div>
           </div>

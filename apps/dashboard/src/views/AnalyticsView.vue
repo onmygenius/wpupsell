@@ -168,17 +168,17 @@ const conversionChartOptions = ref<any>({
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
-        <p class="text-sm text-gray-400 mb-1">AI Revenue</p>
+        <p class="text-sm text-gray-400 mb-1">Upsell AI Revenue</p>
         <p class="text-3xl font-bold text-white">{{ analytics.totalRevenue.toLocaleString() }} {{ currency }}</p>
         <p class="text-xs text-green-400 mt-2" v-if="analytics.conversions > 0">{{ analytics.conversions }} AI conversions</p>
         <p class="text-xs text-gray-500 mt-2" v-else>No conversions tracked yet</p>
       </div>
 
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
-        <p class="text-sm text-gray-400 mb-1">Upsell Revenue</p>
-        <p class="text-3xl font-bold text-white">{{ analytics.upsellRevenue.toLocaleString() }} {{ currency }}</p>
-        <p class="text-xs text-green-400 mt-2" v-if="analytics.conversions > 0">100% from AI recommendations</p>
-        <p class="text-xs text-gray-500 mt-2" v-else>No conversions tracked yet</p>
+        <p class="text-sm text-gray-400 mb-1">Total Orders</p>
+        <p class="text-3xl font-bold text-white">{{ analytics.conversions }}</p>
+        <p class="text-xs text-green-400 mt-2" v-if="analytics.conversions > 0">From AI recommendations</p>
+        <p class="text-xs text-gray-500 mt-2" v-else>No orders yet</p>
       </div>
 
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
