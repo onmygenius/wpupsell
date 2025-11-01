@@ -77,15 +77,21 @@ class Recommendations {
         
         $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
         
+        error_log('UpSell AI: AJAX request for product ID: ' . $product_id);
+        
         if (!$product_id) {
+            error_log('UpSell AI: Invalid product ID');
             wp_send_json_error(['message' => 'Invalid product ID']);
         }
         
         // Get current product details
         $current_product = wc_get_product($product_id);
         if (!$current_product) {
+            error_log('UpSell AI: Product not found: ' . $product_id);
             wp_send_json_error(['message' => 'Product not found']);
         }
+        
+        error_log('UpSell AI: Current product: ' . $current_product->get_name());
         
         // Get all products from WooCommerce
         $all_products = wc_get_products([
@@ -93,6 +99,8 @@ class Recommendations {
             'status' => 'publish',
             'exclude' => [$product_id], // Exclude current product
         ]);
+        
+        error_log('UpSell AI: Found ' . count($all_products) . ' available products');
         
         // Format products for API
         $available_products = [];
@@ -105,7 +113,11 @@ class Recommendations {
             ];
         }
         
+        error_log('UpSell AI: Formatted ' . count($available_products) . ' products for API');
+        
         // Get recommendations from API with all products
+        error_log('UpSell AI: Calling API for recommendations...');
+        
         $recommendations = $this->api_client->get_recommendations(
             $product_id,
             $current_product,
@@ -113,8 +125,11 @@ class Recommendations {
         );
         
         if (isset($recommendations['error'])) {
+            error_log('UpSell AI: API returned error: ' . $recommendations['error']);
             wp_send_json_error(['message' => $recommendations['error']]);
         }
+        
+        error_log('UpSell AI: API response received: ' . print_r($recommendations, true));
         
         // Format recommendations for frontend
         $formatted = [];
@@ -135,6 +150,8 @@ class Recommendations {
                 }
             }
         }
+        
+        error_log('UpSell AI: Sending ' . count($formatted) . ' formatted recommendations to frontend');
         
         wp_send_json_success([
             'recommendations' => $formatted,

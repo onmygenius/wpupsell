@@ -22,24 +22,30 @@ class Client {
      */
     public function get_recommendations($product_id, $current_product, $available_products, $user_id = null) {
         if (empty($this->api_key) || empty($this->store_id)) {
+            error_log('UpSell AI: API key or Store ID not configured');
             return ['error' => 'API key or Store ID not configured'];
         }
+        
+        $request_data = [
+            'storeId' => $this->store_id,
+            'productId' => (string) $product_id,
+            'productName' => $current_product->get_name(),
+            'productCategory' => $this->get_product_category($current_product),
+            'productPrice' => (float) $current_product->get_price(),
+            'availableProducts' => $available_products,
+            'userId' => $user_id ?: 'guest_' . wp_generate_password(8, false),
+        ];
+        
+        error_log('UpSell AI: Sending request to ' . $this->api_url . '/recommendations');
+        error_log('UpSell AI: Request data - Products count: ' . count($available_products));
         
         $response = wp_remote_post($this->api_url . '/recommendations', [
             'headers' => [
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer ' . $this->api_key,
             ],
-            'body' => json_encode([
-                'storeId' => $this->store_id,
-                'productId' => (string) $product_id,
-                'productName' => $current_product->get_name(),
-                'productCategory' => $this->get_product_category($current_product),
-                'productPrice' => (float) $current_product->get_price(),
-                'availableProducts' => $available_products,
-                'userId' => $user_id ?: 'guest_' . wp_generate_password(8, false),
-            ]),
-            'timeout' => 30, // Increased timeout for AI processing
+            'body' => json_encode($request_data),
+            'timeout' => 30,
         ]);
         
         if (is_wp_error($response)) {
@@ -47,8 +53,24 @@ class Client {
             return ['error' => $response->get_error_message()];
         }
         
+        $status_code = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
+        
+        error_log('UpSell AI: Response status: ' . $status_code);
+        
+        if ($status_code !== 200) {
+            error_log('UpSell AI: API returned error status ' . $status_code . ': ' . $body);
+            return ['error' => 'API returned status ' . $status_code];
+        }
+        
         $data = json_decode($body, true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log('UpSell AI: JSON decode error: ' . json_last_error_msg());
+            return ['error' => 'Invalid JSON response'];
+        }
+        
+        error_log('UpSell AI: Success - Received ' . (isset($data['recommendations']) ? count($data['recommendations']) : 0) . ' recommendations');
         
         return $data;
     }
@@ -58,8 +80,11 @@ class Client {
      */
     public function track_conversion($recommendation_id, $product_id, $converted = true, $revenue = 0, $user_id = null) {
         if (empty($this->api_key) || empty($this->store_id)) {
+            error_log('UpSell AI: Cannot track conversion - API key or Store ID not configured');
             return false;
         }
+        
+        error_log('UpSell AI: Tracking conversion - Product: ' . $product_id . ', Converted: ' . ($converted ? 'yes' : 'no') . ', Revenue: $' . $revenue);
         
         $response = wp_remote_post($this->api_url . '/conversion', [
             'headers' => [
@@ -82,6 +107,13 @@ class Client {
             return false;
         }
         
+        $status_code = wp_remote_retrieve_response_code($response);
+        if ($status_code !== 200) {
+            error_log('UpSell AI: Conversion tracking failed with status ' . $status_code);
+            return false;
+        }
+        
+        error_log('UpSell AI: Conversion tracked successfully');
         return true;
     }
     

@@ -1,6 +1,22 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db } from '../lib/firebase-admin';
-import { getAIRecommendations } from '../lib/groq-client';
+
+// Optional imports - graceful degradation
+let db: any = null;
+let getAIRecommendations: any = null;
+
+try {
+  const firebaseAdmin = require('../lib/firebase-admin');
+  db = firebaseAdmin.db;
+} catch (error) {
+  console.warn('Firebase not configured, tracking disabled');
+}
+
+try {
+  const groqClient = require('../lib/groq-client');
+  getAIRecommendations = groqClient.getAIRecommendations;
+} catch (error) {
+  console.warn('Groq AI not configured, using fallback recommendations');
+}
 
 export default async function handler(
   req: VercelRequest,
@@ -20,67 +36,97 @@ export default async function handler(
   }
 
   try {
-    const { storeId, productId, userId } = req.body;
+    const { 
+      storeId, 
+      productId, 
+      productName,
+      productCategory,
+      productPrice,
+      availableProducts,
+      userId 
+    } = req.body;
 
     if (!storeId || !productId) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: 'Missing required fields: storeId, productId' });
     }
 
-    // 1. Get product details from Firestore
-    const productDoc = await db
-      .collection('products')
-      .where('storeId', '==', storeId)
-      .where('productId', '==', productId)
-      .limit(1)
-      .get();
-
-    if (productDoc.empty) {
-      return res.status(404).json({ error: 'Product not found' });
+    if (!availableProducts || !Array.isArray(availableProducts)) {
+      return res.status(400).json({ error: 'Missing required field: availableProducts (array)' });
     }
 
-    const product = productDoc.docs[0].data();
+    // Use product data from request (sent by plugin)
+    const product = {
+      productId,
+      name: productName || 'Unknown Product',
+      category: productCategory || 'general',
+      price: productPrice || 0,
+    };
 
-    // 2. Get all available products for this store
-    const productsSnapshot = await db
-      .collection('products')
-      .where('storeId', '==', storeId)
-      .limit(50)
-      .get();
+    // 2. Get AI recommendations from Groq (or fallback)
+    let recommendedIds: string[] = [];
+    
+    if (getAIRecommendations) {
+      try {
+        recommendedIds = await getAIRecommendations({
+          productId: product.productId,
+          productName: product.name,
+          productCategory: product.category,
+          productPrice: product.price,
+          availableProducts,
+        });
+      } catch (error) {
+        console.error('AI recommendations failed, using fallback:', error);
+      }
+    }
+    
+    // Fallback: simple rule-based recommendations
+    if (recommendedIds.length === 0 && availableProducts.length > 0) {
+      // Recommend products from same category or similar price range
+      const sameCategoryProducts = availableProducts.filter(
+        p => p.category === product.category && p.id !== product.productId
+      );
+      
+      const similarPriceProducts = availableProducts.filter(
+        p => Math.abs(p.price - product.price) < product.price * 0.5 && p.id !== product.productId
+      );
+      
+      // Combine and take top 3
+      const fallbackProducts = [...new Set([...sameCategoryProducts, ...similarPriceProducts])];
+      recommendedIds = fallbackProducts.slice(0, 3).map(p => p.id);
+      
+      console.log('Using fallback recommendations:', recommendedIds.length);
+    }
 
-    const availableProducts = productsSnapshot.docs.map(doc => ({
-      id: doc.data().productId,
-      name: doc.data().name,
-      category: doc.data().category || 'general',
-      price: doc.data().price || 0,
-    }));
-
-    // 3. Get AI recommendations from Groq
-    const recommendedIds = await getAIRecommendations({
-      productId: product.productId,
-      productName: product.name,
-      productCategory: product.category || 'general',
-      productPrice: product.price || 0,
-      availableProducts,
-    });
-
-    // 4. Get full product details for recommendations
+    // 3. Get full product details for recommendations
     const recommendations = availableProducts.filter(p =>
       recommendedIds.includes(p.id)
     );
 
-    // 5. Save recommendation to Firestore for tracking
-    await db.collection('recommendations').add({
-      storeId,
-      productId,
-      userId: userId || 'anonymous',
-      recommendations: recommendedIds,
-      createdAt: new Date(),
-      converted: false,
-    });
+    // 4. Save recommendation to Firestore for tracking (if available)
+    let recommendationId = 'temp_' + Date.now();
+    
+    if (db) {
+      try {
+        const recommendationDoc = await db.collection('recommendations').add({
+          storeId,
+          productId,
+          userId: userId || 'anonymous',
+          recommendations: recommendedIds,
+          productName: product.name,
+          createdAt: new Date(),
+          converted: false,
+        });
+        recommendationId = recommendationDoc.id;
+      } catch (error) {
+        console.error('Failed to save to Firestore:', error);
+        // Continue anyway - tracking is optional
+      }
+    }
 
-    // 6. Return recommendations
+    // 5. Return recommendations
     return res.status(200).json({
       success: true,
+      recommendation_id: recommendationId,
       product: {
         id: product.productId,
         name: product.name,
@@ -92,6 +138,7 @@ export default async function handler(
         reason: 'AI recommended based on product similarity',
       })),
       algorithm: 'groq-ai',
+      timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
     console.error('Recommendations error:', error);
