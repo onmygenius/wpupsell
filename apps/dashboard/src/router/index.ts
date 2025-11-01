@@ -29,6 +29,12 @@ const router = createRouter({
       meta: { title: 'Products' }
     },
     {
+      path: '/landing-pages',
+      name: 'landing-pages',
+      component: () => import('../views/LandingPagesView.vue'),
+      meta: { title: 'Landing Pages' }
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('../views/SettingsView.vue'),

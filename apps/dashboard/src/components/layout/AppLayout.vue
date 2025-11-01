@@ -20,6 +20,7 @@ const navigation = [
   { name: 'Analytics', path: '/analytics', icon: '📈' },
   { name: 'Stores', path: '/stores', icon: '🏪' },
   { name: 'Products', path: '/products', icon: '📦' },
+  { name: 'Landing Pages', path: '/landing-pages', icon: '🎨' },
   { name: 'Settings', path: '/settings', icon: '⚙️' }
 ];
 
