@@ -14,6 +14,10 @@ const pageTitle = ref('');
 const pageSlug = ref('');
 const urlPrefix = ref('oferte');
 const generating = ref(false);
+const showEditModal = ref(false);
+const editingPage = ref<any>(null);
+const editedContent = ref<any>(null);
+const uploadingImage = ref(false);
 
 onMounted(async () => {
   await Promise.all([
@@ -168,6 +172,80 @@ function downloadHTML(page: any) {
   }
 }
 
+function openEditModal(page: any) {
+  editingPage.value = page;
+  editedContent.value = JSON.parse(JSON.stringify(page.content)); // Deep clone
+  showEditModal.value = true;
+}
+
+function closeEditModal() {
+  showEditModal.value = false;
+  editingPage.value = null;
+  editedContent.value = null;
+}
+
+async function saveChanges() {
+  if (!editingPage.value || !editedContent.value) return;
+  
+  try {
+    const response = await fetch(`${API_URL}/landing-pages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'update',
+        storeId: STORE_ID,
+        landingPageId: editingPage.value.id,
+        content: editedContent.value,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('Modificări salvate cu succes!');
+      closeEditModal();
+      await loadLandingPages();
+    } else {
+      alert('Eroare la salvare: ' + data.error);
+    }
+  } catch (error) {
+    console.error('Failed to save changes:', error);
+    alert('Eroare la salvare');
+  }
+}
+
+async function uploadImage(event: any) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  uploadingImage.value = true;
+  
+  try {
+    // Convert to base64 for now (în producție ar trebui să folosim Firebase Storage)
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (editedContent.value && e.target?.result) {
+        if (!editedContent.value.gallery) {
+          editedContent.value.gallery = [];
+        }
+        editedContent.value.gallery.push(e.target.result);
+        uploadingImage.value = false;
+      }
+    };
+    reader.readAsDataURL(file);
+  } catch (error) {
+    console.error('Failed to upload image:', error);
+    alert('Eroare la upload imagine');
+    uploadingImage.value = false;
+  }
+}
+
+function removeImage(index: number) {
+  if (editedContent.value?.gallery) {
+    editedContent.value.gallery.splice(index, 1);
+  }
+}
+
 async function deleteLandingPage(pageId: string) {
   if (!confirm('Sigur vrei să ștergi această landing page?')) {
     return;
@@ -260,6 +338,13 @@ async function deleteLandingPage(pageId: string) {
           </div>
           
           <div class="flex items-center gap-2">
+            <button 
+              @click="openEditModal(page)"
+              class="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition" 
+              title="Edit"
+            >
+              ✏️
+            </button>
             <button 
               @click="viewHTML(page)"
               class="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition" 
@@ -376,6 +461,156 @@ async function deleteLandingPage(pageId: string) {
             class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ generating ? '⏳ Generating...' : '🎨 Generate Landing Page' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div v-if="showEditModal && editedContent" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto" @click.self="closeEditModal">
+      <div class="bg-[#0a0f2e] rounded-xl border border-gray-800 p-8 max-w-4xl w-full mx-4 my-8 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-white">✏️ Edit Landing Page</h2>
+          <button @click="closeEditModal" class="text-gray-400 hover:text-white text-2xl">×</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-2 mb-6 border-b border-gray-800">
+          <button class="px-4 py-2 text-white border-b-2 border-blue-600">📝 Description</button>
+          <button class="px-4 py-2 text-gray-400 hover:text-white">✨ Benefits</button>
+          <button class="px-4 py-2 text-gray-400 hover:text-white">🖼️ Gallery</button>
+          <button class="px-4 py-2 text-gray-400 hover:text-white">❓ FAQ</button>
+        </div>
+
+        <!-- Description Editor -->
+        <div class="space-y-4 mb-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">Hero Headline</label>
+            <input
+              v-model="editedContent.hero.headline"
+              type="text"
+              class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">Hero Subheadline</label>
+            <input
+              v-model="editedContent.hero.subheadline"
+              type="text"
+              class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">CTA Button Text</label>
+            <input
+              v-model="editedContent.hero.cta"
+              type="text"
+              class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">Product Description</label>
+            <textarea
+              v-model="editedContent.description"
+              rows="6"
+              class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Benefits Editor -->
+        <div class="space-y-4 mb-6">
+          <h3 class="text-lg font-semibold text-white mb-4">✨ Benefits</h3>
+          <div v-for="(benefit, index) in editedContent.benefits" :key="index" class="bg-[#0f1535] border border-gray-800 rounded-lg p-4">
+            <div class="flex items-center gap-4 mb-3">
+              <input
+                v-model="benefit.icon"
+                type="text"
+                placeholder="Icon"
+                class="w-20 bg-[#0a0f2e] border border-gray-700 rounded px-3 py-2 text-white text-center"
+              />
+              <input
+                v-model="benefit.title"
+                type="text"
+                placeholder="Benefit Title"
+                class="flex-1 bg-[#0a0f2e] border border-gray-700 rounded px-3 py-2 text-white"
+              />
+            </div>
+            <textarea
+              v-model="benefit.description"
+              rows="2"
+              placeholder="Benefit Description"
+              class="w-full bg-[#0a0f2e] border border-gray-700 rounded px-3 py-2 text-white"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Image Gallery -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-white mb-4">🖼️ Image Gallery</h3>
+          
+          <div class="grid grid-cols-3 gap-4 mb-4">
+            <div v-for="(image, index) in editedContent.gallery || []" :key="index" class="relative group">
+              <img :src="image" class="w-full h-32 object-cover rounded-lg" />
+              <button
+                @click="removeImage(index)"
+                class="absolute top-2 right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+
+          <label class="block">
+            <input
+              type="file"
+              accept="image/*"
+              @change="uploadImage"
+              class="hidden"
+            />
+            <div class="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center cursor-pointer hover:border-blue-600 transition">
+              <p class="text-gray-400">
+                {{ uploadingImage ? '💾 Uploading...' : '📷 Click to upload image' }}
+              </p>
+            </div>
+          </label>
+        </div>
+
+        <!-- FAQ Editor -->
+        <div class="space-y-4 mb-6">
+          <h3 class="text-lg font-semibold text-white mb-4">❓ FAQ</h3>
+          <div v-for="(item, index) in editedContent.faq" :key="index" class="bg-[#0f1535] border border-gray-800 rounded-lg p-4">
+            <input
+              v-model="item.question"
+              type="text"
+              placeholder="Question"
+              class="w-full bg-[#0a0f2e] border border-gray-700 rounded px-3 py-2 text-white mb-2"
+            />
+            <textarea
+              v-model="item.answer"
+              rows="2"
+              placeholder="Answer"
+              class="w-full bg-[#0a0f2e] border border-gray-700 rounded px-3 py-2 text-white"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-4">
+          <button
+            @click="saveChanges"
+            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition"
+          >
+            💾 Save Changes
+          </button>
+          <button
+            @click="closeEditModal"
+            class="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition"
+          >
+            Cancel
           </button>
         </div>
       </div>

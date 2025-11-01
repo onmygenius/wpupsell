@@ -96,6 +96,61 @@ module.exports = async (req, res) => {
         });
       }
       
+      // UPDATE landing page content
+      if (action === 'update' && landingPageId) {
+        const { content } = req.body;
+        
+        if (!content) {
+          return res.status(400).json({ error: 'Missing content' });
+        }
+        
+        // Get product info for HTML regeneration
+        const landingPageDoc = await db
+          .collection('stores')
+          .doc(storeId)
+          .collection('landingPages')
+          .doc(landingPageId)
+          .get();
+        
+        if (!landingPageDoc.exists) {
+          return res.status(404).json({ error: 'Landing page not found' });
+        }
+        
+        const landingPageData = landingPageDoc.data();
+        
+        // Get product data
+        const productDoc = await db
+          .collection('stores')
+          .doc(storeId)
+          .collection('products')
+          .doc(landingPageData.productId)
+          .get();
+        
+        const product = productDoc.exists ? productDoc.data() : {};
+        
+        // Regenerate HTML with updated content
+        const { generateLandingPageHTML } = require('./lib/html-template');
+        const html = generateLandingPageHTML(product, content);
+        
+        await db
+          .collection('stores')
+          .doc(storeId)
+          .collection('landingPages')
+          .doc(landingPageId)
+          .update({
+            content,
+            html,
+            updatedAt: new Date(),
+          });
+        
+        console.log(`✅ Landing page updated: ${landingPageId}`);
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Landing page updated successfully',
+        });
+      }
+      
       // UPDATE landing page status
       if (action === 'updateStatus' && landingPageId) {
         const { status } = req.body;
