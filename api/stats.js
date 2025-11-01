@@ -51,6 +51,24 @@ module.exports = async (req, res) => {
       
       const db = admin.firestore();
       
+      // Get events for funnel
+      const eventsSnapshot = await db
+        .collection('stores')
+        .doc(storeId)
+        .collection('events')
+        .get();
+      
+      let impressions = 0;
+      let clicks = 0;
+      let addToCarts = 0;
+      
+      eventsSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.eventType === 'impression') impressions++;
+        if (data.eventType === 'click') clicks++;
+        if (data.eventType === 'add_to_cart') addToCarts++;
+      });
+      
       // Get conversions from subcollection
       const conversionsSnapshot = await db
         .collection('stores')
@@ -142,6 +160,12 @@ module.exports = async (req, res) => {
           topProducts,
           recentConversions,
           dailyRevenue: last7Days, // Last 7 days for charts
+          funnel: {
+            impressions,
+            clicks,
+            addToCarts,
+            conversions: orders
+          }
         }
       });
     } catch (error) {

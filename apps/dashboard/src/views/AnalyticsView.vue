@@ -49,29 +49,24 @@ onMounted(async () => {
         revenueChartOptions.value.series[0].data = revenues;
         revenueChartOptions.value.series[1].data = revenues; // Upsell = Total for now
       }
+      
+      // Update funnel chart with real data
+      if (statsData.stats.funnel) {
+        conversionChartOptions.value.series[0].data = [
+          statsData.stats.funnel.impressions || 0,
+          statsData.stats.funnel.clicks || 0,
+          statsData.stats.funnel.addToCarts || 0,
+          statsData.stats.funnel.conversions || 0
+        ];
+      }
+      
+      // Get top products from stats
+      if (statsData.stats.topProducts) {
+        topProducts.value = statsData.stats.topProducts;
+      }
     }
     
-    // Load products
-    const response = await fetch(`${API_URL}/products`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'list', storeId: STORE_ID }),
-    });
-    
-    const data = await response.json();
-    if (data.success) {
-      // Top products by price (since we don't have conversion data yet)
-      topProducts.value = data.products
-        .sort((a: any, b: any) => b.price - a.price)
-        .slice(0, 5)
-        .map((p: any) => ({
-          productId: p.productId,
-          name: p.name,
-          conversions: 0,
-          revenue: 0,
-          conversionRate: 0
-        }));
-    }
+    // Top products already loaded from stats API
   } catch (error) {
     console.error('Failed to load analytics:', error);
   } finally {
@@ -173,9 +168,9 @@ const conversionChartOptions = ref<any>({
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
-        <p class="text-sm text-gray-400 mb-1">Total Revenue</p>
+        <p class="text-sm text-gray-400 mb-1">AI Revenue</p>
         <p class="text-3xl font-bold text-white">{{ analytics.totalRevenue.toLocaleString() }} {{ currency }}</p>
-        <p class="text-xs text-green-400 mt-2" v-if="analytics.conversions > 0">{{ analytics.conversions }} conversions</p>
+        <p class="text-xs text-green-400 mt-2" v-if="analytics.conversions > 0">{{ analytics.conversions }} AI conversions</p>
         <p class="text-xs text-gray-500 mt-2" v-else>No conversions tracked yet</p>
       </div>
 
@@ -233,10 +228,10 @@ const conversionChartOptions = ref<any>({
               class="border-b border-gray-800 hover:bg-gray-800/30 transition"
             >
               <td class="py-4 text-white">{{ product.name }}</td>
-              <td class="py-4 text-right text-gray-500">{{ product.conversions }}</td>
-              <td class="py-4 text-right text-gray-500">${{ product.revenue }}</td>
+              <td class="py-4 text-right text-white">{{ product.conversions }}</td>
+              <td class="py-4 text-right text-green-400">{{ Math.round(product.revenue) }} {{ currency }}</td>
               <td class="py-4 text-right">
-                <span class="text-gray-500">{{ product.conversionRate }}%</span>
+                <span class="text-green-400">{{ product.conversions > 0 ? '100%' : '0%' }}</span>
               </td>
             </tr>
           </tbody>
