@@ -5,22 +5,11 @@ import { useAuthStore } from '../stores/auth';
 const authStore = useAuthStore();
 const userProfile = ref<any>(null);
 const loading = ref(true);
-const copied = ref(false);
 
 onMounted(async () => {
   userProfile.value = await authStore.getUserProfile();
   loading.value = false;
 });
-
-function copyApiKey() {
-  if (userProfile.value?.apiKey) {
-    navigator.clipboard.writeText(userProfile.value.apiKey);
-    copied.value = true;
-    setTimeout(() => {
-      copied.value = false;
-    }, 2000);
-  }
-}
 
 const notifications = ref({
   emailOnConversion: true,
@@ -79,40 +68,6 @@ const billing = ref({
           />
         </div>
         <!-- Removed save button since fields are read-only -->
-      </div>
-    </div>
-
-    <!-- API Keys -->
-    <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-xl font-semibold text-white">Your API Key</h2>
-          <p class="text-gray-400 text-sm mt-1">Use this key in your WooCommerce plugin</p>
-        </div>
-      </div>
-      
-      <div v-if="loading" class="text-center py-8">
-        <p class="text-gray-400">Loading...</p>
-      </div>
-
-      <div v-else-if="userProfile?.apiKey" class="bg-gray-800/30 border border-gray-700 rounded-lg p-4">
-        <div class="flex items-start justify-between mb-3">
-          <div class="flex-1">
-            <h3 class="text-white font-medium mb-1">Production API Key</h3>
-            <p class="text-xs text-gray-400">Created {{ userProfile.createdAt?.toDate().toLocaleDateString() }}</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <code class="flex-1 text-sm text-gray-300 bg-gray-900/50 px-3 py-2 rounded font-mono">{{ userProfile.apiKey }}</code>
-          <button 
-            @click="copyApiKey" 
-            class="text-gray-400 hover:text-white transition px-3 py-2"
-            :class="{ 'text-green-400': copied }"
-          >
-            {{ copied ? '✅' : '📋' }}
-          </button>
-        </div>
-        <p class="text-xs text-green-400 mt-2">✨ Copy this key and paste it in your WordPress plugin settings</p>
       </div>
     </div>
 
