@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 
 const API_URL = 'https://wpupsell-dashboard.vercel.app/api';
-const STORE_ID = 'store_fHg74QwLurg5'; // TODO: Get from auth
+const STORE_ID = localStorage.getItem('storeId') || null;
 
 const loading = ref(true);
 const landingPages = ref<any[]>([]);

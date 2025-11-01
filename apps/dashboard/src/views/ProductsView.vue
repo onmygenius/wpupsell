@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 
 // API Configuration
 const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
-const STORE_ID = 'store_fHg74QwLurg5'; // TODO: Get from auth/store selection
+const STORE_ID = localStorage.getItem('storeId') || null;
 
 // Product interface
 interface Product {

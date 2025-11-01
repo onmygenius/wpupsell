@@ -1,7 +1,28 @@
 // HTML Template Generator for Landing Pages
 // Generates high-converting HTML from AI-generated content
 
-function generateLandingPageHTML(product, content, storeUrl = '') {
+// Import templates
+const { generateMinimalistTemplate } = require('../templates/minimalist-ecommerce');
+
+// Template registry
+const TEMPLATES = {
+  'minimalist-ecommerce': generateMinimalistTemplate,
+  // More templates will be added here
+};
+
+function generateLandingPageHTML(product, content, storeUrl = '', templateId = 'default') {
+  // Check if specific template exists
+  if (templateId !== 'default' && TEMPLATES[templateId]) {
+    console.log(`Using template: ${templateId}`);
+    return TEMPLATES[templateId](product, content, storeUrl);
+  }
+  
+  // Use default template
+  console.log('Using default template');
+  return generateDefaultTemplate(product, content, storeUrl);
+}
+
+function generateDefaultTemplate(product, content, storeUrl = '') {
   const { hero, description, benefits, urgency, socialProof, features, guarantee, faq, trustBadges } = content;
   
   // Ensure storeUrl ends without trailing slash

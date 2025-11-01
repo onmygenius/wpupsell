@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import { Chart } from 'highcharts-vue';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
-const STORE_ID = 'store_fHg74QwLurg5';
+const STORE_ID = localStorage.getItem('storeId') || null;
 
 const loading = ref(true);
 const analytics = ref({

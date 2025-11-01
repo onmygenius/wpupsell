@@ -3,9 +3,10 @@ import { ref, onMounted } from 'vue';
 import PieDonutChart from '../components/charts/PieDonutChart.vue';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
-const STORE_ID = 'store_fHg74QwLurg5'; // TODO: Get from auth
+const STORE_ID = localStorage.getItem('storeId') || null; // Get from localStorage, NO DEFAULT!
 
 const loading = ref(true);
+const hasStore = ref(false);
 const stats = ref({
   totalSales: 0,
   enabledProducts: 0,
@@ -60,6 +61,15 @@ const formatTime = (timestamp: any) => {
 
 onMounted(async () => {
   try {
+    // Check if user has a store connected
+    if (!STORE_ID) {
+      loading.value = false;
+      hasStore.value = false;
+      return; // No store connected, show empty dashboard
+    }
+    
+    hasStore.value = true;
+    
     // Load products count
     const productsResponse = await fetch(`${API_URL}/products`, {
       method: 'POST',

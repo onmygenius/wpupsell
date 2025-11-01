@@ -1,0 +1,39 @@
+{
+  "hero": {
+    "headline": "Lănțișor Elegant din Aur 18K",
+    "subheadline": "Eleganță atemporală",
+    "cta": "Cumpără Acum"
+  },
+  "description": "Lănțișorul elegant din aur 18K reprezintă o bijuterie deosebită, care îmbină armonios funcționalitatea cu estetica rafinată. Acest lănțișor, realizat din aur autentic de 18 karate, emană o eleganță atemporală, capabilă să completeze orice ținută, de la o rochie de seară la un costum de zi cu zi. Fie că este purtat singur sau împreună cu un pandantiv, acest lănțișor adaugă o notă de rafinament și sofisticare oricărei apariții. Aurul de 18 karate, cu conținutul său ridicat de metal prețios, asigură o durabilitate și o strălucire deosebită, care va rezista testului timpului. Cu o grosime și o lungime perfect echilibrate, lănțișorul se potrivește oricărui gât, oferind un confort și o libertate de mișcare deosebite. Fie că sunteți în căutarea unui cadou special pentru o persoană iubită sau doriți să vă răsfățați singuri, lănțișorul elegant din aur 18K este alegerea perfectă. El nu numai că reprezintă o investiție valoroasă, dar și o declarație de iubire și apreciere pentru frumusețea și valoarea vieții. Prin urmare, permiteți-vă să vă bucurați de frumusețea și eleganța pe care acest lănțișor o oferă, și lăsați-vă seduși de strălucirea și rafinamentul său. Lănțișorul elegant din aur 18K este o alegere clasică, care nu va demoda niciodată, fiind o dovadă a gustului și a rafinamentului dvs. Acest lănțișor nu este doar o bijuterie, ci și un simbol al dragostei și al aprecierii pentru viață. El reprezintă o ocazie de a vă conecta cu ceea ce este mai important și de a vă bucura de frumusețea și valoarea lucrurilor simple. În timp ce moda și tendințele vin și trec, un lănțișor din aur 18K rămâne o constantă a eleganței și a rafinamentului. Acesta este motivul pentru care atât de mulți oameni aleg să poarte un astfel de lănțișor, nu numai pentru valoarea sa materială, ci și pentru semnificația sa emoțională și spirituală. Lănțișorul din aur 18K este o bijuterie care poate fi purtată în orice ocazie, de la o ieșire în oraș până la o ocazie specială. El este un simbol al dragostei, al aprecierii și al prețuirii pentru viață și pentru oamenii care o fac specială. Prin urmare, dacă sunteți în căutarea unei bijuterii care să vă reprezinte și să vă facă să vă simțiți special, lănțișorul elegant din aur 18K este alegerea perfectă.",
+  "benefits": [
+    {
+      "icon": "✨",
+      "title": "Aur Autentic",
+      "description": "Asigură o durabilitate și o strălucire deosebită"
+    },
+    {
+      "icon": "💎",
+      "title": "Calitate Superioară",
+      "description": "Realizat cu atenție la detalii pentru a asigura o calitate excepțională"
+    },
+    {
+      "icon": "🔒",
+      "title": "Siguranță",
+      "description": "Proiectat pentru a fi confortabil și sigur de purtat"
+    }
+  ],
+  "faq": [
+    {
+      "question": "Este aurul autentic?",
+      "answer": "Da, lănțișorul nostru este realizat din aur autentic de 18 karate, asigurând o calitate și o durabilitate deosebită."
+    },
+    {
+      "question": "Care este lungimea lănțișorului?",
+      "answer": "Lănțișorul nostru are o lungime standard, dar putem oferi și lungimi personalizate la cerere."
+    },
+    {
+      "question": "Pot returna lănțișorul dacă nu sunt mulțumit?",
+      "answer": "Da, oferim o politică de returnare flexibilă. Vă rugăm să consultați secțiunea noastră de returnări pentru detalii."
+    }
+  ]
+}

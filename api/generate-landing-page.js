@@ -67,7 +67,7 @@ Return ONLY a JSON object with this EXACT structure:
     "subheadline": "Supporting text that creates urgency (max 20 words)",
     "cta": "Action-oriented button text (max 3 words)"
   },
-  "description": "ADVANCED product description (3-4 paragraphs, 200-250 words). Requirements: 1) Start with emotional hook, 2) Paint vivid picture of ownership experience, 3) Use sensory language (how it looks, feels, makes you feel), 4) Address transformation (before/after), 5) Create desire through storytelling, 6) End with powerful statement. AVOID generic phrases! Be specific and compelling.",
+  "description": "COMPREHENSIVE product description (MINIMUM 500 words, 5-7 paragraphs). CRITICAL: Must be AT LEAST 500 words! Requirements: 1) Start with powerful emotional hook that captures attention, 2) Paint vivid, detailed picture of ownership experience using sensory language, 3) Describe how it looks, feels, sounds, and makes the customer FEEL, 4) Tell a compelling story about transformation (before/after owning this product), 5) Include specific use cases and scenarios, 6) Address the customer's deepest desires and pain points, 7) Use metaphors and analogies to make it memorable, 8) Build anticipation and desire through detailed storytelling, 9) Include technical details woven into emotional narrative, 10) End with powerful, inspiring statement. AVOID generic phrases! Be EXTREMELY specific, detailed, and compelling. This is the MOST IMPORTANT section - make every word count!",
   "benefits": [
     {"icon": "✨", "title": "Compelling benefit title (3-5 words)", "description": "DETAILED benefit explanation (35-40 words). Focus on TRANSFORMATION and EMOTIONAL impact. Use specific examples. Explain HOW it improves their life. Make it tangible and desirable."},
     {"icon": "💎", "title": "Compelling benefit title (3-5 words)", "description": "DETAILED benefit explanation (35-40 words). Focus on TRANSFORMATION and EMOTIONAL impact. Use specific examples. Explain HOW it improves their life. Make it tangible and desirable."},
@@ -123,7 +123,7 @@ IMPORTANT:
       ],
       model: 'llama-3.3-70b-versatile',
       temperature: 0.8,
-      max_tokens: 1500,
+      max_tokens: 3000, // Increased for 500+ word descriptions
     });
 
     const content = completion.choices[0]?.message?.content || '';
