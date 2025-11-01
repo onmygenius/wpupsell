@@ -1,21 +1,42 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Optional imports - graceful degradation
-let db: any = null;
-let getAIRecommendations: any = null;
-
-try {
-  const firebaseAdmin = require('../lib/firebase-admin');
-  db = firebaseAdmin.db;
-} catch (error) {
-  console.warn('Firebase not configured, tracking disabled');
+// Lazy load helpers
+async function getFirebaseDb() {
+  const hasFirebase = process.env.FIREBASE_PROJECT_ID && 
+                      process.env.FIREBASE_CLIENT_EMAIL && 
+                      process.env.FIREBASE_PRIVATE_KEY;
+  
+  if (!hasFirebase) {
+    console.log('Firebase not configured');
+    return null;
+  }
+  
+  try {
+    const { db } = await import('../lib/firebase-admin');
+    console.log('Firebase loaded');
+    return db;
+  } catch (error) {
+    console.error('Firebase load failed:', error);
+    return null;
+  }
 }
 
-try {
-  const groqClient = require('../lib/groq-client');
-  getAIRecommendations = groqClient.getAIRecommendations;
-} catch (error) {
-  console.warn('Groq AI not configured, using fallback recommendations');
+async function getGroqAI() {
+  const hasGroq = process.env.GROQ_API_KEY;
+  
+  if (!hasGroq) {
+    console.log('Groq not configured');
+    return null;
+  }
+  
+  try {
+    const { getAIRecommendations } = await import('../lib/groq-client');
+    console.log('Groq AI loaded');
+    return getAIRecommendations;
+  } catch (error) {
+    console.error('Groq load failed:', error);
+    return null;
+  }
 }
 
 export default async function handler(
@@ -87,13 +108,13 @@ export default async function handler(
     // 2. Get AI recommendations from Groq (or fallback)
     let recommendedIds: string[] = [];
     
-    console.log('Checking AI availability...');
-    console.log('getAIRecommendations available:', !!getAIRecommendations);
+    console.log('Loading AI...');
+    const aiFunction = await getGroqAI();
     
-    if (getAIRecommendations) {
+    if (aiFunction) {
       try {
         console.log('Calling Groq AI...');
-        recommendedIds = await getAIRecommendations({
+        recommendedIds = await aiFunction({
           productId: product.productId,
           productName: product.name,
           productCategory: product.category,
@@ -140,13 +161,13 @@ export default async function handler(
     // 4. Save recommendation to Firestore for tracking (if available)
     let recommendationId = 'temp_' + Date.now();
     
-    console.log('Checking Firestore availability...');
-    console.log('db available:', !!db);
+    console.log('Loading Firestore...');
+    const firebaseDb = await getFirebaseDb();
     
-    if (db) {
+    if (firebaseDb) {
       try {
         console.log('Saving to Firestore...');
-        const recommendationDoc = await db.collection('recommendations').add({
+        const recommendationDoc = await firebaseDb.collection('recommendations').add({
           storeId,
           productId,
           userId: userId || 'anonymous',
@@ -179,7 +200,7 @@ export default async function handler(
         price: r.price,
         reason: 'AI recommended based on product similarity',
       })),
-      algorithm: getAIRecommendations ? 'groq-ai' : 'fallback',
+      algorithm: aiFunction ? 'groq-ai' : 'fallback',
       timestamp: new Date().toISOString(),
     };
     

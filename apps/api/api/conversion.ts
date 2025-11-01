@@ -1,13 +1,24 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Optional Firebase - graceful degradation
-let db: any = null;
-
-try {
-  const firebaseAdmin = require('../lib/firebase-admin');
-  db = firebaseAdmin.db;
-} catch (error) {
-  console.warn('Firebase not configured, conversion tracking disabled');
+// Lazy load Firebase
+async function getFirebaseDb() {
+  const hasFirebase = process.env.FIREBASE_PROJECT_ID && 
+                      process.env.FIREBASE_CLIENT_EMAIL && 
+                      process.env.FIREBASE_PRIVATE_KEY;
+  
+  if (!hasFirebase) {
+    console.log('Firebase not configured');
+    return null;
+  }
+  
+  try {
+    const { db } = await import('../lib/firebase-admin');
+    console.log('Firebase loaded');
+    return db;
+  } catch (error) {
+    console.error('Firebase load failed:', error);
+    return null;
+  }
 }
 
 export default async function handler(
@@ -41,6 +52,9 @@ export default async function handler(
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // Load Firebase
+    const db = await getFirebaseDb();
+    
     // If Firebase is not configured, just log and return success
     if (!db) {
       console.log('Conversion tracked (no Firebase):', {
