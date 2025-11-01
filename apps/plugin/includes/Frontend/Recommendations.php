@@ -22,10 +22,12 @@ class Recommendations {
     }
     
     public function enqueue_assets() {
-        // Temporarily load on all pages for debugging
-        // if (!is_product()) {
-        //     return;
-        // }
+        if (!is_product()) {
+            return;
+        }
+        
+        error_log('🚀 UpSell AI: enqueue_assets() called on PRODUCT PAGE');
+        error_log('🚀 UpSell AI: Product ID: ' . get_the_ID());
         
         // Plugin CSS
         wp_enqueue_style('upsellai-frontend', UPSELLAI_PLUGIN_URL . 'assets/css/frontend.css', [], UPSELLAI_VERSION);
@@ -34,12 +36,16 @@ class Recommendations {
         wp_enqueue_script('upsellai-frontend', UPSELLAI_PLUGIN_URL . 'assets/js/frontend.js', [], UPSELLAI_VERSION, true);
         
         // Localize script
-        wp_localize_script('upsellai-frontend', 'upsellaiData', [
+        $data = [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('upsellai_nonce'),
             'productId' => get_the_ID(),
             'storeId' => get_option('upsellai_store_id'),
-        ]);
+        ];
+        
+        error_log('🚀 UpSell AI: Localizing script with data: ' . print_r($data, true));
+        
+        wp_localize_script('upsellai-frontend', 'upsellaiData', $data);
     }
     
     public function display_recommendations() {

@@ -124,6 +124,9 @@
     function renderRecommendations() {
         hideLoading();
         
+        console.log('🚀 UpSell AI: renderRecommendations() called');
+        console.log('🚀 UpSell AI: Recommendations count:', state.recommendations.length);
+        
         // Check if user added to cart recently (within 10 seconds)
         const lastAddedToCart = sessionStorage.getItem('upsellai_last_added_to_cart');
         if (lastAddedToCart) {
@@ -139,8 +142,12 @@
             }
         }
         
-        // Setup smart triggers
-        setupSmartTriggers();
+        // SIMPLIFIED: Show popup immediately after 2 seconds
+        console.log('🚀 UpSell AI: Setting timeout to show popup in 2 seconds...');
+        setTimeout(() => {
+            console.log('🚀 UpSell AI: Timeout triggered! Showing popup now...');
+            showPopup('instant');
+        }, 2000);
     }
     
     // Setup smart triggers: Exit Intent, Scroll, Time
