@@ -15,10 +15,32 @@ const analytics = ref({
   avgOrderValue: 0
 });
 
+const currency = ref('LEI');
 const topProducts = ref<any[]>([]);
 
 onMounted(async () => {
   try {
+    // Load stats from conversions
+    const statsResponse = await fetch(`${API_URL}/stats`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ storeId: STORE_ID }),
+    });
+    
+    const statsData = await statsResponse.json();
+    if (statsData.success) {
+      analytics.value.totalRevenue = statsData.stats.totalRevenue;
+      analytics.value.upsellRevenue = statsData.stats.totalRevenue; // All revenue is upsell
+      analytics.value.conversions = statsData.stats.conversions;
+      
+      // Calculate avg order value
+      if (statsData.stats.orders > 0) {
+        analytics.value.avgOrderValue = Math.round((statsData.stats.totalRevenue / statsData.stats.orders) * 100) / 100;
+      }
+      
+      currency.value = statsData.stats.currency || 'LEI';
+    }
+    
     // Load products
     const response = await fetch(`${API_URL}/products`, {
       method: 'POST',
@@ -142,26 +164,29 @@ const conversionChartOptions = ref<any>({
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
         <p class="text-sm text-gray-400 mb-1">Total Revenue</p>
-        <p class="text-3xl font-bold text-white">${{ analytics.totalRevenue.toLocaleString() }}</p>
-        <p class="text-xs text-gray-500 mt-2">No conversions tracked yet</p>
+        <p class="text-3xl font-bold text-white">{{ analytics.totalRevenue.toLocaleString() }} {{ currency }}</p>
+        <p class="text-xs text-green-400 mt-2" v-if="analytics.conversions > 0">{{ analytics.conversions }} conversions</p>
+        <p class="text-xs text-gray-500 mt-2" v-else>No conversions tracked yet</p>
       </div>
 
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
         <p class="text-sm text-gray-400 mb-1">Upsell Revenue</p>
-        <p class="text-3xl font-bold text-white">${{ analytics.upsellRevenue.toLocaleString() }}</p>
-        <p class="text-xs text-gray-500 mt-2">No conversions tracked yet</p>
+        <p class="text-3xl font-bold text-white">{{ analytics.upsellRevenue.toLocaleString() }} {{ currency }}</p>
+        <p class="text-xs text-green-400 mt-2" v-if="analytics.conversions > 0">100% from AI recommendations</p>
+        <p class="text-xs text-gray-500 mt-2" v-else>No conversions tracked yet</p>
       </div>
 
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
         <p class="text-sm text-gray-400 mb-1">Conversion Rate</p>
         <p class="text-3xl font-bold text-white">{{ analytics.conversionRate }}%</p>
-        <p class="text-xs text-gray-500 mt-2">No conversions tracked yet</p>
+        <p class="text-xs text-gray-400 mt-2">Track impressions to calculate</p>
       </div>
 
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
         <p class="text-sm text-gray-400 mb-1">Avg Order Value</p>
-        <p class="text-3xl font-bold text-white">${{ analytics.avgOrderValue }}</p>
-        <p class="text-xs text-gray-500 mt-2">No conversions tracked yet</p>
+        <p class="text-3xl font-bold text-white">{{ analytics.avgOrderValue }} {{ currency }}</p>
+        <p class="text-xs text-green-400 mt-2" v-if="analytics.avgOrderValue > 0">Per upsell order</p>
+        <p class="text-xs text-gray-500 mt-2" v-else>No conversions tracked yet</p>
       </div>
     </div>
 
