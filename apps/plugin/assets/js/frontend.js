@@ -118,53 +118,20 @@
             }
     }
     
-    // Check frequency cap (max 3 per day)
-    function checkFrequencyCap() {
-        const today = new Date().toDateString();
-        const popupData = localStorage.getItem('upsellai_popup_data');
-        
-        if (popupData) {
-            const data = JSON.parse(popupData);
-            if (data.date === today && data.count >= 3) {
-                console.log('🚀 UpSell AI: Frequency cap reached (3 per day)');
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    // Increment popup counter
-    function incrementPopupCounter() {
-        const today = new Date().toDateString();
-        const popupData = localStorage.getItem('upsellai_popup_data');
-        
-        let data = { date: today, count: 1 };
-        if (popupData) {
-            const existing = JSON.parse(popupData);
-            if (existing.date === today) {
-                data.count = existing.count + 1;
-            }
-        }
-        localStorage.setItem('upsellai_popup_data', JSON.stringify(data));
-    }
+    // Frequency cap removed - no daily limit
     
     // Render recommendations with smart triggers
     function renderRecommendations() {
         hideLoading();
         
-        // Check frequency cap
-        if (!checkFrequencyCap()) {
-            return;
-        }
-        
-        // Check if user added to cart recently (within 1 minute)
+        // Check if user added to cart recently (within 10 seconds)
         const lastAddedToCart = sessionStorage.getItem('upsellai_last_added_to_cart');
         if (lastAddedToCart) {
             const timeSinceAdded = Date.now() - parseInt(lastAddedToCart);
-            const oneMinute = 60 * 1000;
+            const cooldownTime = 10 * 1000; // 10 seconds
             
-            if (timeSinceAdded < oneMinute) {
-                const remainingSeconds = Math.ceil((oneMinute - timeSinceAdded) / 1000);
+            if (timeSinceAdded < cooldownTime) {
+                const remainingSeconds = Math.ceil((cooldownTime - timeSinceAdded) / 1000);
                 console.log(`🚀 UpSell AI: Pop-up suppressed. Cooldown: ${remainingSeconds}s`);
                 return;
             } else {
@@ -225,7 +192,6 @@
         if (state.popupShown) return;
         
         state.popupShown = true;
-        incrementPopupCounter();
         
         console.log(`🚀 UpSell AI: Showing popup (trigger: ${trigger})`);
         
@@ -350,7 +316,7 @@
                 
                 // Save timestamp when user added to cart
                 sessionStorage.setItem('upsellai_last_added_to_cart', Date.now().toString());
-                console.log('🚀 UpSell AI: User added to cart. Pop-ups suppressed for 1 minute.');
+                console.log('🚀 UpSell AI: User added to cart. Pop-ups suppressed for 10 seconds.');
                 
                 // Close pop-up
                 const popup = document.getElementById('upsellai-popup');
