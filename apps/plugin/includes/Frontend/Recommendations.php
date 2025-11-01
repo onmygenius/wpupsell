@@ -131,11 +131,21 @@ class Recommendations {
         
         error_log('UpSell AI: API response received: ' . print_r($recommendations, true));
         
+        // Get max recommendations setting from admin
+        $max_recommendations = absint(get_option('upsellai_max_recommendations', 3));
+        error_log('UpSell AI: Max recommendations setting: ' . $max_recommendations);
+        
         // Format recommendations for frontend
         $formatted = [];
         
         if (isset($recommendations['recommendations'])) {
+            $count = 0;
             foreach ($recommendations['recommendations'] as $rec) {
+                // Stop if we've reached the max
+                if ($count >= $max_recommendations) {
+                    break;
+                }
+                
                 $product = wc_get_product($rec['id']);
                 
                 if ($product) {
@@ -147,11 +157,12 @@ class Recommendations {
                         'url' => get_permalink($product->get_id()),
                         'reason' => $rec['reason'] ?? 'AI recommended',
                     ];
+                    $count++;
                 }
             }
         }
         
-        error_log('UpSell AI: Sending ' . count($formatted) . ' formatted recommendations to frontend');
+        error_log('UpSell AI: Sending ' . count($formatted) . ' formatted recommendations to frontend (max: ' . $max_recommendations . ')');
         
         wp_send_json_success([
             'recommendations' => $formatted,
