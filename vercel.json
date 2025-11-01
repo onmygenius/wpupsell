@@ -1,21 +1,22 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "apps/api/api/**/*.ts",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/apps/api/api/$1"
-    }
-  ],
+  "buildCommand": "cd apps/dashboard && npm run build",
+  "outputDirectory": "apps/dashboard/dist",
+  "installCommand": "npm install",
+  "framework": null,
   "functions": {
     "apps/api/api/**/*.ts": {
       "memory": 1024,
       "maxDuration": 30
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/apps/api/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
