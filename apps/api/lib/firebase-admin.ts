@@ -1,17 +1,45 @@
 import * as admin from 'firebase-admin';
 
-// Initialize Firebase Admin (singleton)
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-  });
+let initialized = false;
+
+function initializeFirebase() {
+  if (initialized) return;
+  
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      }),
+    });
+  }
+  
+  initialized = true;
 }
 
-export const db = admin.firestore();
-export const auth = admin.auth();
+// Lazy getters
+export const getDb = () => {
+  initializeFirebase();
+  return admin.firestore();
+};
+
+export const getAuth = () => {
+  initializeFirebase();
+  return admin.auth();
+};
+
+// Backward compatibility
+export const db = new Proxy({} as any, {
+  get(target, prop) {
+    return getDb()[prop];
+  }
+});
+
+export const auth = new Proxy({} as any, {
+  get(target, prop) {
+    return getAuth()[prop];
+  }
+});
 
 export default admin;

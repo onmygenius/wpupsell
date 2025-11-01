@@ -32,45 +32,86 @@
     
     // Load recommendations
     async function loadRecommendations() {
+            console.log('🚀 UpSell AI: ========================================');
+            console.log('🚀 UpSell AI: Starting loadRecommendations()');
+            console.log('🚀 UpSell AI: AJAX URL:', upsellaiData.ajaxUrl);
+            console.log('🚀 UpSell AI: Product ID:', upsellaiData.productId);
+            console.log('🚀 UpSell AI: Store ID:', upsellaiData.storeId);
+            console.log('🚀 UpSell AI: Nonce:', upsellaiData.nonce);
+            
             state.loading = true;
             state.error = null;
             showLoading();
             
             try {
+                console.log('🚀 UpSell AI: Sending AJAX request...');
+                
+                const requestBody = new URLSearchParams({
+                    action: 'upsellai_get_recommendations',
+                    nonce: upsellaiData.nonce,
+                    product_id: upsellaiData.productId,
+                });
+                
+                console.log('🚀 UpSell AI: Request body:', requestBody.toString());
+                
                 const response = await fetch(upsellaiData.ajaxUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: new URLSearchParams({
-                        action: 'upsellai_get_recommendations',
-                        nonce: upsellaiData.nonce,
-                        product_id: upsellaiData.productId,
-                    }),
+                    body: requestBody,
                 });
                 
-                const data = await response.json();
+                console.log('🚀 UpSell AI: Response received!');
+                console.log('🚀 UpSell AI: Response status:', response.status);
+                console.log('🚀 UpSell AI: Response statusText:', response.statusText);
+                console.log('🚀 UpSell AI: Response headers:', [...response.headers.entries()]);
+                
+                const responseText = await response.text();
+                console.log('🚀 UpSell AI: Response text (raw):', responseText);
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                    console.log('🚀 UpSell AI: Response JSON parsed:', data);
+                } catch (e) {
+                    console.error('🚀 UpSell AI: ❌ JSON parse error:', e);
+                    throw new Error('Invalid JSON response: ' + responseText.substring(0, 100));
+                }
                 
                 if (data.success) {
+                    console.log('🚀 UpSell AI: ✅ Success!');
                     state.recommendations = data.data.recommendations || [];
                     state.recommendationId = data.data.recommendation_id;
                     
+                    console.log('🚀 UpSell AI: Recommendations count:', state.recommendations.length);
+                    console.log('🚀 UpSell AI: Recommendation ID:', state.recommendationId);
+                    console.log('🚀 UpSell AI: Recommendations:', state.recommendations);
+                    
                     if (state.recommendations.length > 0) {
+                        console.log('🚀 UpSell AI: Rendering recommendations...');
                         renderRecommendations();
                         trackImpression();
                     } else {
+                        console.log('🚀 UpSell AI: No recommendations to show');
                         hideLoading();
                     }
                 } else {
+                    console.error('🚀 UpSell AI: ❌ Error from server');
+                    console.error('🚀 UpSell AI: Error message:', data.data?.message);
                     state.error = data.data?.message || 'Failed to load recommendations';
                     showError();
                 }
             } catch (error) {
-                console.error('UpSell AI Error:', error);
-                state.error = 'Failed to load recommendations';
+                console.error('🚀 UpSell AI: ❌ EXCEPTION CAUGHT');
+                console.error('🚀 UpSell AI: Error type:', error.constructor.name);
+                console.error('🚀 UpSell AI: Error message:', error.message);
+                console.error('🚀 UpSell AI: Error stack:', error.stack);
+                state.error = 'Failed to load recommendations: ' + error.message;
                 showError();
             } finally {
                 state.loading = false;
+                console.log('🚀 UpSell AI: ======================================== END');
             }
     }
     

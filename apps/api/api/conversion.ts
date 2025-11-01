@@ -12,7 +12,7 @@ async function getFirebaseDb() {
   }
   
   try {
-    const { db } = await import('../lib/firebase-admin');
+    const { db } = await import('../lib/firebase-admin.js');
     console.log('Firebase loaded');
     return db;
   } catch (error) {

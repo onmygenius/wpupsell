@@ -1,8 +1,15 @@
 import Groq from 'groq-sdk';
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+let groqInstance: Groq | null = null;
+
+function getGroq(): Groq {
+  if (!groqInstance) {
+    groqInstance = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
+    });
+  }
+  return groqInstance;
+}
 
 export interface RecommendationRequest {
   productId: string;
@@ -43,6 +50,7 @@ Return ONLY product IDs as a JSON array, nothing else.
 Example: ["prod_002", "prod_005", "prod_008"]
 `;
 
+    const groq = getGroq();
     const completion = await groq.chat.completions.create({
       messages: [
         {
@@ -69,4 +77,4 @@ Example: ["prod_002", "prod_005", "prod_008"]
   }
 }
 
-export default groq;
+export default getGroq();
