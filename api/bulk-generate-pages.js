@@ -6,7 +6,6 @@
  * Direct publish to WordPress - NO database storage
  */
 
-const { getFirestore } = require('../lib/firebase-admin');
 const Groq = require('groq-sdk');
 
 // Groq instance
@@ -19,6 +18,23 @@ function getGroq() {
     });
   }
   return groqInstance;
+}
+
+// Firebase Admin
+function getFirebaseDb() {
+  const admin = require('firebase-admin');
+  
+  if (admin.apps.length === 0) {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      }),
+    });
+  }
+  
+  return admin.firestore();
 }
 
 // CORS headers
@@ -55,7 +71,7 @@ module.exports = async (req, res) => {
     }
 
     // Get store data from Firestore
-    const db = getFirestore();
+    const db = getFirebaseDb();
     const storeDoc = await db.collection('stores').doc(storeId).get();
 
     if (!storeDoc.exists) {
