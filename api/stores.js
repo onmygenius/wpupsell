@@ -244,28 +244,40 @@ module.exports = async function handler(req, res) {
           
           // Sync products (for both new and existing stores)
           if (products && products.length > 0) {
-            console.log(`📦 Syncing ${products.length} products...`);
+            console.log(`📦 Syncing ${products.length} products to store ${storeId}...`);
+            console.log('📦 First product:', JSON.stringify(products[0]));
             
-            const batch = db.batch();
-            products.forEach(product => {
-              const productRef = db.collection('stores')
-                .doc(storeId)
-                .collection('products')
-                .doc(product.id.toString());
-              
-              batch.set(productRef, {
-                ...product,
-                syncedAt: new Date()
+            try {
+              const batch = db.batch();
+              products.forEach((product, index) => {
+                const productRef = db.collection('stores')
+                  .doc(storeId)
+                  .collection('products')
+                  .doc(product.id.toString());
+                
+                console.log(`📦 Adding product ${index + 1}/${products.length}: ${product.name} (ID: ${product.id})`);
+                
+                batch.set(productRef, {
+                  ...product,
+                  syncedAt: new Date()
+                });
               });
-            });
-            
-            await batch.commit();
-            console.log('✅ Products synced');
-            
-            // Update total products count
-            await db.collection('stores').doc(storeId).update({
-              'stats.totalProducts': products.length
-            });
+              
+              await batch.commit();
+              console.log('✅ Products batch committed successfully');
+              
+              // Update total products count
+              await db.collection('stores').doc(storeId).update({
+                'stats.totalProducts': products.length
+              });
+              
+              console.log('✅ Products synced - total:', products.length);
+            } catch (error) {
+              console.error('❌ Error syncing products:', error);
+              throw error;
+            }
+          } else {
+            console.log('⚠️ No products to sync');
           }
           
           // Return credentials
