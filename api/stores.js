@@ -89,6 +89,12 @@ export default async function handler(req, res) {
         // Update WordPress Publishing credentials
         const { apiKey, wordpressUsername, wordpressPassword } = req.body;
         
+        console.log('📝 UPDATE WP CREDENTIALS:', {
+          apiKey: apiKey ? 'present' : 'missing',
+          wordpressUsername,
+          wordpressPassword: wordpressPassword ? 'present' : 'missing'
+        });
+        
         if (!apiKey) {
           return res.status(400).json({ success: false, error: 'apiKey required' });
         }
@@ -100,10 +106,12 @@ export default async function handler(req, res) {
           .get();
         
         if (storesSnapshot.empty) {
+          console.log('❌ Store not found for API Key');
           return res.status(404).json({ success: false, error: 'Store not found' });
         }
         
         const storeDoc = storesSnapshot.docs[0];
+        console.log('✅ Store found:', storeDoc.id);
         
         // Update WordPress credentials
         await storeDoc.ref.update({
@@ -112,6 +120,8 @@ export default async function handler(req, res) {
           wordpressConnected: false, // Will be set to true after successful test
           updatedAt: new Date()
         });
+        
+        console.log('✅ WordPress credentials updated in Firebase');
         
         return res.json({ 
           success: true,

@@ -427,30 +427,51 @@ class Settings {
         $api_key = get_option('upsellai_api_key');
         
         if (empty($api_key)) {
+            error_log('❌ SYNC WP CREDENTIALS: API Key is empty!');
             return false;
         }
         
         $api_url = 'https://wpupsell-dashboard.vercel.app/api/stores';
         
+        $request_body = [
+            'apiKey' => $api_key,
+            'wordpressUsername' => $username,
+            'wordpressPassword' => $password, // Plain text - encrypted in transit via HTTPS
+            'action' => 'update_wp_credentials'
+        ];
+        
+        error_log('📤 SYNC WP CREDENTIALS TO FIREBASE:');
+        error_log('API URL: ' . $api_url);
+        error_log('API Key: ' . substr($api_key, 0, 10) . '...');
+        error_log('Username: ' . $username);
+        error_log('Password: ' . (empty($password) ? 'EMPTY' : 'present'));
+        
         $response = wp_remote_post($api_url, [
             'headers' => [
                 'Content-Type' => 'application/json',
             ],
-            'body' => json_encode([
-                'apiKey' => $api_key,
-                'wordpressUsername' => $username,
-                'wordpressPassword' => $password, // Plain text - encrypted in transit via HTTPS
-                'action' => 'update_wp_credentials'
-            ]),
+            'body' => json_encode($request_body),
             'timeout' => 15,
         ]);
         
         if (is_wp_error($response)) {
-            error_log('Failed to sync WP credentials to Firebase: ' . $response->get_error_message());
+            error_log('❌ Failed to sync WP credentials to Firebase: ' . $response->get_error_message());
             return false;
         }
         
-        return true;
+        $status_code = wp_remote_retrieve_response_code($response);
+        $response_body = wp_remote_retrieve_body($response);
+        
+        error_log('📥 Response Status: ' . $status_code);
+        error_log('📥 Response Body: ' . $response_body);
+        
+        if ($status_code === 200) {
+            error_log('✅ WordPress credentials synced to Firebase successfully!');
+            return true;
+        } else {
+            error_log('❌ Failed to sync - Status: ' . $status_code);
+            return false;
+        }
     }
     
     /**

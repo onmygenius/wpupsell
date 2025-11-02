@@ -50,6 +50,9 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 if (response.success) {
                     alert('✅ Connection successful!\n\n' + response.data.message);
+                    
+                    // Update Connection Status UI instantly
+                    location.reload(); // Refresh to show updated status
                 } else {
                     alert('❌ Connection failed!\n\n' + response.data.message);
                 }
