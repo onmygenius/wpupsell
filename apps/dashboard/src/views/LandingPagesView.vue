@@ -465,15 +465,15 @@ function viewLivePage(url: string) {
           @click="openGenerateModal"
           class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
         >
-          <span class="text-xl">+</span>
-          Generate Single Page
+          <span class="text-xl">📦</span>
+          Generate Product Page
         </button>
         <button 
           @click="openBulkModal"
           class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition flex items-center gap-2"
         >
           <span class="text-xl">🚀</span>
-          Bulk Generate
+          Generate SEO Pages
         </button>
       </div>
     </div>
