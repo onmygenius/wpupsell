@@ -42,6 +42,12 @@ class Settings {
         
         wp_enqueue_style('upsellai-admin', UPSELLAI_PLUGIN_URL . 'assets/css/admin.css', [], UPSELLAI_VERSION);
         wp_enqueue_script('upsellai-admin', UPSELLAI_PLUGIN_URL . 'assets/js/admin.js', ['jquery'], UPSELLAI_VERSION, true);
+        
+        // Pass nonce to JavaScript for AJAX security
+        wp_localize_script('upsellai-admin', 'upsellaiAdmin', [
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'test_connection_nonce' => wp_create_nonce('upsellai_test_wp_connection')
+        ]);
     }
     
     public function render_settings_page() {
@@ -451,7 +457,8 @@ class Settings {
      * AJAX handler to test WordPress REST API connection
      */
     public function ajax_test_wp_connection() {
-        check_ajax_referer('upsellai_settings_nonce', 'nonce');
+        // Verify nonce for AJAX security (works with Wordfence, iThemes, etc)
+        check_ajax_referer('upsellai_test_wp_connection', 'nonce');
         
         if (!current_user_can('manage_options')) {
             wp_send_json_error(['message' => 'Insufficient permissions']);

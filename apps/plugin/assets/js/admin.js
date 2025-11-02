@@ -39,11 +39,11 @@ jQuery(document).ready(function($) {
         
         // AJAX request to test connection
         $.ajax({
-            url: ajaxurl,
+            url: upsellaiAdmin.ajax_url,
             type: 'POST',
             data: {
                 action: 'upsellai_test_wp_connection',
-                nonce: $('#_wpnonce').val(),
+                nonce: upsellaiAdmin.test_connection_nonce,
                 username: username,
                 password: password
             },
