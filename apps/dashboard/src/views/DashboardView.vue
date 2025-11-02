@@ -52,11 +52,12 @@ const resetDate = computed(() => {
   if (!date) return 'N/A';
   
   try {
-    let d;
-    if (date.toDate && typeof date.toDate === 'function') {
-      d = date.toDate();
-    } else if (date._seconds) {
-      d = new Date(date._seconds * 1000);
+    let d: Date;
+    // Handle Firebase Timestamp
+    if ((date as any).toDate && typeof (date as any).toDate === 'function') {
+      d = (date as any).toDate();
+    } else if ((date as any)._seconds) {
+      d = new Date((date as any)._seconds * 1000);
     } else {
       d = new Date(date);
     }
