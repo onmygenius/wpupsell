@@ -24,13 +24,17 @@ onMounted(async () => {
 async function loadStore() {
   try {
     loading.value = true;
-    const storeId = localStorage.getItem('storeId');
+    
+    // Use userId as storeId (they are the same now)
+    const storeId = authStore.userId;
     
     if (!storeId) {
-      // No store yet - user needs to create one
+      // No user logged in
       loading.value = false;
       return;
     }
+    
+    console.log('🔍 Loading store for userId:', storeId);
     
     // Load store from Firebase
     const storeDoc = await getDoc(doc(db, 'stores', storeId));
