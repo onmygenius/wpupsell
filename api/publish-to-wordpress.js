@@ -102,7 +102,17 @@ module.exports = async (req, res) => {
       const decryptedPassword = decryptPassword(store.wordpressPassword);
       
       // Prepare WordPress REST API request
-      const wordpressUrl = store.url.replace(/\/$/, ''); // Remove trailing slash
+      let wordpressUrl = store.url || '';
+      
+      // If URL is empty, try to get it from storeId or fail gracefully
+      if (!wordpressUrl || wordpressUrl === '') {
+        return res.status(400).json({
+          error: 'WordPress URL not configured',
+          message: 'Please add your WordPress URL in Store Settings'
+        });
+      }
+      
+      wordpressUrl = wordpressUrl.replace(/\/$/, ''); // Remove trailing slash
       const apiUrl = `${wordpressUrl}/wp-json/wp/v2/pages`;
       
       // Create Basic Auth header
