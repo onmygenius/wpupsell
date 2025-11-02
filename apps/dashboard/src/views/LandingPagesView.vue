@@ -26,6 +26,13 @@ const store = ref<any>(null);
 const activeTab = ref('description');
 const selectedTemplate = ref('');
 
+// Bulk generation
+const showBulkModal = ref(false);
+const bulkGenerating = ref(false);
+const bulkNumberOfPages = ref(10);
+const bulkProgress = ref(0);
+const bulkResults = ref<any[]>([]);
+
 // Available templates
 const templates = [
   { id: 'starter', name: 'Starter', description: 'Modern, clean design with Tailwind CSS - Perfect for any product' }
@@ -280,7 +287,6 @@ async function uploadImage(event: any) {
     reader.readAsDataURL(file);
   } catch (error) {
     console.error('Failed to upload image:', error);
-    alert('Eroare la upload imagine');
     uploadingImage.value = false;
   }
 }
@@ -288,6 +294,69 @@ async function uploadImage(event: any) {
 function removeImage(index: number) {
   if (editedContent.value?.gallery) {
     editedContent.value.gallery.splice(index, 1);
+  }
+}
+
+// Bulk Generation Functions
+function openBulkModal() {
+  showBulkModal.value = true;
+  bulkNumberOfPages.value = 10;
+  bulkProgress.value = 0;
+  bulkResults.value = [];
+}
+
+function closeBulkModal() {
+  if (!bulkGenerating.value) {
+    showBulkModal.value = false;
+  }
+}
+
+async function startBulkGeneration() {
+  if (!STORE_ID) {
+    alert('Store ID not found');
+    return;
+  }
+
+  if (bulkNumberOfPages.value < 1 || bulkNumberOfPages.value > 100) {
+    alert('Number of pages must be between 1 and 100');
+    return;
+  }
+
+  bulkGenerating.value = true;
+  bulkProgress.value = 0;
+  bulkResults.value = [];
+
+  try {
+    console.log(`🚀 Starting bulk generation of ${bulkNumberOfPages.value} pages...`);
+
+    const response = await fetch(`${API_URL}/bulk-generate-pages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        storeId: STORE_ID,
+        numberOfPages: bulkNumberOfPages.value
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      bulkResults.value = data.results;
+      bulkProgress.value = 100;
+      
+      const successCount = data.results.filter((r: any) => r.status === 'success').length;
+      alert(`✅ Success! Generated ${successCount} out of ${bulkNumberOfPages.value} pages!`);
+      
+      // Reload landing pages
+      await loadLandingPages();
+    } else {
+      alert('Failed to generate pages: ' + data.error);
+    }
+  } catch (error) {
+    console.error('Failed to bulk generate:', error);
+    alert('Failed to generate pages. Please try again.');
+  } finally {
+    bulkGenerating.value = false;
   }
 }
 
@@ -369,13 +438,22 @@ function viewLivePage(url: string) {
         <h1 class="text-3xl font-bold text-white">🎨 Landing Pages</h1>
         <p class="text-gray-400 mt-1">Generate high-converting product pages with AI</p>
       </div>
-      <button 
-        @click="openGenerateModal"
-        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-      >
-        <span class="text-xl">+</span>
-        Generate New Landing Page
-      </button>
+      <div class="flex gap-3">
+        <button 
+          @click="openGenerateModal"
+          class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+        >
+          <span class="text-xl">+</span>
+          Generate Single Page
+        </button>
+        <button 
+          @click="openBulkModal"
+          class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+        >
+          <span class="text-xl">🚀</span>
+          Bulk Generate
+        </button>
+      </div>
     </div>
 
     <!-- Loading State -->
@@ -747,6 +825,108 @@ function viewLivePage(url: string) {
           >
             Cancel
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Generate Modal -->
+    <div v-if="showBulkModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="closeBulkModal">
+      <div class="bg-[#0a0f2e] rounded-xl border border-gray-800 p-8 max-w-2xl w-full mx-4">
+        <h2 class="text-2xl font-bold text-white mb-6">🚀 Bulk Generate Promotional Pages</h2>
+        
+        <div class="space-y-6">
+          <!-- Info -->
+          <div class="bg-blue-900/20 border border-blue-800 rounded-lg p-4">
+            <p class="text-blue-300 text-sm">
+              Generate multiple UNIQUE promotional pages for your store. Each page will have:
+            </p>
+            <ul class="text-blue-300 text-sm mt-2 space-y-1 list-disc list-inside">
+              <li>Unique title and content (1000-1500 words)</li>
+              <li>2-3 products mentioned with links</li>
+              <li>Strong CTA and persuasive copy</li>
+              <li>Published directly to WordPress</li>
+            </ul>
+          </div>
+
+          <!-- Number of Pages -->
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">
+              Number of Pages to Generate
+            </label>
+            <input
+              v-model.number="bulkNumberOfPages"
+              type="number"
+              min="1"
+              max="100"
+              :disabled="bulkGenerating"
+              class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none disabled:opacity-50"
+              placeholder="10"
+            />
+            <p class="text-xs text-gray-500 mt-1">Choose between 1 and 100 pages</p>
+          </div>
+
+          <!-- Progress -->
+          <div v-if="bulkGenerating" class="space-y-2">
+            <div class="flex justify-between text-sm text-gray-400">
+              <span>Generating pages...</span>
+              <span>{{ bulkProgress }}%</span>
+            </div>
+            <div class="w-full bg-gray-800 rounded-full h-2">
+              <div 
+                class="bg-green-600 h-2 rounded-full transition-all duration-300"
+                :style="{ width: bulkProgress + '%' }"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Results -->
+          <div v-if="bulkResults.length > 0" class="max-h-64 overflow-y-auto space-y-2">
+            <div 
+              v-for="result in bulkResults" 
+              :key="result.pageNumber"
+              class="bg-[#0f1535] border border-gray-800 rounded-lg p-3 text-sm"
+            >
+              <div class="flex items-center justify-between">
+                <span class="text-white font-medium">Page {{ result.pageNumber }}: {{ result.title }}</span>
+                <span v-if="result.status === 'success'" class="text-green-400">✓</span>
+                <span v-else class="text-red-400">✗</span>
+              </div>
+              <a 
+                v-if="result.url" 
+                :href="result.url" 
+                target="_blank"
+                class="text-blue-400 hover:underline text-xs"
+              >
+                {{ result.url }}
+              </a>
+              <p v-if="result.error" class="text-red-400 text-xs mt-1">{{ result.error }}</p>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-4">
+            <button
+              v-if="!bulkGenerating"
+              @click="startBulkGeneration"
+              class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-semibold"
+            >
+              🚀 Start Generation
+            </button>
+            <button
+              v-if="!bulkGenerating"
+              @click="closeBulkModal"
+              class="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition"
+            >
+              Cancel
+            </button>
+            <button
+              v-if="bulkGenerating"
+              disabled
+              class="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg cursor-not-allowed opacity-50"
+            >
+              ⏳ Generating...
+            </button>
+          </div>
         </div>
       </div>
     </div>
