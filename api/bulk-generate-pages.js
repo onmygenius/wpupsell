@@ -56,11 +56,12 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { storeId, numberOfPages = 10 } = req.body;
+    const { storeId, numberOfPages = 10, offset = 0 } = req.body;
 
     console.log('=== BULK GENERATE PAGES ===');
     console.log('Store ID:', storeId);
     console.log('Number of pages:', numberOfPages);
+    console.log('Offset:', offset);
 
     if (!storeId) {
       return res.status(400).json({ error: 'Missing storeId' });
@@ -70,11 +71,11 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Number of pages must be between 1 and 100' });
     }
 
-    // Limit to 3 pages to avoid Vercel timeout (30s limit on Hobby plan)
-    const pagesToGenerate = Math.min(numberOfPages, 3);
-    if (pagesToGenerate < numberOfPages) {
-      console.log(`⚠️  Limited to ${pagesToGenerate} pages to avoid timeout (requested: ${numberOfPages})`);
-    }
+    // Calculate how many pages to generate in this chunk
+    const remainingPages = numberOfPages - offset;
+    const pagesToGenerate = Math.min(remainingPages, 3); // Max 3 pages per request
+    
+    console.log(`📊 Generating ${pagesToGenerate} pages (${offset + 1}-${offset + pagesToGenerate} of ${numberOfPages})`);
 
     // Get store data from Firestore
     const db = getFirebaseDb();
@@ -125,8 +126,8 @@ module.exports = async (req, res) => {
     const results = [];
     
     for (let i = 0; i < titles.length; i++) {
-      const pageNumber = i + 1;
-      console.log(`\n📄 Generating page ${pageNumber}/${titles.length}: ${titles[i]}`);
+      const pageNumber = offset + i + 1; // Include offset in page number
+      console.log(`\n📄 Generating page ${pageNumber}/${numberOfPages}: ${titles[i]}`);
 
       try {
         // Generate content for this page

@@ -326,32 +326,54 @@ async function startBulkGeneration() {
   bulkProgress.value = 0;
   bulkResults.value = [];
 
+  const totalPages = bulkNumberOfPages.value;
+  const chunkSize = 3; // Generate 3 pages per request
+  let offset = 0;
+
   try {
-    console.log(`🚀 Starting bulk generation of ${bulkNumberOfPages.value} pages...`);
+    console.log(`🚀 Starting bulk generation of ${totalPages} pages...`);
 
-    const response = await fetch(`${API_URL}/bulk-generate-pages`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        storeId: STORE_ID,
-        numberOfPages: bulkNumberOfPages.value
-      }),
-    });
+    // Loop until all pages are generated
+    while (offset < totalPages) {
+      console.log(`📄 Generating chunk: ${offset + 1}-${Math.min(offset + chunkSize, totalPages)} of ${totalPages}`);
 
-    const data = await response.json();
+      const response = await fetch(`${API_URL}/bulk-generate-pages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeId: STORE_ID,
+          numberOfPages: totalPages,
+          offset: offset
+        }),
+      });
 
-    if (data.success) {
-      bulkResults.value = data.results;
-      bulkProgress.value = 100;
-      
-      const successCount = data.results.filter((r: any) => r.status === 'success').length;
-      alert(`✅ Success! Generated ${successCount} out of ${bulkNumberOfPages.value} pages!`);
-      
-      // Reload landing pages
-      await loadLandingPages();
-    } else {
-      alert('Failed to generate pages: ' + data.error);
+      const data = await response.json();
+
+      if (data.success) {
+        // Add results to the list
+        bulkResults.value.push(...data.results);
+        
+        // Update progress
+        offset += data.totalGenerated;
+        bulkProgress.value = Math.round((offset / totalPages) * 100);
+        
+        console.log(`✅ Generated ${offset}/${totalPages} pages`);
+      } else {
+        alert('Failed to generate pages: ' + data.error);
+        break;
+      }
+
+      // Small delay between chunks
+      if (offset < totalPages) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
     }
+
+    const successCount = bulkResults.value.filter((r: any) => r.status === 'success').length;
+    alert(`✅ Success! Generated ${successCount} out of ${totalPages} pages!`);
+    
+    // Reload landing pages
+    await loadLandingPages();
   } catch (error) {
     console.error('Failed to bulk generate:', error);
     alert('Failed to generate pages. Please try again.');
@@ -831,7 +853,7 @@ function viewLivePage(url: string) {
 
     <!-- Bulk Generate Modal -->
     <div v-if="showBulkModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="closeBulkModal">
-      <div class="bg-[#0a0f2e] rounded-xl border border-gray-800 p-8 max-w-2xl w-full mx-4">
+      <div class="bg-[#0a0f2e] rounded-xl border border-gray-800 p-8 max-w-2xl w-full mx-4" @click.stop>
         <h2 class="text-2xl font-bold text-white mb-6">🚀 Bulk Generate Promotional Pages</h2>
         
         <div class="space-y-6">
