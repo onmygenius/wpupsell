@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 
 const route = useRoute();
 const authStore = useAuthStore();
 const isCollapsed = ref(false);
+const currentPlan = ref('free');
 
 const userInitial = computed(() => {
   return authStore.userEmail.charAt(0).toUpperCase() || 'U';
@@ -23,6 +26,21 @@ const navigation = [
   { name: 'Landing Pages', path: '/landing-pages', icon: '🎨' },
   { name: 'Settings', path: '/settings', icon: '⚙️' }
 ];
+
+const planName = computed(() => currentPlan.value.toUpperCase());
+
+onMounted(async () => {
+  try {
+    if (authStore.userId) {
+      const storeDoc = await getDoc(doc(db, 'stores', authStore.userId));
+      if (storeDoc.exists()) {
+        currentPlan.value = storeDoc.data().plan || 'free';
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load plan:', error);
+  }
+});
 
 const isActive = (path: string) => {
   return route.path === path;
@@ -58,7 +76,7 @@ const toggleSidebar = () => {
           </div>
           <div v-if="!isCollapsed">
             <h1 class="text-lg font-bold text-white">UpSell AI</h1>
-            <p class="text-xs text-gray-400">Pro Plan</p>
+            <p class="text-xs text-gray-400">{{ planName }} Plan</p>
           </div>
         </div>
 
@@ -89,6 +107,29 @@ const toggleSidebar = () => {
             </div>
           </RouterLink>
         </nav>
+
+        <!-- Upgrade Button -->
+        <div class="mt-6">
+          <RouterLink
+            to="/pricing"
+            :class="[
+              'flex items-center gap-3 px-4 py-3 rounded-lg transition group relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700',
+              isCollapsed ? 'justify-center' : ''
+            ]"
+            :title="isCollapsed ? 'Upgrade' : ''"
+          >
+            <span class="text-xl">⭐</span>
+            <span v-if="!isCollapsed" class="text-white font-semibold">Upgrade</span>
+            
+            <!-- Tooltip when collapsed -->
+            <div 
+              v-if="isCollapsed"
+              class="absolute left-full ml-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50"
+            >
+              Upgrade
+            </div>
+          </RouterLink>
+        </div>
       </div>
 
       <!-- User Section -->
