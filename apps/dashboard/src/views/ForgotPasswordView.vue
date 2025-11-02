@@ -19,10 +19,13 @@ async function resetPassword() {
   message.value = '';
 
   try {
-    const response = await fetch('https://wpupsell-dashboard.vercel.app/api/reset-password', {
+    const response = await fetch('https://wpupsell-dashboard.vercel.app/api/stores', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.value })
+      body: JSON.stringify({ 
+        action: 'reset_password',
+        email: email.value 
+      })
     });
 
     const data = await response.json();

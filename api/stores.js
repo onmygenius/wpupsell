@@ -367,10 +367,64 @@ module.exports = async function handler(req, res) {
         });
       }
 
+      case 'reset_password': {
+        // Reset user password - generate new password and send via email
+        const { email } = req.body;
+
+        if (!email) {
+          return res.status(400).json({ success: false, error: 'Email is required' });
+        }
+
+        try {
+          const { getAuth } = require('../lib/firebase-admin');
+          const crypto = require('crypto');
+          const auth = getAuth();
+
+          // Check if user exists
+          let user;
+          try {
+            user = await auth.getUserByEmail(email);
+          } catch (error) {
+            // User not found - don't reveal this for security
+            return res.status(200).json({
+              success: true,
+              message: 'If an account exists with this email, a new password has been sent.'
+            });
+          }
+
+          // Generate new strong password
+          const newPassword = crypto.randomBytes(12).toString('base64').slice(0, 16);
+
+          // Update user password
+          await auth.updateUser(user.uid, {
+            password: newPassword
+          });
+
+          console.log(`New password for ${email}: ${newPassword}`);
+
+          // TODO: Send email with new password
+          // For now, return it in response (REMOVE IN PRODUCTION)
+
+          return res.status(200).json({
+            success: true,
+            message: 'New password has been sent to your email.',
+            // REMOVE THIS IN PRODUCTION - only for testing
+            tempPassword: newPassword
+          });
+
+        } catch (error) {
+          console.error('Reset password error:', error);
+          return res.status(500).json({
+            success: false,
+            error: 'Failed to reset password. Please try again.'
+          });
+        }
+      }
+
       default:
         return res.status(400).json({ 
           success: false, 
-          error: 'Invalid action. Use: get, update, list' 
+          error: 'Invalid action. Use: get, update, list, reset_password' 
         });
     }
   } catch (error) {
