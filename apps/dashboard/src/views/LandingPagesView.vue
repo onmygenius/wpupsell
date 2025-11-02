@@ -117,6 +117,7 @@ function selectProduct(product: any) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '') + '-oferta';
+  searchQuery.value = ''; // Close dropdown after selection
 }
 
 function sanitizeSlug() {

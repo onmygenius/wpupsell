@@ -240,8 +240,14 @@ module.exports = async (req, res) => {
         ...storeData
       };
       
+      // Add currency to product for template
+      const productWithCurrency = {
+        ...product,
+        currency: store.currency
+      };
+      
       // Generate HTML from content
-      const html = generateLandingPageHTML(product, content, store, templateId || 'default');
+      const html = generateLandingPageHTML(productWithCurrency, content, store, templateId || 'default');
       
       const landingPageData = {
         id: landingPageRef.id,
