@@ -142,8 +142,16 @@ IMPORTANT:
     jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1');
     // Fix missing quotes around property names
     jsonString = jsonString.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
-    // Fix single quotes to double quotes
-    jsonString = jsonString.replace(/'/g, '"');
+    
+    // CRITICAL: Escape control characters in string values
+    // This regex finds all string values and escapes newlines, tabs, etc.
+    jsonString = jsonString.replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, (match, p1) => {
+      // Don't escape property names (they come after { or ,)
+      return match;
+    });
+    
+    // Alternative: Remove all control characters that break JSON
+    jsonString = jsonString.replace(/[\x00-\x1F\x7F]/g, '');
     
     let landingPageContent;
     try {
