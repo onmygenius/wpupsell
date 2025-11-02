@@ -14,8 +14,12 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   // Fetch user's stores
   async function fetchStores() {
-    if (!authStore.userId) return;
+    if (!authStore.userId) {
+      console.log('❌ No userId - cannot fetch stores');
+      return;
+    }
 
+    console.log('🔍 Fetching stores for userId:', authStore.userId);
     loading.value = true;
     error.value = null;
 
@@ -26,13 +30,18 @@ export const useDashboardStore = defineStore('dashboard', () => {
       );
 
       const snapshot = await getDocs(storesQuery);
-      stores.value = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      console.log('📊 Found stores:', snapshot.docs.length);
+      
+      stores.value = snapshot.docs.map(doc => {
+        console.log('📦 Store:', doc.id, doc.data());
+        return {
+          id: doc.id,
+          ...doc.data()
+        };
+      });
     } catch (err: any) {
       error.value = err.message;
-      console.error('Error fetching stores:', err);
+      console.error('❌ Error fetching stores:', err);
     } finally {
       loading.value = false;
     }
