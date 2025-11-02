@@ -230,7 +230,7 @@
                     <a href="${product.url}" target="_blank" style="text-decoration: none; color: inherit;">
                         <h3 class="upsellai-popup-product-name" style="cursor: pointer;">${product.name}</h3>
                     </a>
-                    <p class="upsellai-popup-product-price">$${product.price}</p>
+                    <p class="upsellai-popup-product-price">${product.price} ${product.currency || 'LEI'}</p>
                     <p class="upsellai-popup-product-reason">${product.reason}</p>
                     <button class="upsellai-popup-add-to-cart" data-product-id="${product.id}" data-price="${product.price}">
                         Adaugă în Coș

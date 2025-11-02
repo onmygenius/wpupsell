@@ -98,6 +98,7 @@ class Recommendations {
                 'name' => $product->get_name(),
                 'price' => (float) $product->get_price(),
                 'category' => $this->get_product_category($product),
+                'currency' => get_woocommerce_currency(),
             ];
         }
         
@@ -141,6 +142,7 @@ class Recommendations {
                         'id' => $rec['id'],
                         'name' => $product->get_name(),
                         'price' => $product->get_price(),
+                        'currency' => get_woocommerce_currency(),
                         'image' => wp_get_attachment_url($product->get_image_id()),
                         'url' => get_permalink($product->get_id()),
                         'reason' => $rec['reason'] ?? 'AI recommended',
@@ -155,6 +157,8 @@ class Recommendations {
         wp_send_json_success([
             'recommendations' => $formatted,
             'recommendation_id' => $recommendations['recommendation_id'] ?? null,
+            'popupTitle' => $recommendations['popupTitle'] ?? null,
+            'popupSubtitle' => $recommendations['popupSubtitle'] ?? null,
         ]);
     }
     

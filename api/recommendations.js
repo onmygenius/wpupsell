@@ -26,8 +26,8 @@ Customer is viewing:
 - Price: ${product.price} ${product.currency || 'LEI'}
 - Category: ${product.category}
 
-Available products to recommend:
-${availableProducts.map(p => `- ${p.name} (${p.price} ${p.currency || 'LEI'}) - ${p.category}`).join('\n')}
+Available products to recommend (with exact IDs):
+${availableProducts.map(p => `- ID: "${p.id}" | ${p.name} | ${p.price} ${p.currency || 'LEI'} | Category: ${p.category}`).join('\n')}
 
 YOUR TASK:
 
@@ -40,24 +40,32 @@ YOUR TASK:
    - popupSubtitle: Persuasive subtitle (6-10 words) that explains the value
 
 4. SELECT 3 products that complement the current product
-   IMPORTANT: You MUST use the EXACT product IDs from the "Available products" list above!
-   DO NOT invent or modify IDs! Copy them EXACTLY as shown!
+   CRITICAL: You MUST use the EXACT product IDs from the "Available products" list above!
+   The IDs are shown as: ID: "123" - Copy the ID value EXACTLY (including quotes if shown)!
+   DO NOT invent IDs! DO NOT modify IDs! Use ONLY the IDs listed above!
 
-5. For EACH product, write a UNIQUE persuasive message (max 15 words) that:
-   - Uses industry-appropriate language and emotional triggers
-   - Mentions the SPECIFIC product name
-   - Creates urgency or FOMO
-   - Feels personal and exclusive
-   - Is DIFFERENT from other messages (no repetition!)
+5. For EACH product, write a UNIQUE persuasive message (10-20 words) that:
+   - Uses industry-specific language and emotional triggers appropriate for the niche
+   - Mentions the SPECIFIC product name or benefit
+   - Creates urgency, FOMO, or desire
+   - Feels personal, exclusive, and compelling
+   - Is COMPLETELY DIFFERENT from other messages (no repetition!)
+   - Focuses on transformation, benefits, or emotional connection
 
-INDUSTRY-SPECIFIC EXAMPLES:
+INDUSTRY-SPECIFIC TONE & LANGUAGE GUIDE:
 
-Jewelry: "✨ Completează-ți colecția cu eleganță" / "Bijuterii care se potrivesc stilului tău"
-Auto: "🔧 Piese perfecte pentru mașina ta" / "Compatibile 100% cu vehiculul tău"
-Fashion: "👗 Stilul tău, completat perfect" / "Ținute care te definesc"
-Tourism: "🌴 Aventura ta continuă aici" / "Experiențe de neuitat te așteaptă"
-Toys: "🎮 Distracție fără limite" / "Jucării care aduc zâmbete"
-Construction: "🏗️ Tot ce îți trebuie pentru proiect" / "Materiale de calitate, preț corect"
+🔹 Jewelry: Elegant, luxurious, emotional - "Strălucește cu eleganță", "Completează-ți colecția cu rafinament"
+🔹 Auto Parts: Technical, reliable, compatible - "Piese originale pentru vehiculul tău", "Performanță garantată"
+🔹 Fashion: Trendy, stylish, confident - "Stilul tău, definit perfect", "Ținute care te fac să strălucești"
+🔹 Tourism: Adventurous, exciting, memorable - "Aventura vieții te așteaptă", "Experiențe de neuitat"
+🔹 Electronics: Innovative, smart, powerful - "Tehnologie de ultimă generație", "Performanță superioară"
+🔹 Construction: Professional, durable, quality - "Materiale premium pentru proiecte perfecte", "Rezistență garantată"
+🔹 Toys: Fun, playful, joyful - "Distracție fără limite", "Zâmbete garantate pentru copii"
+🔹 Cosmetics: Beautiful, transformative, radiant - "Frumusețea ta naturală", "Strălucește cu încredere"
+🔹 Pharmacy: Health-focused, caring, trusted - "Sănătatea ta contează", "Îngrijire de încredere"
+🔹 Sports: Energetic, performance, achievement - "Performanță maximă", "Depășește-ți limitele"
+🔹 Books: Inspiring, educational, transformative - "Cunoaștere care transformă", "Povești care inspiră"
+🔹 Furniture: Comfortable, stylish, quality - "Confort și eleganță", "Design care durează"
 
 Return ONLY a JSON object with this EXACT format:
 {
@@ -91,8 +99,8 @@ CRITICAL RULES:
         },
       ],
       model: 'llama-3.3-70b-versatile',
-      temperature: 0.8,
-      max_tokens: 300,
+      temperature: 0.7,
+      max_tokens: 800,
     });
 
     const response = completion.choices[0]?.message?.content || '[]';
@@ -362,6 +370,7 @@ module.exports = async (req, res) => {
         id: r.id,
         name: r.name,
         price: r.price,
+        currency: r.currency || 'LEI',
         reason: r.reason || 'Recomandat pentru tine',
       })),
       algorithm: algorithm,
