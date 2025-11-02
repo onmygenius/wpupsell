@@ -24,6 +24,7 @@ class Settings {
     
     public function register_settings() {
         register_setting('upsellai_settings', 'upsellai_api_key');
+        // Hidden settings with defaults
         register_setting('upsellai_settings', 'upsellai_enabled');
         register_setting('upsellai_settings', 'upsellai_display_location');
         register_setting('upsellai_settings', 'upsellai_max_recommendations');
@@ -55,24 +56,25 @@ class Settings {
             return;
         }
         
-        // Save settings
-        if (isset($_POST['upsellai_save_settings'])) {
-            check_admin_referer('upsellai_settings_nonce');
-            
-            update_option('upsellai_api_key', sanitize_text_field($_POST['upsellai_api_key']));
-            update_option('upsellai_enabled', isset($_POST['upsellai_enabled']) ? '1' : '0');
-            update_option('upsellai_display_location', sanitize_text_field($_POST['upsellai_display_location']));
-            update_option('upsellai_max_recommendations', absint($_POST['upsellai_max_recommendations']));
-            
-            echo '<div class="notice notice-success"><p>' . __('Settings saved successfully!', 'upsellai') . '</p></div>';
+        // Save settings (API Key is readonly, no save needed)
+        // Hidden settings are set to defaults automatically
+        if (!get_option('upsellai_enabled')) {
+            update_option('upsellai_enabled', '1'); // Default: enabled
+        }
+        if (!get_option('upsellai_display_location')) {
+            update_option('upsellai_display_location', 'both'); // Default: both
+        }
+        if (!get_option('upsellai_max_recommendations')) {
+            update_option('upsellai_max_recommendations', '1'); // Default: 1
         }
         
         // Save Credentials removed - now handled automatically by Test Connection
         
         $api_key = get_option('upsellai_api_key', '');
+        // Hidden settings with defaults
         $enabled = get_option('upsellai_enabled', '1');
-        $display_location = get_option('upsellai_display_location', 'product_page');
-        $max_recommendations = get_option('upsellai_max_recommendations', '3');
+        $display_location = get_option('upsellai_display_location', 'both');
+        $max_recommendations = get_option('upsellai_max_recommendations', '1');
         
         // WordPress Publishing settings
         $wp_username = get_option('upsellai_wp_username', '');
@@ -114,8 +116,7 @@ class Settings {
             <div class="upsellai-settings-grid">
                 <!-- Left Column: Main Settings -->
                 <div class="upsellai-settings-column">
-                    <form method="post" action="">
-                        <?php wp_nonce_field('upsellai_settings_nonce'); ?>
+                    <h2><?php _e('🔑 API Configuration', 'upsellai'); ?></h2>
                     
                     <table class="form-table">
                         <tr>
@@ -123,79 +124,26 @@ class Settings {
                                 <label for="upsellai_api_key"><?php _e('API Key', 'upsellai'); ?></label>
                             </th>
                             <td>
-                                <input type="text" 
-                                       id="upsellai_api_key" 
-                                       name="upsellai_api_key" 
-                                       value="<?php echo esc_attr($api_key); ?>" 
-                                       class="regular-text" 
-                                       placeholder="sk_live_..." />
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input type="text" 
+                                           id="upsellai_api_key" 
+                                           value="<?php echo esc_attr($api_key); ?>" 
+                                           class="regular-text" 
+                                           readonly
+                                           style="background: #f0f0f1; cursor: not-allowed;" />
+                                    <button type="button" 
+                                            class="button button-secondary" 
+                                            onclick="navigator.clipboard.writeText(document.getElementById('upsellai_api_key').value); this.textContent='✓ Copied!'; setTimeout(() => this.textContent='📋 Copy', 2000);">
+                                        📋 <?php _e('Copy', 'upsellai'); ?>
+                                    </button>
+                                </div>
                                 <p class="description">
                                     <?php _e('Get your API key from', 'upsellai'); ?> 
-                                    <a href="https://upsellai-dashboard.vercel.app/settings" target="_blank">UpSell AI Dashboard</a>
-                                </p>
-                            </td>
-                        </tr>
-                        
-                        <tr>
-                            <th scope="row">
-                                <label for="upsellai_enabled"><?php _e('Enable Recommendations', 'upsellai'); ?></label>
-                            </th>
-                            <td>
-                                <label>
-                                    <input type="checkbox" 
-                                           id="upsellai_enabled" 
-                                           name="upsellai_enabled" 
-                                           value="1" 
-                                           <?php checked($enabled, '1'); ?> />
-                                    <?php _e('Show AI recommendations to customers', 'upsellai'); ?>
-                                </label>
-                            </td>
-                        </tr>
-                        
-                        <tr>
-                            <th scope="row">
-                                <label for="upsellai_display_location"><?php _e('Display Location', 'upsellai'); ?></label>
-                            </th>
-                            <td>
-                                <select id="upsellai_display_location" name="upsellai_display_location">
-                                    <option value="product_page" <?php selected($display_location, 'product_page'); ?>>
-                                        <?php _e('Product Page', 'upsellai'); ?>
-                                    </option>
-                                    <option value="cart_page" <?php selected($display_location, 'cart_page'); ?>>
-                                        <?php _e('Cart Page', 'upsellai'); ?>
-                                    </option>
-                                    <option value="both" <?php selected($display_location, 'both'); ?>>
-                                        <?php _e('Both', 'upsellai'); ?>
-                                    </option>
-                                </select>
-                            </td>
-                        </tr>
-                        
-                        <tr>
-                            <th scope="row">
-                                <label for="upsellai_max_recommendations"><?php _e('Max Recommendations', 'upsellai'); ?></label>
-                            </th>
-                            <td>
-                                <input type="number" 
-                                       id="upsellai_max_recommendations" 
-                                       name="upsellai_max_recommendations" 
-                                       value="<?php echo esc_attr($max_recommendations); ?>" 
-                                       min="1" 
-                                       max="5" 
-                                       class="small-text" />
-                                <p class="description">
-                                    <?php _e('Number of products to recommend (1-5)', 'upsellai'); ?>
+                                    <a href="https://wpupsell-dashboard.vercel.app" target="_blank">UpSell AI Dashboard</a>
                                 </p>
                             </td>
                         </tr>
                     </table>
-                    
-                        <p class="submit">
-                            <button type="submit" name="upsellai_save_settings" class="button button-primary">
-                                <?php _e('Save Settings', 'upsellai'); ?>
-                            </button>
-                        </p>
-                    </form>
                     
                     <hr />
                     
@@ -223,11 +171,50 @@ class Settings {
                     
                     <hr />
                     
+                    <!-- Connection Status -->
+                    <h2><?php _e('🔗 Connection Status', 'upsellai'); ?></h2>
+                    
+                    <?php if ($wp_connected): ?>
+                        <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; padding: 15px; margin-bottom: 15px;">
+                            <p style="margin: 0; color: #155724; font-weight: 600;">
+                                ✅ <?php _e('Connected to UpSell AI Dashboard', 'upsellai'); ?>
+                            </p>
+                        </div>
+                        
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><?php _e('Store URL', 'upsellai'); ?></th>
+                                <td><strong><?php echo esc_html(get_site_url()); ?></strong></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php _e('WordPress User', 'upsellai'); ?></th>
+                                <td><strong><?php echo esc_html($wp_username); ?></strong></td>
+                            </tr>
+                            <?php if ($wp_last_test): ?>
+                            <tr>
+                                <th scope="row"><?php _e('Last Test', 'upsellai'); ?></th>
+                                <td><?php echo date('Y-m-d H:i:s', $wp_last_test); ?></td>
+                            </tr>
+                            <?php endif; ?>
+                        </table>
+                    <?php else: ?>
+                        <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 15px; margin-bottom: 15px;">
+                            <p style="margin: 0; color: #721c24; font-weight: 600;">
+                                ❌ <?php _e('Not Connected', 'upsellai'); ?>
+                            </p>
+                            <p style="margin: 10px 0 0 0; color: #721c24;">
+                                <?php _e('Configure Application Password in the right panel to enable WordPress Publishing.', 'upsellai'); ?>
+                            </p>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <hr />
+                    
                     <!-- Quick Stats -->
-                    <h2><?php _e('Quick Stats', 'upsellai'); ?></h2>
+                    <h2><?php _e('📊 Quick Stats', 'upsellai'); ?></h2>
                     <div class="upsellai-stats">
                         <p><?php _e('View detailed analytics in your', 'upsellai'); ?> 
-                           <a href="https://upsellai-dashboard.vercel.app" target="_blank">UpSell AI Dashboard</a>
+                           <a href="https://wpupsell-dashboard.vercel.app" target="_blank">UpSell AI Dashboard</a>
                         </p>
                     </div>
                 </div>
