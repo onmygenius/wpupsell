@@ -7,7 +7,19 @@
  */
 
 const { getFirestore } = require('../lib/firebase-admin');
-const { getGroq } = require('../lib/groq-client');
+const Groq = require('groq-sdk');
+
+// Groq instance
+let groqInstance = null;
+
+function getGroq() {
+  if (!groqInstance) {
+    groqInstance = new Groq({
+      apiKey: process.env.GROQ_API_KEY
+    });
+  }
+  return groqInstance;
+}
 
 // CORS headers
 function setCorsHeaders(res) {
