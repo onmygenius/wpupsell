@@ -122,15 +122,41 @@ module.exports = async (req, res) => {
       // Sanitize HTML content for WordPress
       let htmlContent = landingPage.html || '';
       
+      console.log(`📏 Original HTML length: ${htmlContent.length} characters`);
+      
       // Remove any null bytes or invalid characters
       htmlContent = htmlContent.replace(/\0/g, '');
       
-      // WordPress has a limit on post_content length (usually 65535 bytes for TEXT field)
-      // If HTML is too long, truncate it
-      const maxLength = 60000; // Safe limit
-      if (htmlContent.length > maxLength) {
-        console.log(`⚠️ HTML too long (${htmlContent.length} chars), truncating to ${maxLength}`);
-        htmlContent = htmlContent.substring(0, maxLength) + '\n<!-- Content truncated due to length -->';
+      // WordPress LONGTEXT field can handle up to 4GB, but we need to check byte size
+      // UTF-8 characters can be 1-4 bytes each
+      const byteSize = Buffer.byteLength(htmlContent, 'utf8');
+      console.log(`📏 HTML byte size: ${byteSize} bytes`);
+      
+      // WordPress post_content is LONGTEXT (max 4GB) but some hosts limit it
+      // Safe limit: 50KB (50000 bytes) to avoid issues
+      const maxBytes = 50000;
+      
+      if (byteSize > maxBytes) {
+        console.log(`⚠️ HTML too large (${byteSize} bytes), truncating to ${maxBytes} bytes`);
+        
+        // Truncate by bytes, not characters
+        let truncated = '';
+        let currentBytes = 0;
+        
+        for (let i = 0; i < htmlContent.length; i++) {
+          const char = htmlContent[i];
+          const charBytes = Buffer.byteLength(char, 'utf8');
+          
+          if (currentBytes + charBytes > maxBytes - 100) { // Leave room for closing tag
+            break;
+          }
+          
+          truncated += char;
+          currentBytes += charBytes;
+        }
+        
+        htmlContent = truncated + '\n<!-- Content truncated due to size limit -->';
+        console.log(`✂️ Truncated to ${Buffer.byteLength(htmlContent, 'utf8')} bytes`);
       }
       
       const pageData = {
