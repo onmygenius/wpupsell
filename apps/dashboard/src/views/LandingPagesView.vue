@@ -43,7 +43,7 @@ async function loadStore() {
   try {
     // Import Firebase (lazy load)
     const { doc, getDoc } = await import('firebase/firestore');
-    const { db } = await import('@/firebase');
+    const { db } = await import('../firebase/config');
     
     const storeDoc = await getDoc(doc(db, 'stores', STORE_ID));
     if (storeDoc.exists()) {
