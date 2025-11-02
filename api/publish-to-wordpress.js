@@ -119,9 +119,23 @@ module.exports = async (req, res) => {
       const auth = Buffer.from(`${store.wordpressUsername}:${decryptedPassword}`).toString('base64');
       
       // Prepare page data
+      // Sanitize HTML content for WordPress
+      let htmlContent = landingPage.html || '';
+      
+      // Remove any null bytes or invalid characters
+      htmlContent = htmlContent.replace(/\0/g, '');
+      
+      // WordPress has a limit on post_content length (usually 65535 bytes for TEXT field)
+      // If HTML is too long, truncate it
+      const maxLength = 60000; // Safe limit
+      if (htmlContent.length > maxLength) {
+        console.log(`⚠️ HTML too long (${htmlContent.length} chars), truncating to ${maxLength}`);
+        htmlContent = htmlContent.substring(0, maxLength) + '\n<!-- Content truncated due to length -->';
+      }
+      
       const pageData = {
         title: landingPage.pageTitle,
-        content: landingPage.html,
+        content: htmlContent,
         slug: landingPage.pageSlug,
         status: 'publish',
         meta: {
