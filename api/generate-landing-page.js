@@ -60,6 +60,13 @@ CRITICAL INSTRUCTIONS:
    - Use social proof effectively
    - Make it feel exclusive and premium
 
+5. JSON FORMATTING RULES (CRITICAL):
+   - NEVER use double quotes (") inside string values
+   - Use single quotes (') or apostrophes instead
+   - Example: CORRECT: "Lanțisorul 'Inima Eternă' este frumos"
+   - Example: WRONG: "Lanțisorul \"Inima Eternă\" este frumos"
+   - This is CRITICAL for valid JSON parsing!
+
 Return ONLY a JSON object with this EXACT structure:
 {
   "hero": {
@@ -138,20 +145,29 @@ IMPORTANT:
     let jsonString = jsonMatch[0];
     
     // Clean up common JSON errors from AI
-    // Fix trailing commas
+    console.log('🧹 Cleaning JSON before parsing...');
+    
+    // 1. Remove control characters (newlines, tabs, etc.)
+    jsonString = jsonString.replace(/[\x00-\x1F\x7F]/g, '');
+    
+    // 2. Fix trailing commas
     jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1');
-    // Fix missing quotes around property names
+    
+    // 3. Fix missing quotes around property names
     jsonString = jsonString.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
     
-    // CRITICAL: Escape control characters in string values
-    // This regex finds all string values and escapes newlines, tabs, etc.
-    jsonString = jsonString.replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, (match, p1) => {
-      // Don't escape property names (they come after { or ,)
-      return match;
+    // 4. CRITICAL FIX: Replace escaped quotes inside string values with single quotes
+    // This fixes: "Lanțisorul \"Inima Eternă\"" -> "Lanțisorul 'Inima Eternă'"
+    jsonString = jsonString.replace(/:\s*"([^"]*?)\\"/g, (match, before) => {
+      // Replace \" with ' inside string values
+      return `: "${before.replace(/\\"/g, "'")}"`;
     });
     
-    // Alternative: Remove all control characters that break JSON
-    jsonString = jsonString.replace(/[\x00-\x1F\x7F]/g, '');
+    // 5. Also fix any remaining \" that might break JSON
+    // But preserve \" at the end of strings (those are valid)
+    jsonString = jsonString.replace(/\\"(?!")/g, "'");
+    
+    console.log('✅ JSON cleaned, attempting parse...');
     
     let landingPageContent;
     try {
