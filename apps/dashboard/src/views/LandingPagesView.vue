@@ -24,13 +24,11 @@ const editedContent = ref<any>(null);
 const uploadingImage = ref(false);
 const store = ref<any>(null);
 const activeTab = ref('description');
-const selectedTemplate = ref('default');
+const selectedTemplate = ref('');
 
 // Available templates
 const templates = [
-  { id: 'default', name: 'Default (Minimalist)', description: 'Clean, modern design with focus on product' },
-  { id: 'minimalist-ecommerce', name: 'Minimalist E-Commerce', description: 'Professional minimalist template' },
-  // More templates will be added here
+  { id: 'starter', name: 'Starter', description: 'Modern, clean design with Tailwind CSS - Perfect for any product' }
 ];
 
 onMounted(async () => {
@@ -118,7 +116,7 @@ function openGenerateModal() {
   pageTitle.value = '';
   pageSlug.value = '';
   urlPrefix.value = 'oferte';
-  selectedTemplate.value = 'default';
+  selectedTemplate.value = '';
 }
 
 function closeGenerateModal() {
@@ -540,11 +538,12 @@ function viewLivePage(url: string) {
           <div>
             <label class="block text-sm font-medium text-gray-400 mb-2">Template</label>
             <select v-model="selectedTemplate" class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none">
+              <option value="" disabled>Choose template...</option>
               <option v-for="template in templates" :key="template.id" :value="template.id">
                 {{ template.name }}
               </option>
             </select>
-            <p class="text-xs text-gray-500 mt-1">{{ templates.find(t => t.id === selectedTemplate)?.description }}</p>
+            <p class="text-xs text-gray-500 mt-1">{{ selectedTemplate ? templates.find(t => t.id === selectedTemplate)?.description : 'Select a template to see description' }}</p>
           </div>
           
           <div>
