@@ -50,6 +50,9 @@ export const useAuthStore = defineStore('auth', () => {
       // Create user profile in Firestore
       await createUserProfile(userCredential.user, name);
 
+      // Create store with FREE plan
+      await createStoreWithFreePlan(userCredential.user, name);
+
       router.push('/stores'); // Redirect to Stores to create store
       return { success: true };
     } catch (err: any) {
@@ -101,6 +104,41 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     await setDoc(doc(db, 'users', firebaseUser.uid), userProfile);
+  }
+
+  // Create store with FREE plan
+  async function createStoreWithFreePlan(firebaseUser: User, name?: string) {
+    const now = new Date();
+    const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
+
+    const store = {
+      userId: firebaseUser.uid,
+      name: name || firebaseUser.email?.split('@')[0] || 'My Store',
+      url: '',
+      apiKey: generateApiKey(),
+      plan: 'free',
+      status: 'active',
+      limits: {
+        pagesPerMonth: 5,
+        maxProducts: 10,
+        maxStores: 1
+      },
+      usage: {
+        pagesGenerated: 0,
+        lastResetDate: now,
+        currentPeriodStart: now,
+        currentPeriodEnd: periodEnd
+      },
+      createdAt: now,
+      updatedAt: now,
+      stats: {
+        totalProducts: 0,
+        totalRevenue: 0,
+        totalConversions: 0
+      }
+    };
+
+    await setDoc(doc(db, 'stores', firebaseUser.uid), store);
   }
 
   // Generate API Key

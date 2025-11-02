@@ -214,6 +214,9 @@ module.exports = async function handler(req, res) {
             apiKey = 'sk_live_' + crypto.randomBytes(20).toString('hex');
             
             // Create store in Firestore
+            const now = new Date();
+            const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
+            
             const storeRef = db.collection('stores').doc(userId);
             await storeRef.set({
               userId,
@@ -225,10 +228,21 @@ module.exports = async function handler(req, res) {
               wordpressPassword,
               wordpressConnected: true,
               wordpressLastTest: Date.now(),
-              plan: 'starter',
+              plan: 'free',
               status: 'active',
-              createdAt: new Date(),
-              updatedAt: new Date(),
+              limits: {
+                pagesPerMonth: 5,
+                maxProducts: 10,
+                maxStores: 1
+              },
+              usage: {
+                pagesGenerated: 0,
+                lastResetDate: now,
+                currentPeriodStart: now,
+                currentPeriodEnd: periodEnd
+              },
+              createdAt: now,
+              updatedAt: now,
               stats: {
                 totalRevenue: 0,
                 totalProducts: 0,

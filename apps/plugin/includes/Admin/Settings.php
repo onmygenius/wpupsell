@@ -67,31 +67,7 @@ class Settings {
             echo '<div class="notice notice-success"><p>' . __('Settings saved successfully!', 'upsellai') . '</p></div>';
         }
         
-        // Save WordPress Publishing credentials
-        if (isset($_POST['upsellai_save_wp_credentials'])) {
-            check_admin_referer('upsellai_settings_nonce');
-            
-            $wp_username = sanitize_text_field($_POST['upsellai_wp_username']);
-            $wp_app_password = sanitize_text_field($_POST['upsellai_wp_app_password']);
-            
-            // Remove spaces from Application Password (WordPress adds them for readability)
-            $wp_app_password = str_replace(' ', '', $wp_app_password);
-            
-            if (!empty($wp_username) && !empty($wp_app_password)) {
-                // Encrypt the Application Password before saving locally
-                $encrypted_password = $this->encrypt_password($wp_app_password);
-                
-                update_option('upsellai_wp_username', $wp_username);
-                update_option('upsellai_wp_app_password', $encrypted_password);
-                
-                // Send credentials to Firebase (plain text - will be encrypted in transit via HTTPS)
-                $this->sync_wp_credentials_to_firebase($wp_username, $wp_app_password);
-                
-                echo '<div class="notice notice-success"><p>' . __('WordPress credentials saved successfully!', 'upsellai') . '</p></div>';
-            } else {
-                echo '<div class="notice notice-error"><p>' . __('Please fill in both username and Application Password.', 'upsellai') . '</p></div>';
-            }
-        }
+        // Save Credentials removed - now handled automatically by Test Connection
         
         $api_key = get_option('upsellai_api_key', '');
         $enabled = get_option('upsellai_enabled', '1');
@@ -100,7 +76,9 @@ class Settings {
         
         // WordPress Publishing settings
         $wp_username = get_option('upsellai_wp_username', '');
-        $wp_app_password = get_option('upsellai_wp_app_password', '');
+        $wp_app_password_encrypted = get_option('upsellai_wp_app_password', '');
+        // Decrypt for display (show dots)
+        $wp_app_password = !empty($wp_app_password_encrypted) ? str_repeat('•', 24) : '';
         $wp_connected = get_option('upsellai_wp_connected', false);
         $wp_last_test = get_option('upsellai_wp_last_test', 0);
         
@@ -327,7 +305,7 @@ class Settings {
                             <input type="password" 
                                    id="upsellai_wp_app_password" 
                                    name="upsellai_wp_app_password" 
-                                   value="<?php echo esc_attr($wp_app_password ? '••••••••••••••••••••••••' : ''); ?>" 
+                                   value="<?php echo esc_attr($wp_app_password); ?>" 
                                    class="regular-text" 
                                    placeholder="xxxx xxxx xxxx xxxx xxxx xxxx" 
                                    autocomplete="off" />
@@ -369,16 +347,14 @@ class Settings {
                 <p class="submit">
                     <button type="button" 
                             id="upsellai_test_wp_connection" 
-                            class="button button-secondary">
-                        <span class="dashicons dashicons-yes-alt" style="margin-top: 3px;"></span>
-                        <?php _e('Test Connection', 'upsellai'); ?>
-                    </button>
-                    
-                    <button type="submit" 
-                            name="upsellai_save_wp_credentials" 
                             class="button button-primary">
-                        <?php _e('Save Credentials', 'upsellai'); ?>
+                        <span class="dashicons dashicons-yes-alt" style="margin-top: 3px;"></span>
+                        <?php _e('Test Connection & Save', 'upsellai'); ?>
                     </button>
+                </p>
+                
+                <p class="description" style="margin-top: -10px; color: #2271b1;">
+                    ℹ️ <?php _e('Testing connection will automatically save credentials if successful', 'upsellai'); ?>
                 </p>
                 
                 </div>
@@ -421,14 +397,73 @@ class Settings {
     }
     
     /**
+     * Auto Setup Store: Create user + store + sync products in ONE request
+     */
+    private function auto_setup_store($wordpress_url, $wordpress_name, $wordpress_email, $username, $password, $products) {
+        $api_url = 'https://wpupsell-dashboard.vercel.app/api/stores';
+        
+        $request_body = [
+            'action' => 'auto_setup_store',
+            'wordpressUrl' => $wordpress_url,
+            'wordpressName' => $wordpress_name,
+            'wordpressEmail' => $wordpress_email,
+            'wordpressUsername' => $username,
+            'wordpressPassword' => $password,
+            'products' => $products
+        ];
+        
+        error_log('🚀 AUTO SETUP STORE:');
+        error_log('URL: ' . $wordpress_url);
+        error_log('Name: ' . $wordpress_name);
+        error_log('Email: ' . $wordpress_email);
+        error_log('Products: ' . count($products));
+        
+        $response = wp_remote_post($api_url, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+            'body' => json_encode($request_body),
+            'timeout' => 30, // Longer timeout for creating user + store + products
+        ]);
+        
+        if (is_wp_error($response)) {
+            error_log('❌ Auto setup failed: ' . $response->get_error_message());
+            return false;
+        }
+        
+        $status_code = wp_remote_retrieve_response_code($response);
+        $response_body = wp_remote_retrieve_body($response);
+        
+        error_log('📥 Response Status: ' . $status_code);
+        error_log('📥 Response Body: ' . $response_body);
+        
+        if ($status_code === 200) {
+            $result = json_decode($response_body, true);
+            error_log('✅ Auto setup successful!');
+            return $result;
+        } else {
+            error_log('❌ Auto setup failed - Status: ' . $status_code);
+            return false;
+        }
+    }
+    
+    /**
      * Sync WordPress credentials to Firebase
      */
-    private function sync_wp_credentials_to_firebase($username, $password) {
+    private function sync_wp_credentials_to_firebase($username, $password, $wordpress_url = '', $wordpress_name = '') {
         $api_key = get_option('upsellai_api_key');
         
         if (empty($api_key)) {
             error_log('❌ SYNC WP CREDENTIALS: API Key is empty!');
             return false;
+        }
+        
+        // Get WordPress URL and name if not provided (100% dynamic)
+        if (empty($wordpress_url)) {
+            $wordpress_url = get_site_url();
+        }
+        if (empty($wordpress_name)) {
+            $wordpress_name = get_bloginfo('name');
         }
         
         $api_url = 'https://wpupsell-dashboard.vercel.app/api/stores';
@@ -437,6 +472,8 @@ class Settings {
             'apiKey' => $api_key,
             'wordpressUsername' => $username,
             'wordpressPassword' => $password, // Plain text - encrypted in transit via HTTPS
+            'wordpressUrl' => $wordpress_url, // WordPress site URL (100% dynamic)
+            'wordpressName' => $wordpress_name, // WordPress site name (100% dynamic)
             'action' => 'update_wp_credentials'
         ];
         
@@ -527,16 +564,76 @@ class Settings {
         error_log('WP REST API Test - Response: ' . substr($response_body, 0, 200));
         
         if ($status_code === 200) {
-            // Connection successful
+            // Connection successful - AUTO SETUP EVERYTHING!
             update_option('upsellai_wp_connected', true);
             update_option('upsellai_wp_last_test', time());
             
-            // Sync status to Firebase (100% dynamic - uses API Key)
-            $this->sync_wp_connection_status_to_firebase(true);
+            // Save credentials locally
+            $encrypted_password = $this->encrypt_password($password);
+            update_option('upsellai_wp_username', $username);
+            update_option('upsellai_wp_app_password', $encrypted_password);
             
-            wp_send_json_success([
-                'message' => 'Successfully connected to WordPress REST API!\n\nYou can now publish landing pages from the UpSell AI Dashboard.'
+            // Get all WordPress data (100% dynamic)
+            $wordpress_url = get_site_url();
+            $wordpress_name = get_bloginfo('name');
+            $wordpress_email = get_bloginfo('admin_email');
+            
+            // Get all WooCommerce products
+            $products = [];
+            $wc_products = wc_get_products([
+                'limit' => -1,
+                'status' => 'publish'
             ]);
+            
+            foreach ($wc_products as $product) {
+                $products[] = [
+                    'id' => $product->get_id(),
+                    'name' => $product->get_name(),
+                    'price' => (float) $product->get_price(),
+                    'regularPrice' => (float) $product->get_regular_price(),
+                    'salePrice' => $product->get_sale_price() ? (float) $product->get_sale_price() : null,
+                    'description' => $product->get_short_description(),
+                    'image' => wp_get_attachment_url($product->get_image_id()),
+                    'url' => get_permalink($product->get_id()),
+                    'category' => $product->get_category_ids() ? implode(', ', $product->get_category_ids()) : '',
+                    'stock' => $product->get_stock_quantity(),
+                    'sku' => $product->get_sku(),
+                    'enabled' => true
+                ];
+            }
+            
+            // AUTO SETUP: Create store + user + sync products in ONE request!
+            $setup_result = $this->auto_setup_store($wordpress_url, $wordpress_name, $wordpress_email, $username, $password, $products);
+            
+            if ($setup_result && isset($setup_result['success']) && $setup_result['success']) {
+                // Save API Key locally (readonly)
+                update_option('upsellai_api_key', $setup_result['apiKey']);
+                
+                // Success message with dashboard credentials
+                $message = "✅ Success! Store created and products synced!\n\n";
+                $message .= "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+                $message .= "📊 DASHBOARD CREDENTIALS:\n";
+                $message .= "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
+                $message .= "Email: " . $setup_result['dashboardEmail'] . "\n";
+                $message .= "Password: " . $setup_result['dashboardPassword'] . "\n\n";
+                $message .= "🔗 Login here:\n";
+                $message .= $setup_result['dashboardUrl'] . "\n\n";
+                $message .= "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+                $message .= "✅ " . count($products) . " products synced\n";
+                $message .= "✅ Store: " . $wordpress_name . "\n";
+                $message .= "✅ API Key saved (readonly)\n";
+                
+                wp_send_json_success([
+                    'message' => $message,
+                    'dashboardUrl' => $setup_result['dashboardUrl'],
+                    'dashboardEmail' => $setup_result['dashboardEmail'],
+                    'dashboardPassword' => $setup_result['dashboardPassword']
+                ]);
+            } else {
+                wp_send_json_error([
+                    'message' => 'Connection successful but store setup failed.\n\nPlease contact support.'
+                ]);
+            }
         } elseif ($status_code === 401) {
             wp_send_json_error([
                 'message' => 'Authentication failed!\n\nPlease check:\n1. Username is correct (not email)\n2. Application Password is correct (remove spaces!)\n3. Application Passwords are enabled in WordPress\n\nTested URL: ' . $api_url
