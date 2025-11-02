@@ -162,9 +162,9 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { productId, pageTitle, pageSlug, urlPrefix, storeId } = req.body;
+    const { productId, pageTitle, pageSlug, urlPrefix, templateId, storeId } = req.body;
     
-    console.log('📊 Request:', { productId, pageTitle, pageSlug, urlPrefix, storeId });
+    console.log('📊 Request:', { productId, pageTitle, pageSlug, urlPrefix, templateId, storeId });
     
     if (!productId || !pageTitle || !pageSlug || !storeId) {
       return res.status(400).json({ 
@@ -229,13 +229,19 @@ module.exports = async (req, res) => {
         .collection('landingPages')
         .doc();
       
-      // Get store URL from Firebase
+      // Get store data from Firebase
       const storeDoc = await db.collection('stores').doc(storeId).get();
       const storeData = storeDoc.exists ? storeDoc.data() : {};
-      const storeUrl = storeData.url || storeData.siteUrl || '';
+      const store = {
+        id: storeId,
+        name: storeData.name || 'Store',
+        url: storeData.url || storeData.siteUrl || '',
+        currency: storeData.currency || 'RON',
+        ...storeData
+      };
       
       // Generate HTML from content
-      const html = generateLandingPageHTML(product, content, storeUrl);
+      const html = generateLandingPageHTML(product, content, store, templateId || 'default');
       
       const landingPageData = {
         id: landingPageRef.id,
@@ -245,6 +251,7 @@ module.exports = async (req, res) => {
         pageSlug,
         urlPrefix: urlPrefix || '',
         fullUrl: urlPrefix ? `/${urlPrefix}/${pageSlug}` : `/${pageSlug}`,
+        templateId: templateId || 'default',
         content,
         html,
         status: 'draft',

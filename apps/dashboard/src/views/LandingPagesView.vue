@@ -18,13 +18,41 @@ const showEditModal = ref(false);
 const editingPage = ref<any>(null);
 const editedContent = ref<any>(null);
 const uploadingImage = ref(false);
+const store = ref<any>(null);
+const activeTab = ref('description');
+const selectedTemplate = ref('default');
+
+// Available templates
+const templates = [
+  { id: 'default', name: 'Default (Minimalist)', description: 'Clean, modern design with focus on product' },
+  { id: 'minimalist-ecommerce', name: 'Minimalist E-Commerce', description: 'Professional minimalist template' },
+  // More templates will be added here
+];
 
 onMounted(async () => {
   await Promise.all([
+    loadStore(),
     loadLandingPages(),
     loadProducts()
   ]);
 });
+
+async function loadStore() {
+  if (!STORE_ID) return;
+  
+  try {
+    // Import Firebase (lazy load)
+    const { doc, getDoc } = await import('firebase/firestore');
+    const { db } = await import('@/firebase');
+    
+    const storeDoc = await getDoc(doc(db, 'stores', STORE_ID));
+    if (storeDoc.exists()) {
+      store.value = { id: storeDoc.id, ...storeDoc.data() };
+    }
+  } catch (error) {
+    console.error('Failed to load store:', error);
+  }
+}
 
 async function loadLandingPages() {
   try {
@@ -75,6 +103,7 @@ function openGenerateModal() {
   pageTitle.value = '';
   pageSlug.value = '';
   urlPrefix.value = 'oferte';
+  selectedTemplate.value = 'default';
 }
 
 function closeGenerateModal() {
@@ -109,7 +138,8 @@ const filteredProducts = computed(() => {
 
 const previewUrl = computed(() => {
   const prefix = urlPrefix.value ? `${urlPrefix.value}/` : '';
-  return `bijuteriaregala.ro/${prefix}${pageSlug.value}`;
+  const baseUrl = store.value?.url?.replace(/^https?:\/\//, '').replace(/\/$/, '') || 'yourstore.com';
+  return `${baseUrl}/${prefix}${pageSlug.value}`;
 });
 
 async function generateLandingPage() {
@@ -129,6 +159,7 @@ async function generateLandingPage() {
         pageTitle: pageTitle.value,
         pageSlug: pageSlug.value,
         urlPrefix: urlPrefix.value,
+        templateId: selectedTemplate.value,
         storeId: STORE_ID,
       }),
     });
@@ -398,14 +429,14 @@ async function deleteLandingPage(pageId: string) {
                 class="w-full text-left px-4 py-3 hover:bg-gray-800 transition border-b border-gray-800 last:border-b-0"
               >
                 <p class="text-white font-medium">{{ product.name }}</p>
-                <p class="text-sm text-gray-400">{{ product.price }} LEI - {{ product.category }}</p>
+                <p class="text-sm text-gray-400">{{ product.price }} {{ store?.currency || 'LEI' }} - {{ product.category }}</p>
               </button>
             </div>
             
             <!-- Selected Product -->
             <div v-if="selectedProduct" class="mt-2 bg-green-600/20 border border-green-600/50 rounded-lg px-4 py-3">
               <p class="text-green-400 font-medium">✅ Selected: {{ selectedProduct.name }}</p>
-              <p class="text-sm text-gray-400">{{ selectedProduct.price }} LEI</p>
+              <p class="text-sm text-gray-400">{{ selectedProduct.price }} {{ store?.currency || 'LEI' }}</p>
             </div>
           </div>
           
@@ -429,6 +460,16 @@ async function deleteLandingPage(pageId: string) {
               class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none"
             />
             <p class="text-xs text-gray-500 mt-1">Only lowercase letters, numbers, and hyphens</p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">Template</label>
+            <select v-model="selectedTemplate" class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none">
+              <option v-for="template in templates" :key="template.id" :value="template.id">
+                {{ template.name }}
+              </option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">{{ templates.find(t => t.id === selectedTemplate)?.description }}</p>
           </div>
           
           <div>
@@ -476,14 +517,34 @@ async function deleteLandingPage(pageId: string) {
 
         <!-- Tabs -->
         <div class="flex gap-2 mb-6 border-b border-gray-800">
-          <button class="px-4 py-2 text-white border-b-2 border-blue-600">📝 Description</button>
-          <button class="px-4 py-2 text-gray-400 hover:text-white">✨ Benefits</button>
-          <button class="px-4 py-2 text-gray-400 hover:text-white">🖼️ Gallery</button>
-          <button class="px-4 py-2 text-gray-400 hover:text-white">❓ FAQ</button>
+          <button 
+            @click="activeTab = 'description'"
+            :class="['px-4 py-2 transition', activeTab === 'description' ? 'text-white border-b-2 border-blue-600' : 'text-gray-400 hover:text-white']"
+          >
+            📝 Description
+          </button>
+          <button 
+            @click="activeTab = 'benefits'"
+            :class="['px-4 py-2 transition', activeTab === 'benefits' ? 'text-white border-b-2 border-blue-600' : 'text-gray-400 hover:text-white']"
+          >
+            ✨ Benefits
+          </button>
+          <button 
+            @click="activeTab = 'gallery'"
+            :class="['px-4 py-2 transition', activeTab === 'gallery' ? 'text-white border-b-2 border-blue-600' : 'text-gray-400 hover:text-white']"
+          >
+            🖼️ Gallery
+          </button>
+          <button 
+            @click="activeTab = 'faq'"
+            :class="['px-4 py-2 transition', activeTab === 'faq' ? 'text-white border-b-2 border-blue-600' : 'text-gray-400 hover:text-white']"
+          >
+            ❓ FAQ
+          </button>
         </div>
 
         <!-- Description Editor -->
-        <div class="space-y-4 mb-6">
+        <div v-show="activeTab === 'description'" class="space-y-4 mb-6">
           <div>
             <label class="block text-sm font-medium text-gray-400 mb-2">Hero Headline</label>
             <input
@@ -522,7 +583,7 @@ async function deleteLandingPage(pageId: string) {
         </div>
 
         <!-- Benefits Editor -->
-        <div class="space-y-4 mb-6">
+        <div v-show="activeTab === 'benefits'" class="space-y-4 mb-6">
           <h3 class="text-lg font-semibold text-white mb-4">✨ Benefits</h3>
           <div v-for="(benefit, index) in editedContent.benefits" :key="index" class="bg-[#0f1535] border border-gray-800 rounded-lg p-4">
             <div class="flex items-center gap-4 mb-3">
@@ -549,7 +610,7 @@ async function deleteLandingPage(pageId: string) {
         </div>
 
         <!-- Image Gallery -->
-        <div class="mb-6">
+        <div v-show="activeTab === 'gallery'" class="mb-6">
           <h3 class="text-lg font-semibold text-white mb-4">🖼️ Image Gallery</h3>
           
           <div class="grid grid-cols-3 gap-4 mb-4">
@@ -580,7 +641,7 @@ async function deleteLandingPage(pageId: string) {
         </div>
 
         <!-- FAQ Editor -->
-        <div class="space-y-4 mb-6">
+        <div v-show="activeTab === 'faq'" class="space-y-4 mb-6">
           <h3 class="text-lg font-semibold text-white mb-4">❓ FAQ</h3>
           <div v-for="(item, index) in editedContent.faq" :key="index" class="bg-[#0f1535] border border-gray-800 rounded-lg p-4">
             <input
