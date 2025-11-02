@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../firebase/config';
 
 const route = useRoute();
 const authStore = useAuthStore();
 const isCollapsed = ref(false);
-const currentPlan = ref('free');
 
 const userInitial = computed(() => {
   return authStore.userEmail.charAt(0).toUpperCase() || 'U';
@@ -26,21 +23,6 @@ const navigation = [
   { name: 'Landing Pages', path: '/landing-pages', icon: '🎨' },
   { name: 'Settings', path: '/settings', icon: '⚙️' }
 ];
-
-const planName = computed(() => currentPlan.value.toUpperCase());
-
-onMounted(async () => {
-  try {
-    if (authStore.userId) {
-      const storeDoc = await getDoc(doc(db, 'stores', authStore.userId));
-      if (storeDoc.exists()) {
-        currentPlan.value = storeDoc.data().plan || 'free';
-      }
-    }
-  } catch (error) {
-    console.error('Failed to load plan:', error);
-  }
-});
 
 const isActive = (path: string) => {
   return route.path === path;
@@ -76,7 +58,7 @@ const toggleSidebar = () => {
           </div>
           <div v-if="!isCollapsed">
             <h1 class="text-lg font-bold text-white">UpSell AI</h1>
-            <p class="text-xs text-gray-400">{{ planName }} Plan</p>
+            <p class="text-xs text-gray-400">{{ authStore.userEmail }}</p>
           </div>
         </div>
 

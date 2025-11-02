@@ -168,12 +168,33 @@ module.exports = async function handler(req, res) {
           let userId, storeId, apiKey, dashboardPassword;
           
           if (!existingStoreSnapshot.empty) {
-            // Store exists - just update
-            console.log('✅ Store exists - updating...');
+            // Store exists - verify it's the same user
+            console.log('⚠️ Store URL already registered - verifying ownership...');
             const storeDoc = existingStoreSnapshot.docs[0];
+            const existingStoreData = storeDoc.data();
+            
+            // Get the email of the existing store owner
+            const { getAuth } = require('../lib/firebase-admin');
+            const auth = getAuth();
+            const existingUser = await auth.getUser(existingStoreData.userId);
+            
+            // Check if the email matches
+            if (existingUser.email !== wordpressEmail) {
+              // Different user trying to register same store URL - BLOCK!
+              console.log('🚫 BLOCKED: Different user trying to register existing store');
+              return res.status(403).json({
+                success: false,
+                error: 'This store is already registered with another account.',
+                message: 'This WordPress store is already connected to an UpSell AI account. Please login with your original email or contact support if you need help.',
+                existingEmail: existingUser.email.substring(0, 3) + '***@' + existingUser.email.split('@')[1] // Show partial email
+              });
+            }
+            
+            // Same user - just update credentials
+            console.log('✅ Store exists - same user, updating...');
             storeId = storeDoc.id;
-            userId = storeDoc.data().userId;
-            apiKey = storeDoc.data().apiKey;
+            userId = existingStoreData.userId;
+            apiKey = existingStoreData.apiKey;
             
             // Update credentials
             await storeDoc.ref.update({
