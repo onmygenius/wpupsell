@@ -239,7 +239,9 @@ Generate EXACTLY ${count} titles in JSON format:
   const response = completion.choices[0]?.message?.content || '{}';
   const parsed = JSON.parse(response);
   
-  return parsed.titles || [];
+  // Add store name to each title
+  const titles = parsed.titles || [];
+  return titles.map(title => `${title} | ${store.name}`);
 }
 
 /**
