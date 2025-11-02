@@ -252,11 +252,16 @@ async function generatePageContent(store, products, title, pageNumber) {
   const shuffled = [...products].sort(() => 0.5 - Math.random());
   const selectedProducts = shuffled.slice(0, 3);
 
+  // Get product categories for external links
+  const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
+  const mainCategory = categories[0] || 'produse';
+
   const prompt = `Write promotional content for an e-commerce landing page.
 
 Title: ${title}
 Store: ${store.name}
 Products to mention: ${selectedProducts.map(p => p.name).join(', ')}
+Category: ${mainCategory}
 
 Requirements:
 - Write 1000-1500 words of PERSUASIVE, PROMOTIONAL content
@@ -275,13 +280,21 @@ Structure:
 5. Urgency/Scarcity (150 words) - Create FOMO
 6. Final CTA (100 words) - Strong call to action
 
-Return ONLY the content in plain text, no HTML tags, no formatting.`;
+Return in JSON format:
+{
+  "content": "main promotional content here",
+  "faq": [
+    {"question": "question 1", "answer": "answer 1"},
+    {"question": "question 2", "answer": "answer 2"},
+    {"question": "question 3", "answer": "answer 3"}
+  ]
+}`;
 
   const completion = await groq.chat.completions.create({
     messages: [
       {
         role: 'system',
-        content: 'You are an expert copywriter specializing in persuasive e-commerce content that drives sales.'
+        content: 'You are an expert copywriter specializing in persuasive e-commerce content that drives sales. Always return valid JSON.'
       },
       {
         role: 'user',
@@ -290,16 +303,23 @@ Return ONLY the content in plain text, no HTML tags, no formatting.`;
     ],
     model: 'llama-3.3-70b-versatile',
     temperature: 0.8,
-    max_tokens: 3000
+    max_tokens: 3000,
+    response_format: { type: 'json_object' }
   });
 
-  return completion.choices[0]?.message?.content || '';
+  const response = completion.choices[0]?.message?.content || '{}';
+  try {
+    return JSON.parse(response);
+  } catch (error) {
+    console.error('Failed to parse AI response:', error);
+    return { content: response, faq: [] };
+  }
 }
 
 /**
  * Generate HTML for the page
  */
-function generatePageHTML(store, products, title, content) {
+function generatePageHTML(store, products, title, contentData) {
   // Select random product image for hero
   const randomProduct = products[Math.floor(Math.random() * products.length)];
   const heroImage = randomProduct.image || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200&q=80';
@@ -312,8 +332,12 @@ function generatePageHTML(store, products, title, content) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
+  // Extract content and FAQ
+  const content = contentData.content || contentData;
+  const faq = contentData.faq || [];
+
   // Split content into paragraphs
-  const paragraphs = content.split('\n\n').filter(p => p.trim());
+  const paragraphs = typeof content === 'string' ? content.split('\n\n').filter(p => p.trim()) : [content];
 
   const html = `
 <!DOCTYPE html>
@@ -404,6 +428,30 @@ function generatePageHTML(store, products, title, content) {
             </div>
         </div>
     </section>
+    
+    <!-- FAQ Section -->
+    ${faq && faq.length > 0 ? `
+    <section class="bg-gray-50 py-16">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center text-gray-900 mb-12">
+                Întrebări Frecvente
+            </h2>
+            <div class="space-y-4">
+                ${faq.map(item => `
+                    <details class="bg-white rounded-xl border border-gray-200 overflow-hidden group">
+                        <summary class="px-6 py-4 font-semibold text-gray-900 hover:bg-gray-50 flex justify-between items-center cursor-pointer list-none">
+                            <span>${item.question}</span>
+                            <span class="text-2xl text-blue-500 transition-transform group-open:rotate-45">+</span>
+                        </summary>
+                        <div class="px-6 py-4 text-gray-600 border-t border-gray-200">
+                            ${item.answer}
+                        </div>
+                    </details>
+                `).join('')}
+            </div>
+        </div>
+    </section>
+    ` : ''}
     
 </body>
 </html>
