@@ -196,9 +196,12 @@ module.exports = async function handler(req, res) {
             const crypto = require('crypto');
             dashboardPassword = crypto.randomBytes(8).toString('base64').slice(0, 12);
             
+            // Get Firebase Auth instance (already initialized)
+            const { getAuth } = require('../lib/firebase-admin');
+            const auth = getAuth();
+            
             // Create user in Firebase Auth
-            const admin = require('firebase-admin');
-            const userRecord = await admin.auth().createUser({
+            const userRecord = await auth.createUser({
               email: wordpressEmail,
               password: dashboardPassword,
               displayName: wordpressName
