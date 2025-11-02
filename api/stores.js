@@ -133,6 +133,157 @@ module.exports = async function handler(req, res) {
         });
       }
 
+      case 'auto_setup_store': {
+        // Auto-setup: Create store + user + sync products in ONE request
+        const { 
+          wordpressUrl, 
+          wordpressName, 
+          wordpressEmail,
+          wordpressUsername, 
+          wordpressPassword,
+          products 
+        } = req.body;
+        
+        console.log('🚀 AUTO SETUP STORE:', {
+          wordpressUrl,
+          wordpressName,
+          wordpressEmail,
+          productsCount: products?.length || 0
+        });
+        
+        if (!wordpressUrl || !wordpressEmail) {
+          return res.status(400).json({ 
+            success: false, 
+            error: 'WordPress URL and Email required' 
+          });
+        }
+        
+        try {
+          // Check if store already exists (by WordPress URL)
+          const existingStoreSnapshot = await db.collection('stores')
+            .where('url', '==', wordpressUrl)
+            .limit(1)
+            .get();
+          
+          let userId, storeId, apiKey, dashboardPassword;
+          
+          if (!existingStoreSnapshot.empty) {
+            // Store exists - just update
+            console.log('✅ Store exists - updating...');
+            const storeDoc = existingStoreSnapshot.docs[0];
+            storeId = storeDoc.id;
+            userId = storeDoc.data().userId;
+            apiKey = storeDoc.data().apiKey;
+            
+            // Update credentials
+            await storeDoc.ref.update({
+              name: wordpressName,
+              wordpressUsername,
+              wordpressPassword,
+              wordpressConnected: true,
+              wordpressLastTest: Date.now(),
+              updatedAt: new Date()
+            });
+            
+            // Get existing password (can't retrieve from Firebase Auth)
+            dashboardPassword = 'Use your existing password';
+            
+          } else {
+            // New store - create everything
+            console.log('🆕 New store - creating user + store...');
+            
+            // Generate random password for dashboard
+            const crypto = require('crypto');
+            dashboardPassword = crypto.randomBytes(8).toString('base64').slice(0, 12);
+            
+            // Create user in Firebase Auth
+            const admin = require('firebase-admin');
+            const userRecord = await admin.auth().createUser({
+              email: wordpressEmail,
+              password: dashboardPassword,
+              displayName: wordpressName
+            });
+            
+            userId = userRecord.uid;
+            console.log('✅ User created:', userId);
+            
+            // Generate API Key
+            apiKey = 'sk_live_' + crypto.randomBytes(20).toString('hex');
+            
+            // Create store in Firestore
+            const storeRef = db.collection('stores').doc(userId);
+            await storeRef.set({
+              userId,
+              storeId: userId,
+              name: wordpressName,
+              url: wordpressUrl,
+              apiKey,
+              wordpressUsername,
+              wordpressPassword,
+              wordpressConnected: true,
+              wordpressLastTest: Date.now(),
+              plan: 'starter',
+              status: 'active',
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              stats: {
+                totalRevenue: 0,
+                totalProducts: 0,
+                conversions: 0,
+                conversionRate: 0,
+                currency: 'LEI'
+              }
+            });
+            
+            storeId = userId;
+            console.log('✅ Store created:', storeId);
+          }
+          
+          // Sync products (for both new and existing stores)
+          if (products && products.length > 0) {
+            console.log(`📦 Syncing ${products.length} products...`);
+            
+            const batch = db.batch();
+            products.forEach(product => {
+              const productRef = db.collection('stores')
+                .doc(storeId)
+                .collection('products')
+                .doc(product.id.toString());
+              
+              batch.set(productRef, {
+                ...product,
+                syncedAt: new Date()
+              });
+            });
+            
+            await batch.commit();
+            console.log('✅ Products synced');
+            
+            // Update total products count
+            await db.collection('stores').doc(storeId).update({
+              'stats.totalProducts': products.length
+            });
+          }
+          
+          // Return credentials
+          return res.json({
+            success: true,
+            apiKey,
+            dashboardEmail: wordpressEmail,
+            dashboardPassword,
+            dashboardUrl: 'https://wpupsell-dashboard.vercel.app/login',
+            message: 'Store setup complete! Products synced successfully.'
+          });
+          
+        } catch (error) {
+          console.error('❌ Auto setup error:', error);
+          return res.status(500).json({
+            success: false,
+            error: error.message
+          });
+        }
+      }
+
       case 'update_wp_status': {
         // Update WordPress connection status after test
         const { apiKey, wordpressConnected, wordpressLastTest } = req.body;
