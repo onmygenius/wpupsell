@@ -7,6 +7,7 @@ class Settings {
         add_action('admin_menu', [$this, 'add_menu_page']);
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
+        add_action('wp_ajax_upsellai_test_wp_connection', [$this, 'ajax_test_wp_connection']);
     }
     
     public function add_menu_page() {
@@ -26,6 +27,12 @@ class Settings {
         register_setting('upsellai_settings', 'upsellai_enabled');
         register_setting('upsellai_settings', 'upsellai_display_location');
         register_setting('upsellai_settings', 'upsellai_max_recommendations');
+        
+        // WordPress Publishing settings
+        register_setting('upsellai_settings', 'upsellai_wp_username');
+        register_setting('upsellai_settings', 'upsellai_wp_app_password');
+        register_setting('upsellai_settings', 'upsellai_wp_connected');
+        register_setting('upsellai_settings', 'upsellai_wp_last_test');
     }
     
     public function enqueue_admin_assets($hook) {
@@ -54,10 +61,39 @@ class Settings {
             echo '<div class="notice notice-success"><p>' . __('Settings saved successfully!', 'upsellai') . '</p></div>';
         }
         
+        // Save WordPress Publishing credentials
+        if (isset($_POST['upsellai_save_wp_credentials'])) {
+            check_admin_referer('upsellai_settings_nonce');
+            
+            $wp_username = sanitize_text_field($_POST['upsellai_wp_username']);
+            $wp_app_password = sanitize_text_field($_POST['upsellai_wp_app_password']);
+            
+            if (!empty($wp_username) && !empty($wp_app_password)) {
+                // Encrypt the Application Password before saving locally
+                $encrypted_password = $this->encrypt_password($wp_app_password);
+                
+                update_option('upsellai_wp_username', $wp_username);
+                update_option('upsellai_wp_app_password', $encrypted_password);
+                
+                // Send credentials to Firebase (plain text - will be encrypted in transit via HTTPS)
+                $this->sync_wp_credentials_to_firebase($wp_username, $wp_app_password);
+                
+                echo '<div class="notice notice-success"><p>' . __('WordPress credentials saved successfully!', 'upsellai') . '</p></div>';
+            } else {
+                echo '<div class="notice notice-error"><p>' . __('Please fill in both username and Application Password.', 'upsellai') . '</p></div>';
+            }
+        }
+        
         $api_key = get_option('upsellai_api_key', '');
         $enabled = get_option('upsellai_enabled', '1');
         $display_location = get_option('upsellai_display_location', 'product_page');
         $max_recommendations = get_option('upsellai_max_recommendations', '3');
+        
+        // WordPress Publishing settings
+        $wp_username = get_option('upsellai_wp_username', '');
+        $wp_app_password = get_option('upsellai_wp_app_password', '');
+        $wp_connected = get_option('upsellai_wp_connected', false);
+        $wp_last_test = get_option('upsellai_wp_last_test', 0);
         
         ?>
         <div class="wrap">
@@ -173,6 +209,134 @@ class Settings {
                 
                 <hr />
                 
+                <!-- WordPress Publishing Section -->
+                <h2><?php _e('WordPress Publishing', 'upsellai'); ?></h2>
+                
+                <!-- Info Box - Why is this needed -->
+                <div class="notice notice-info inline" style="margin: 20px 0; padding: 12px; border-left-color: #2271b1;">
+                    <p style="margin: 0; font-size: 14px;">
+                        <strong>ℹ️ <?php _e('Why do you need this?', 'upsellai'); ?></strong>
+                        <br>
+                        <?php _e('This allows you to publish AI-generated landing pages directly from the UpSell AI Dashboard to your WordPress site with one click.', 'upsellai'); ?>
+                        <br>
+                        <?php _e('Without this, you would need to manually copy and paste the HTML for each landing page.', 'upsellai'); ?>
+                    </p>
+                </div>
+                
+                <!-- Warning Box - Application Password -->
+                <div class="notice notice-warning inline" style="margin: 20px 0; padding: 12px;">
+                    <p style="margin: 0; font-size: 14px;">
+                        <strong>⚠️ <?php _e('Important:', 'upsellai'); ?></strong>
+                        <?php _e('Use an Application Password, NOT your WordPress admin password!', 'upsellai'); ?>
+                        <br>
+                        <?php _e('Application Passwords are more secure and can be revoked anytime without changing your admin password.', 'upsellai'); ?>
+                    </p>
+                </div>
+                
+                <p><?php _e('To enable automatic publishing of landing pages from UpSell AI Dashboard to your WordPress site, create an Application Password below.', 'upsellai'); ?></p>
+                
+                <!-- Tutorial Box -->
+                <div style="background: #f0f0f1; border-left: 4px solid #2271b1; padding: 15px; margin: 20px 0;">
+                    <h3 style="margin-top: 0;"><?php _e('How to create an Application Password:', 'upsellai'); ?></h3>
+                    <ol style="margin: 10px 0; padding-left: 20px;">
+                        <li><?php _e('Go to WordPress Admin → <strong>Users → Your Profile</strong>', 'upsellai'); ?></li>
+                        <li><?php _e('Scroll down to <strong>"Application Passwords"</strong> section', 'upsellai'); ?></li>
+                        <li><?php _e('Enter name: <strong>"UpSell AI Landing Pages"</strong>', 'upsellai'); ?></li>
+                        <li><?php _e('Click <strong>"Add New Application Password"</strong>', 'upsellai'); ?></li>
+                        <li><?php _e('Copy the generated password (format: xxxx xxxx xxxx xxxx)', 'upsellai'); ?></li>
+                        <li><?php _e('Paste it in the field below and click "Save Credentials"', 'upsellai'); ?></li>
+                    </ol>
+                    <p style="margin-bottom: 0;">
+                        <strong><?php _e('Note:', 'upsellai'); ?></strong>
+                        <?php _e('This password is ONLY used to publish landing pages. It\'s different from your WordPress login password and can be revoked anytime.', 'upsellai'); ?>
+                    </p>
+                </div>
+                
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="upsellai_wp_username"><?php _e('WordPress Username', 'upsellai'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" 
+                                   id="upsellai_wp_username" 
+                                   name="upsellai_wp_username" 
+                                   value="<?php echo esc_attr($wp_username); ?>" 
+                                   class="regular-text" 
+                                   placeholder="admin" />
+                            <p class="description">
+                                <?php _e('Your WordPress admin username (usually "admin")', 'upsellai'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="upsellai_wp_app_password">
+                                <?php _e('Application Password', 'upsellai'); ?>
+                                <span style="color: #d63638;">*</span>
+                            </label>
+                        </th>
+                        <td>
+                            <input type="password" 
+                                   id="upsellai_wp_app_password" 
+                                   name="upsellai_wp_app_password" 
+                                   value="<?php echo esc_attr($wp_app_password ? '••••••••••••••••••••••••' : ''); ?>" 
+                                   class="regular-text" 
+                                   placeholder="xxxx xxxx xxxx xxxx xxxx xxxx" 
+                                   autocomplete="off" />
+                            
+                            <p class="description" style="color: #d63638; font-weight: 600;">
+                                ⚠️ <?php _e('NOT your WordPress admin password! Use Application Password only.', 'upsellai'); ?>
+                            </p>
+                            
+                            <p class="description">
+                                <?php _e('Paste the Application Password you created above (format: xxxx xxxx xxxx xxxx)', 'upsellai'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <?php _e('Connection Status', 'upsellai'); ?>
+                        </th>
+                        <td>
+                            <?php if ($wp_connected): ?>
+                                <span style="color: #00a32a; font-weight: 600;">
+                                    ✅ <?php _e('Connected', 'upsellai'); ?>
+                                </span>
+                                <?php if ($wp_last_test): ?>
+                                    <p class="description">
+                                        <?php _e('Last tested:', 'upsellai'); ?> 
+                                        <?php echo date('Y-m-d H:i:s', $wp_last_test); ?>
+                                    </p>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <span style="color: #d63638; font-weight: 600;">
+                                    ❌ <?php _e('Not Connected', 'upsellai'); ?>
+                                </span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                </table>
+                
+                <p class="submit">
+                    <button type="button" 
+                            id="upsellai_test_wp_connection" 
+                            class="button button-secondary">
+                        <span class="dashicons dashicons-yes-alt" style="margin-top: 3px;"></span>
+                        <?php _e('Test Connection', 'upsellai'); ?>
+                    </button>
+                    
+                    <button type="submit" 
+                            name="upsellai_save_wp_credentials" 
+                            class="button button-primary">
+                        <?php _e('Save Credentials', 'upsellai'); ?>
+                    </button>
+                </p>
+                
+                <hr />
+                
                 <h2><?php _e('Quick Stats', 'upsellai'); ?></h2>
                 <div class="upsellai-stats">
                     <p><?php _e('View detailed analytics in your', 'upsellai'); ?> 
@@ -182,5 +346,142 @@ class Settings {
             </div>
         </div>
         <?php
+    }
+    
+    /**
+     * Sync WordPress credentials to Firebase
+     */
+    private function sync_wp_credentials_to_firebase($username, $password) {
+        $api_key = get_option('upsellai_api_key');
+        
+        if (empty($api_key)) {
+            return false;
+        }
+        
+        $api_url = 'https://wpupsell-dashboard.vercel.app/api/stores';
+        
+        $response = wp_remote_post($api_url, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+            'body' => json_encode([
+                'apiKey' => $api_key,
+                'wordpressUsername' => $username,
+                'wordpressPassword' => $password, // Plain text - encrypted in transit via HTTPS
+                'action' => 'update_wp_credentials'
+            ]),
+            'timeout' => 15,
+        ]);
+        
+        if (is_wp_error($response)) {
+            error_log('Failed to sync WP credentials to Firebase: ' . $response->get_error_message());
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * AJAX handler to test WordPress REST API connection
+     */
+    public function ajax_test_wp_connection() {
+        check_ajax_referer('upsellai_settings_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Insufficient permissions']);
+            return;
+        }
+        
+        $username = sanitize_text_field($_POST['username']);
+        $password = sanitize_text_field($_POST['password']);
+        
+        if (empty($username) || empty($password)) {
+            wp_send_json_error(['message' => 'Username and password are required']);
+            return;
+        }
+        
+        // Test connection to WordPress REST API
+        $site_url = get_site_url();
+        $api_url = $site_url . '/wp-json/wp/v2/pages';
+        
+        // Create Basic Auth header
+        $auth = base64_encode($username . ':' . $password);
+        
+        $response = wp_remote_get($api_url, [
+            'headers' => [
+                'Authorization' => 'Basic ' . $auth,
+            ],
+            'timeout' => 15,
+        ]);
+        
+        if (is_wp_error($response)) {
+            wp_send_json_error([
+                'message' => 'Connection failed: ' . $response->get_error_message()
+            ]);
+            return;
+        }
+        
+        $status_code = wp_remote_retrieve_response_code($response);
+        
+        if ($status_code === 200) {
+            // Connection successful
+            update_option('upsellai_wp_connected', true);
+            update_option('upsellai_wp_last_test', time());
+            
+            wp_send_json_success([
+                'message' => 'Successfully connected to WordPress REST API!\n\nYou can now publish landing pages from the UpSell AI Dashboard.'
+            ]);
+        } elseif ($status_code === 401) {
+            wp_send_json_error([
+                'message' => 'Authentication failed!\n\nPlease check:\n1. Username is correct\n2. Application Password is correct\n3. Application Passwords are enabled in WordPress'
+            ]);
+        } else {
+            wp_send_json_error([
+                'message' => 'Connection failed with status code: ' . $status_code . '\n\nPlease check your WordPress REST API settings.'
+            ]);
+        }
+    }
+    
+    /**
+     * Encrypt password using WordPress built-in functions
+     * 
+     * @param string $password Plain text password
+     * @return string Encrypted password
+     */
+    private function encrypt_password($password) {
+        if (empty($password)) {
+            return '';
+        }
+        
+        // Use WordPress salts for encryption
+        $key = wp_salt('auth');
+        $iv_length = openssl_cipher_iv_length('aes-256-cbc');
+        $iv = openssl_random_pseudo_bytes($iv_length);
+        
+        $encrypted = openssl_encrypt($password, 'aes-256-cbc', $key, 0, $iv);
+        
+        // Combine IV and encrypted data
+        return base64_encode($iv . $encrypted);
+    }
+    
+    /**
+     * Decrypt password
+     * 
+     * @param string $encrypted_password Encrypted password
+     * @return string Plain text password
+     */
+    public function decrypt_password($encrypted_password) {
+        if (empty($encrypted_password)) {
+            return '';
+        }
+        
+        $key = wp_salt('auth');
+        $data = base64_decode($encrypted_password);
+        $iv_length = openssl_cipher_iv_length('aes-256-cbc');
+        
+        $iv = substr($data, 0, $iv_length);
+        $encrypted = substr($data, $iv_length);
+        
+        return openssl_decrypt($encrypted, 'aes-256-cbc', $key, 0, $iv);
     }
 }

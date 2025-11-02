@@ -16,4 +16,52 @@ jQuery(document).ready(function($) {
             alert('Warning: API key should start with "sk_"');
         }
     });
+    
+    // Test WordPress Connection
+    $('#upsellai_test_wp_connection').on('click', function(e) {
+        e.preventDefault();
+        
+        const $button = $(this);
+        const $buttonText = $button.find('span').last();
+        const originalText = $buttonText.text();
+        
+        const username = $('#upsellai_wp_username').val();
+        const password = $('#upsellai_wp_app_password').val();
+        
+        if (!username || !password) {
+            alert('Please enter both WordPress Username and Application Password before testing.');
+            return;
+        }
+        
+        // Disable button and show loading
+        $button.prop('disabled', true);
+        $buttonText.text(' Testing...');
+        
+        // AJAX request to test connection
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'upsellai_test_wp_connection',
+                nonce: $('#_wpnonce').val(),
+                username: username,
+                password: password
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('✅ Connection successful!\n\n' + response.data.message);
+                } else {
+                    alert('❌ Connection failed!\n\n' + response.data.message);
+                }
+            },
+            error: function() {
+                alert('❌ Connection test failed!\n\nPlease check your credentials and try again.');
+            },
+            complete: function() {
+                // Re-enable button
+                $button.prop('disabled', false);
+                $buttonText.text(originalText);
+            }
+        });
+    });
 });

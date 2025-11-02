@@ -307,6 +307,45 @@ async function deleteLandingPage(pageId: string) {
     alert('Eroare la ștergere');
   }
 }
+
+const publishing = ref(false);
+
+async function publishToWordPress(page: any) {
+  if (!confirm('Sigur vrei să publici această landing page în WordPress?')) {
+    return;
+  }
+  
+  publishing.value = true;
+  
+  try {
+    const response = await fetch(`${API_URL}/publish-to-wordpress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        landingPageId: page.id,
+        storeId: STORE_ID,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert(`✅ Landing page publicată cu succes!\n\nURL: ${data.publishedUrl}`);
+      await loadLandingPages();
+    } else {
+      alert(`❌ Eroare la publicare:\n\n${data.message || data.error}`);
+    }
+  } catch (error) {
+    console.error('Failed to publish to WordPress:', error);
+    alert('❌ Eroare la publicare în WordPress');
+  } finally {
+    publishing.value = false;
+  }
+}
+
+function viewLivePage(url: string) {
+  window.open(url, '_blank');
+}
 </script>
 
 <template>
@@ -394,6 +433,26 @@ async function deleteLandingPage(pageId: string) {
             <button class="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition" title="Stats">
               📊
             </button>
+            
+            <!-- Publish to WordPress / View Live Page -->
+            <button 
+              v-if="page.status !== 'published'"
+              @click="publishToWordPress(page)"
+              :disabled="publishing"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed" 
+              title="Publish to WordPress"
+            >
+              {{ publishing ? '⏳ Publishing...' : '📤 Publish' }}
+            </button>
+            <button 
+              v-else
+              @click="viewLivePage(page.publishedUrl)"
+              class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition" 
+              title="View Live Page"
+            >
+              🌐 View Live
+            </button>
+            
             <button 
               @click="deleteLandingPage(page.id)"
               class="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition" 

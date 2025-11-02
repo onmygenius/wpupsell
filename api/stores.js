@@ -85,6 +85,40 @@ export default async function handler(req, res) {
         });
       }
 
+      case 'update_wp_credentials': {
+        // Update WordPress Publishing credentials
+        const { apiKey, wordpressUsername, wordpressPassword } = req.body;
+        
+        if (!apiKey) {
+          return res.status(400).json({ success: false, error: 'apiKey required' });
+        }
+        
+        // Find store by API key
+        const storesSnapshot = await db.collection('stores')
+          .where('apiKey', '==', apiKey)
+          .limit(1)
+          .get();
+        
+        if (storesSnapshot.empty) {
+          return res.status(404).json({ success: false, error: 'Store not found' });
+        }
+        
+        const storeDoc = storesSnapshot.docs[0];
+        
+        // Update WordPress credentials
+        await storeDoc.ref.update({
+          wordpressUsername,
+          wordpressPassword, // Stored as plain text, encrypted in transit via HTTPS
+          wordpressConnected: false, // Will be set to true after successful test
+          updatedAt: new Date()
+        });
+        
+        return res.json({ 
+          success: true,
+          message: 'WordPress credentials updated successfully'
+        });
+      }
+
       default:
         return res.status(400).json({ 
           success: false, 
