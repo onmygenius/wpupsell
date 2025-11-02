@@ -135,7 +135,26 @@ IMPORTANT:
       throw new Error('AI did not return valid JSON');
     }
 
-    const landingPageContent = JSON.parse(jsonMatch[0]);
+    let jsonString = jsonMatch[0];
+    
+    // Clean up common JSON errors from AI
+    // Fix trailing commas
+    jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1');
+    // Fix missing quotes around property names
+    jsonString = jsonString.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
+    // Fix single quotes to double quotes
+    jsonString = jsonString.replace(/'/g, '"');
+    
+    let landingPageContent;
+    try {
+      landingPageContent = JSON.parse(jsonString);
+    } catch (parseError) {
+      console.error('❌ JSON Parse Error:', parseError.message);
+      console.error('📄 Problematic JSON (first 500 chars):', jsonString.substring(0, 500));
+      console.error('📄 Problematic JSON (around error):', jsonString.substring(Math.max(0, 2482 - 100), Math.min(jsonString.length, 2482 + 100)));
+      throw new Error(`Invalid JSON from AI: ${parseError.message}`);
+    }
+    
     console.log('✅ Landing page content generated successfully');
 
     return landingPageContent;

@@ -87,13 +87,14 @@ module.exports = async function handler(req, res) {
 
       case 'update_wp_credentials': {
         // Update WordPress Publishing credentials
-        const { apiKey, wordpressUsername, wordpressPassword, wordpressUrl } = req.body;
+        const { apiKey, wordpressUsername, wordpressPassword, wordpressUrl, wordpressName } = req.body;
         
         console.log('📝 UPDATE WP CREDENTIALS:', {
           apiKey: apiKey ? 'present' : 'missing',
           wordpressUsername,
           wordpressPassword: wordpressPassword ? 'present' : 'missing',
-          wordpressUrl
+          wordpressUrl,
+          wordpressName
         });
         
         if (!apiKey) {
@@ -114,11 +115,12 @@ module.exports = async function handler(req, res) {
         const storeDoc = storesSnapshot.docs[0];
         console.log('✅ Store found:', storeDoc.id);
         
-        // Update WordPress credentials + URL (100% dynamic)
+        // Update WordPress credentials + URL + name (100% dynamic)
         await storeDoc.ref.update({
           wordpressUsername,
           wordpressPassword, // Stored as plain text, encrypted in transit via HTTPS
           url: wordpressUrl || '', // WordPress site URL (100% dynamic from get_site_url())
+          name: wordpressName || 'My Store', // WordPress site name (100% dynamic from get_bloginfo('name'))
           wordpressConnected: false, // Will be set to true after successful test
           updatedAt: new Date()
         });
