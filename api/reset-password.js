@@ -1,4 +1,4 @@
-const { getAuth } = require('./lib/firebase-admin');
+const { getAuth } = require('../lib/firebase-admin');
 const crypto = require('crypto');
 
 module.exports = async (req, res) => {
