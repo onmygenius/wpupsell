@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { useAuthStore } from '../stores/auth';
 
-// API Configuration
-const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
-const STORE_ID = localStorage.getItem('storeId') || null;
+// Auth
+const authStore = useAuthStore();
+const STORE_ID = authStore.userId; // Use userId as storeId
 
 // Product interface
 interface Product {
@@ -58,29 +61,11 @@ const toggleProduct = async (product: any) => {
   product.enabled = !product.enabled;
   
   try {
-    const response = await fetch(`${API_URL}/products`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'update',
-        storeId: STORE_ID,
-        productId: product.productId,
-        enabled: product.enabled,
-      }),
-    });
-    
-    const data = await response.json();
-    
-    if (!data.success) {
-      // Revert on error
-      product.enabled = previousState;
-      console.error('Failed to update product:', data.message);
-      alert('Failed to update product');
-    }
+    // TODO: Update product in Firestore
+    console.log('Toggle product:', product.id, product.enabled);
+    alert('Product toggle - coming soon!');
+    product.enabled = previousState; // Revert for now
   } catch (error) {
-    // Revert on error
     product.enabled = previousState;
     console.error('Toggle error:', error);
     alert('Failed to update product');
@@ -103,40 +88,48 @@ const syncProducts = async () => {
   }
 };
 
-// Load products from API
+// Load products from Firestore
 const loadProducts = async () => {
+  if (!STORE_ID) {
+    console.log('❌ No storeId - cannot load products');
+    return;
+  }
+
   loading.value = true;
   try {
-    const response = await fetch(`${API_URL}/products`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'list',
+    console.log('🔍 Loading products for store:', STORE_ID);
+    
+    const productsSnapshot = await getDocs(
+      collection(db, 'stores', STORE_ID, 'products')
+    );
+    
+    console.log('📦 Found products:', productsSnapshot.docs.length);
+    
+    products.value = productsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        productId: doc.id,
         storeId: STORE_ID,
-      }),
+        name: data.name || '',
+        category: data.category || '',
+        price: data.price || 0,
+        stock: data.stock || 0,
+        image: data.image,
+        url: data.url || '',
+        enabled: data.enabled !== false,
+        syncedAt: data.syncedAt?._seconds ? new Date(data.syncedAt._seconds * 1000) : new Date(),
+      };
     });
     
-    const data = await response.json();
-    
-    if (data.success) {
-      products.value = data.products
-        .map((p: any) => ({
-          ...p,
-          syncedAt: p.syncedAt?._seconds ? new Date(p.syncedAt._seconds * 1000) : new Date(),
-        }))
-        .sort((a: any, b: any) => a.name.localeCompare(b.name)) as Product[];
-      
-      // Update last sync time from first product
-      if (products.value.length > 0) {
-        lastSync.value = products.value[0]?.syncedAt || new Date();
-      }
-    } else {
-      console.error('Failed to load products:', data.message);
+    // Update last sync time from first product
+    if (products.value.length > 0) {
+      lastSync.value = products.value[0]?.syncedAt || new Date();
     }
+    
+    console.log('✅ Products loaded:', products.value.length);
   } catch (error) {
-    console.error('Load error:', error);
+    console.error('❌ Load error:', error);
   } finally {
     loading.value = false;
   }
