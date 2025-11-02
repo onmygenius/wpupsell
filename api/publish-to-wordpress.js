@@ -124,8 +124,19 @@ module.exports = async (req, res) => {
       
       console.log(`📏 Original HTML length: ${htmlContent.length} characters`);
       
-      // Remove any null bytes or invalid characters
+      // CRITICAL: Sanitize HTML for WordPress MySQL database
+      // Remove null bytes
       htmlContent = htmlContent.replace(/\0/g, '');
+      
+      // Remove 4-byte UTF-8 characters (emoji, special symbols) that MySQL utf8mb4 might reject
+      // This is the most common cause of "invalid data" errors
+      htmlContent = htmlContent.replace(/[\uD800-\uDFFF]/g, '');
+      
+      // Remove other problematic characters
+      htmlContent = htmlContent.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+      
+      // Ensure proper encoding
+      htmlContent = Buffer.from(htmlContent, 'utf8').toString('utf8');
       
       // WordPress LONGTEXT field can handle up to 4GB, but we need to check byte size
       // UTF-8 characters can be 1-4 bytes each
