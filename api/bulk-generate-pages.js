@@ -7,6 +7,7 @@
  */
 
 const Groq = require('groq-sdk');
+const { checkPlanLimits, incrementUsage } = require('./lib/plan-limits');
 
 // Groq instance
 let groqInstance = null;
@@ -76,6 +77,20 @@ module.exports = async (req, res) => {
     const pagesToGenerate = Math.min(remainingPages, 3); // Max 3 pages per request
     
     console.log(`📊 Generating ${pagesToGenerate} pages (${offset + 1}-${offset + pagesToGenerate} of ${numberOfPages})`);
+
+    // ✅ CHECK PLAN LIMITS BEFORE GENERATION
+    const limitCheck = await checkPlanLimits(storeId, 'generate_page', pagesToGenerate);
+    if (!limitCheck.allowed) {
+      console.log('❌ Plan limit exceeded:', limitCheck.message);
+      return res.status(403).json({
+        error: limitCheck.message,
+        upgradeMessage: limitCheck.upgradeMessage,
+        upgradePlan: limitCheck.upgradePlan,
+        current: limitCheck.current,
+        limit: limitCheck.limit
+      });
+    }
+    console.log('✅ Plan limits check passed');
 
     // Get store data from Firestore
     const db = getFirebaseDb();
@@ -166,6 +181,12 @@ module.exports = async (req, res) => {
 
     const successCount = results.filter(r => r.status === 'success').length;
     console.log(`\n✅ Bulk generation complete: ${successCount}/${pagesToGenerate} pages published`);
+
+    // ✅ INCREMENT USAGE AFTER SUCCESSFUL GENERATION
+    if (successCount > 0) {
+      await incrementUsage(storeId, 'pagesGenerated', successCount);
+      console.log(`✅ Usage incremented: +${successCount} pages`);
+    }
 
     return res.status(200).json({
       success: true,
