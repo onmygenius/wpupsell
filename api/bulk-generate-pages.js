@@ -70,6 +70,12 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Number of pages must be between 1 and 100' });
     }
 
+    // Limit to 3 pages to avoid Vercel timeout (30s limit on Hobby plan)
+    const pagesToGenerate = Math.min(numberOfPages, 3);
+    if (pagesToGenerate < numberOfPages) {
+      console.log(`⚠️  Limited to ${pagesToGenerate} pages to avoid timeout (requested: ${numberOfPages})`);
+    }
+
     // Get store data from Firestore
     const db = getFirebaseDb();
     const storeDoc = await db.collection('stores').doc(storeId).get();
@@ -109,10 +115,10 @@ module.exports = async (req, res) => {
     }
 
     // Start generation process
-    console.log(`🚀 Starting bulk generation of ${numberOfPages} pages...`);
+    console.log(`🚀 Starting bulk generation of ${pagesToGenerate} pages...`);
 
     // STEP 1: Generate unique titles for all pages
-    const titles = await generateUniqueTitles(store, products, numberOfPages);
+    const titles = await generateUniqueTitles(store, products, pagesToGenerate);
     console.log(`✅ Generated ${titles.length} unique titles`);
 
     // STEP 2: Generate and publish each page
@@ -158,11 +164,13 @@ module.exports = async (req, res) => {
     }
 
     const successCount = results.filter(r => r.status === 'success').length;
-    console.log(`\n✅ Bulk generation complete: ${successCount}/${numberOfPages} pages published`);
+    console.log(`\n✅ Bulk generation complete: ${successCount}/${pagesToGenerate} pages published`);
 
     return res.status(200).json({
       success: true,
-      message: `Successfully generated ${successCount} out of ${numberOfPages} pages`,
+      message: `Successfully generated ${successCount} out of ${pagesToGenerate} pages`,
+      totalRequested: numberOfPages,
+      totalGenerated: pagesToGenerate,
       results
     });
 
@@ -410,19 +418,8 @@ async function publishToWordPress(store, title, html) {
   const fetch = require('node-fetch');
   const crypto = require('crypto');
 
-  // Decrypt WordPress password
-  const algorithm = 'aes-256-cbc';
-  const key = Buffer.from(process.env.ENCRYPTION_KEY || 'your-32-character-secret-key!!', 'utf8');
-  const iv = Buffer.alloc(16, 0);
-  
-  let decryptedPassword;
-  try {
-    const decipher = crypto.createDecipheriv(algorithm, key, iv);
-    decryptedPassword = decipher.update(store.wordpressPassword, 'hex', 'utf8');
-    decryptedPassword += decipher.final('utf8');
-  } catch (error) {
-    throw new Error('Failed to decrypt WordPress password');
-  }
+  // WordPress password (already decrypted in Firebase)
+  const decryptedPassword = store.wordpressPassword;
 
   // Generate slug
   const slug = title
