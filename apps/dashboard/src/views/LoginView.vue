@@ -79,9 +79,9 @@ async function handleLogin() {
 
           <!-- Forgot Password -->
           <div class="text-right">
-            <a href="#" class="text-sm text-blue-400 hover:text-blue-300">
+            <router-link to="/forgot-password" class="text-sm text-blue-400 hover:text-blue-300">
               Forgot password?
-            </a>
+            </router-link>
           </div>
 
           <!-- Submit Button -->
@@ -95,13 +95,10 @@ async function handleLogin() {
           </button>
         </form>
 
-        <!-- Register Link -->
+        <!-- Info -->
         <div class="mt-6 text-center">
-          <p class="text-gray-400">
-            Don't have an account?
-            <router-link to="/register" class="text-blue-400 hover:text-blue-300 font-semibold">
-              Sign up
-            </router-link>
+          <p class="text-sm text-gray-400">
+            Your account is created automatically when you install the WordPress plugin.
           </p>
         </div>
       </div>
