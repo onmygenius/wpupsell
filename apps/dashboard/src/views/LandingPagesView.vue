@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { useAuthStore } from '../stores/auth';
 
 const authStore = useAuthStore();
@@ -79,22 +81,33 @@ async function loadLandingPages() {
 }
 
 async function loadProducts() {
+  if (!STORE_ID) {
+    console.log('❌ No storeId - cannot load products');
+    return;
+  }
+
   try {
-    const response = await fetch(`${API_URL}/products`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        action: 'list',
-        storeId: STORE_ID 
-      }),
+    console.log('🔍 Loading products for landing pages from store:', STORE_ID);
+    
+    const productsSnapshot = await getDocs(
+      collection(db, 'stores', STORE_ID, 'products')
+    );
+    
+    products.value = productsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        productId: doc.id, // Use document ID as productId
+        name: data.name || '',
+        price: data.price || 0,
+        image: data.image,
+        category: data.category || '',
+      };
     });
     
-    const data = await response.json();
-    if (data.success) {
-      products.value = data.products || [];
-    }
+    console.log('✅ Products loaded for landing pages:', products.value.length);
   } catch (error) {
-    console.error('Failed to load products:', error);
+    console.error('❌ Failed to load products:', error);
   }
 }
 
