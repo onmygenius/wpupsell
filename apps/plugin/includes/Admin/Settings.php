@@ -68,6 +68,9 @@ class Settings {
             $wp_username = sanitize_text_field($_POST['upsellai_wp_username']);
             $wp_app_password = sanitize_text_field($_POST['upsellai_wp_app_password']);
             
+            // Remove spaces from Application Password (WordPress adds them for readability)
+            $wp_app_password = str_replace(' ', '', $wp_app_password);
+            
             if (!empty($wp_username) && !empty($wp_app_password)) {
                 // Encrypt the Application Password before saving locally
                 $encrypted_password = $this->encrypt_password($wp_app_password);
@@ -99,9 +102,36 @@ class Settings {
         <div class="wrap">
             <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
             
-            <div class="upsellai-settings-container">
-                <form method="post" action="">
-                    <?php wp_nonce_field('upsellai_settings_nonce'); ?>
+            <style>
+                .upsellai-settings-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 30px;
+                    margin-top: 20px;
+                }
+                @media (max-width: 1200px) {
+                    .upsellai-settings-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+                .upsellai-settings-column {
+                    background: #fff;
+                    border: 1px solid #ccd0d4;
+                    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+                    padding: 20px;
+                }
+                .upsellai-settings-column h2 {
+                    margin-top: 0;
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid #ddd;
+                }
+            </style>
+            
+            <div class="upsellai-settings-grid">
+                <!-- Left Column: Main Settings -->
+                <div class="upsellai-settings-column">
+                    <form method="post" action="">
+                        <?php wp_nonce_field('upsellai_settings_nonce'); ?>
                     
                     <table class="form-table">
                         <tr>
@@ -176,17 +206,17 @@ class Settings {
                         </tr>
                     </table>
                     
-                    <p class="submit">
-                        <button type="submit" name="upsellai_save_settings" class="button button-primary">
-                            <?php _e('Save Settings', 'upsellai'); ?>
-                        </button>
-                    </p>
-                </form>
-                
-                <hr />
-                
-                <!-- Product Sync Section -->
-                <h2><?php _e('Product Sync', 'upsellai'); ?></h2>
+                        <p class="submit">
+                            <button type="submit" name="upsellai_save_settings" class="button button-primary">
+                                <?php _e('Save Settings', 'upsellai'); ?>
+                            </button>
+                        </p>
+                    </form>
+                    
+                    <hr />
+                    
+                    <!-- Product Sync Section -->
+                    <h2><?php _e('Product Sync', 'upsellai'); ?></h2>
                 <p><?php _e('Sync your WooCommerce products with UpSell AI dashboard.', 'upsellai'); ?></p>
                 
                 <?php
@@ -205,12 +235,22 @@ class Settings {
                             <?php _e('Sync Products Now', 'upsellai'); ?>
                         </button>
                     </p>
-                </form>
+                    </form>
+                    
+                    <hr />
+                    
+                    <!-- Quick Stats -->
+                    <h2><?php _e('Quick Stats', 'upsellai'); ?></h2>
+                    <div class="upsellai-stats">
+                        <p><?php _e('View detailed analytics in your', 'upsellai'); ?> 
+                           <a href="https://upsellai-dashboard.vercel.app" target="_blank">UpSell AI Dashboard</a>
+                        </p>
+                    </div>
+                </div>
                 
-                <hr />
-                
-                <!-- WordPress Publishing Section -->
-                <h2><?php _e('WordPress Publishing', 'upsellai'); ?></h2>
+                <!-- Right Column: WordPress Publishing -->
+                <div class="upsellai-settings-column">
+                    <h2><?php _e('WordPress Publishing', 'upsellai'); ?></h2>
                 
                 <!-- Info Box - Why is this needed -->
                 <div class="notice notice-info inline" style="margin: 20px 0; padding: 12px; border-left-color: #2271b1;">
@@ -335,17 +375,43 @@ class Settings {
                     </button>
                 </p>
                 
-                <hr />
-                
-                <h2><?php _e('Quick Stats', 'upsellai'); ?></h2>
-                <div class="upsellai-stats">
-                    <p><?php _e('View detailed analytics in your', 'upsellai'); ?> 
-                       <a href="https://upsellai-dashboard.vercel.app" target="_blank">UpSell AI Dashboard</a>
-                    </p>
                 </div>
             </div>
         </div>
         <?php
+    }
+    
+    /**
+     * Sync WordPress connection status to Firebase
+     */
+    private function sync_wp_connection_status_to_firebase($connected) {
+        $api_key = get_option('upsellai_api_key');
+        
+        if (empty($api_key)) {
+            return false;
+        }
+        
+        $api_url = 'https://wpupsell-dashboard.vercel.app/api/stores';
+        
+        $response = wp_remote_post($api_url, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+            'body' => json_encode([
+                'apiKey' => $api_key,
+                'wordpressConnected' => $connected,
+                'wordpressLastTest' => time(),
+                'action' => 'update_wp_status'
+            ]),
+            'timeout' => 15,
+        ]);
+        
+        if (is_wp_error($response)) {
+            error_log('Failed to sync WP status to Firebase: ' . $response->get_error_message());
+            return false;
+        }
+        
+        return true;
     }
     
     /**
@@ -395,6 +461,9 @@ class Settings {
         $username = sanitize_text_field($_POST['username']);
         $password = sanitize_text_field($_POST['password']);
         
+        // Remove spaces from Application Password
+        $password = str_replace(' ', '', $password);
+        
         if (empty($username) || empty($password)) {
             wp_send_json_error(['message' => 'Username and password are required']);
             return;
@@ -422,22 +491,40 @@ class Settings {
         }
         
         $status_code = wp_remote_retrieve_response_code($response);
+        $response_body = wp_remote_retrieve_body($response);
+        
+        // Debug info
+        error_log('WP REST API Test - URL: ' . $api_url);
+        error_log('WP REST API Test - Status Code: ' . $status_code);
+        error_log('WP REST API Test - Response: ' . substr($response_body, 0, 200));
         
         if ($status_code === 200) {
             // Connection successful
             update_option('upsellai_wp_connected', true);
             update_option('upsellai_wp_last_test', time());
             
+            // Sync status to Firebase (100% dynamic - uses API Key)
+            $this->sync_wp_connection_status_to_firebase(true);
+            
             wp_send_json_success([
                 'message' => 'Successfully connected to WordPress REST API!\n\nYou can now publish landing pages from the UpSell AI Dashboard.'
             ]);
         } elseif ($status_code === 401) {
             wp_send_json_error([
-                'message' => 'Authentication failed!\n\nPlease check:\n1. Username is correct\n2. Application Password is correct\n3. Application Passwords are enabled in WordPress'
+                'message' => 'Authentication failed!\n\nPlease check:\n1. Username is correct (not email)\n2. Application Password is correct (remove spaces!)\n3. Application Passwords are enabled in WordPress\n\nTested URL: ' . $api_url
             ]);
         } else {
+            // Get more details from response
+            $error_details = '';
+            if (!empty($response_body)) {
+                $body_data = json_decode($response_body, true);
+                if (isset($body_data['message'])) {
+                    $error_details = '\n\nError: ' . $body_data['message'];
+                }
+            }
+            
             wp_send_json_error([
-                'message' => 'Connection failed with status code: ' . $status_code . '\n\nPlease check your WordPress REST API settings.'
+                'message' => 'Connection failed with status code: ' . $status_code . $error_details . '\n\nTested URL: ' . $api_url . '\n\nPlease check:\n1. WordPress REST API is enabled\n2. No security plugin blocking REST API\n3. SSL certificate is valid'
             ]);
         }
     }

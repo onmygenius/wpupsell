@@ -93,7 +93,7 @@ export default async function handler(req, res) {
           return res.status(400).json({ success: false, error: 'apiKey required' });
         }
         
-        // Find store by API key
+        // Find store by API key (100% dynamic - no hardcoded Store ID)
         const storesSnapshot = await db.collection('stores')
           .where('apiKey', '==', apiKey)
           .limit(1)
@@ -116,6 +116,39 @@ export default async function handler(req, res) {
         return res.json({ 
           success: true,
           message: 'WordPress credentials updated successfully'
+        });
+      }
+
+      case 'update_wp_status': {
+        // Update WordPress connection status after test
+        const { apiKey, wordpressConnected, wordpressLastTest } = req.body;
+        
+        if (!apiKey) {
+          return res.status(400).json({ success: false, error: 'apiKey required' });
+        }
+        
+        // Find store by API key (100% dynamic - no hardcoded Store ID)
+        const storesSnapshot = await db.collection('stores')
+          .where('apiKey', '==', apiKey)
+          .limit(1)
+          .get();
+        
+        if (storesSnapshot.empty) {
+          return res.status(404).json({ success: false, error: 'Store not found' });
+        }
+        
+        const storeDoc = storesSnapshot.docs[0];
+        
+        // Update WordPress connection status
+        await storeDoc.ref.update({
+          wordpressConnected,
+          wordpressLastTest,
+          updatedAt: new Date()
+        });
+        
+        return res.json({ 
+          success: true,
+          message: 'WordPress connection status updated successfully'
         });
       }
 
