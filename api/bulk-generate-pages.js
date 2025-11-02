@@ -6,8 +6,8 @@
  * Direct publish to WordPress - NO database storage
  */
 
-const { getFirestore } = require('./lib/firebase-admin');
-const { getGroq } = require('./lib/groq-client');
+const { getFirestore } = require('../lib/firebase-admin');
+const { getGroq } = require('../lib/groq-client');
 
 // CORS headers
 function setCorsHeaders(res) {
