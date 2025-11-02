@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { Chart } from 'highcharts-vue';
+import { useAuthStore } from '../stores/auth';
 
+const authStore = useAuthStore();
 const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
-const STORE_ID = localStorage.getItem('storeId') || null;
+const STORE_ID = authStore.userId; // Use userId as storeId - 100% dynamic!
 
 const loading = ref(true);
 const analytics = ref({

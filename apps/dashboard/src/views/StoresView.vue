@@ -48,14 +48,18 @@ async function loadStore() {
     
     const storeData = storeDoc.data();
     
-    // Load products to get count
-    const productsResponse = await fetch(`${API_URL}/products`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'list', storeId }),
-    });
+    // Load products from Firestore subcollection
+    const { collection: firestoreCollection, getDocs: getDocsFirestore } = await import('firebase/firestore');
+    const productsSnapshot = await getDocsFirestore(
+      firestoreCollection(db, 'stores', storeId, 'products')
+    );
     
-    const productsData = await productsResponse.json();
+    const productsData = {
+      success: true,
+      products: productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    };
+    
+    console.log('📦 Loaded products:', productsData.products.length);
     
     // Load stats from conversions
     const statsResponse = await fetch(`${API_URL}/stats`, {

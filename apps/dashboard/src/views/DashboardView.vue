@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import PieDonutChart from '../components/charts/PieDonutChart.vue';
+import { useAuthStore } from '../stores/auth';
 
+const authStore = useAuthStore();
 const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
-const STORE_ID = localStorage.getItem('storeId') || null; // Get from localStorage, NO DEFAULT!
+const STORE_ID = authStore.userId; // Use userId as storeId - 100% dynamic!
 
 const loading = ref(true);
 const hasStore = ref(false);

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { useAuthStore } from '../stores/auth';
 
+const authStore = useAuthStore();
 const API_URL = 'https://wpupsell-dashboard.vercel.app/api';
-const STORE_ID = localStorage.getItem('storeId') || null;
+const STORE_ID = authStore.userId; // Use userId as storeId - 100% dynamic!
 
 const loading = ref(true);
 const landingPages = ref<any[]>([]);
