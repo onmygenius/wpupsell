@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import PieDonutChart from '../components/charts/PieDonutChart.vue';
 import { useAuthStore } from '../stores/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 const authStore = useAuthStore();
 const API_URL = import.meta.env.VITE_API_URL || 'https://wpupsell-dashboard.vercel.app/api';
@@ -22,6 +24,50 @@ const categoryData = ref<any[]>([]);
 const topProducts = ref<any[]>([]);
 const recentActivity = ref<any[]>([]);
 const conversionRate = ref(0);
+
+// Usage tracking
+const planData = ref({
+  plan: 'free',
+  limits: {
+    pagesPerMonth: 5,
+    maxProducts: 10
+  },
+  usage: {
+    pagesGenerated: 0,
+    currentPeriodEnd: new Date()
+  }
+});
+
+// Computed properties for usage
+const usagePercent = computed(() => {
+  const { pagesGenerated } = planData.value.usage;
+  const { pagesPerMonth } = planData.value.limits;
+  return Math.round((pagesGenerated / pagesPerMonth) * 100);
+});
+
+const showWarning = computed(() => usagePercent.value >= 80);
+
+const resetDate = computed(() => {
+  const date = planData.value.usage.currentPeriodEnd;
+  if (!date) return 'N/A';
+  
+  try {
+    let d;
+    if (date.toDate && typeof date.toDate === 'function') {
+      d = date.toDate();
+    } else if (date._seconds) {
+      d = new Date(date._seconds * 1000);
+    } else {
+      d = new Date(date);
+    }
+    
+    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  } catch (error) {
+    return 'N/A';
+  }
+});
+
+const planName = computed(() => planData.value.plan.toUpperCase());
 
 // Format time ago
 const formatTime = (timestamp: any) => {
@@ -138,6 +184,23 @@ onMounted(async () => {
         conversionRate.value = Math.round((statsData.stats.funnel.conversions / statsData.stats.funnel.impressions) * 100 * 10) / 10;
       }
     }
+    
+    // Load plan data from Firebase
+    try {
+      const storeDoc = await getDoc(doc(db, 'stores', STORE_ID));
+      if (storeDoc.exists()) {
+        const storeData = storeDoc.data();
+        if (storeData.plan && storeData.limits && storeData.usage) {
+          planData.value = {
+            plan: storeData.plan,
+            limits: storeData.limits,
+            usage: storeData.usage
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load plan data:', error);
+    }
   } catch (error) {
     console.error('Failed to load stats:', error);
   } finally {
@@ -209,6 +272,69 @@ onMounted(async () => {
         <p class="text-2xl font-bold text-white">{{ stats.products }}</p>
         <p class="text-xs text-gray-400 mt-2">Total synced products</p>
       </div>
+    </div>
+
+    <!-- Usage Card -->
+    <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-xl font-semibold text-white">Monthly Usage</h2>
+          <p class="text-sm text-gray-400 mt-1">{{ planName }} Plan</p>
+        </div>
+        <div class="px-3 py-1 bg-blue-600/20 rounded-lg">
+          <span class="text-sm font-medium text-blue-400">{{ planName }}</span>
+        </div>
+      </div>
+
+      <!-- Pages Generated -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-gray-400">Pages Generated</span>
+          <span class="text-sm font-semibold text-white">
+            {{ planData.usage.pagesGenerated }} / {{ planData.limits.pagesPerMonth }}
+          </span>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+          <div 
+            class="h-3 rounded-full transition-all duration-500"
+            :class="showWarning ? 'bg-yellow-500' : 'bg-blue-600'"
+            :style="{ width: usagePercent + '%' }"
+          ></div>
+        </div>
+        
+        <div class="flex items-center justify-between mt-2">
+          <span class="text-xs text-gray-500">{{ usagePercent }}% used</span>
+          <span class="text-xs text-gray-500">Resets on {{ resetDate }}</span>
+        </div>
+      </div>
+
+      <!-- Warning Message -->
+      <div 
+        v-if="showWarning" 
+        class="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-4"
+      >
+        <div class="flex items-start gap-3">
+          <span class="text-xl">⚠️</span>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-yellow-400 mb-1">
+              You're running low on pages!
+            </p>
+            <p class="text-xs text-yellow-400/80">
+              You've used {{ planData.usage.pagesGenerated }} of {{ planData.limits.pagesPerMonth }} pages this month.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upgrade Button -->
+      <button 
+        disabled
+        class="w-full bg-gray-700 text-gray-400 py-3 px-4 rounded-lg font-medium cursor-not-allowed opacity-50"
+      >
+        Upgrade Plan (Coming Soon)
+      </button>
     </div>
 
     <!-- Charts Section -->
