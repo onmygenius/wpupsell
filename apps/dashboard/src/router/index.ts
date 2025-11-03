@@ -86,13 +86,25 @@ const router = createRouter({
 });
 
 // Route guards
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
   const guestOnly = to.matched.some(record => record.meta.guest);
 
   // Update document title
   document.title = `${to.meta.title} - UpSell AI` || 'UpSell AI Dashboard';
+
+  // Wait for auth to initialize (important for page refresh!)
+  if (authStore.loading) {
+    await new Promise<void>((resolve) => {
+      const unwatch = authStore.$subscribe(() => {
+        if (!authStore.loading) {
+          unwatch();
+          resolve();
+        }
+      });
+    });
+  }
 
   // Check if route requires authentication
   if (requiresAuth && !authStore.isAuthenticated) {
