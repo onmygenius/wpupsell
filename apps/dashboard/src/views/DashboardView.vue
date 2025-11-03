@@ -313,8 +313,10 @@ onMounted(async () => {
       </div>
     </div>
 
-    <!-- Usage Card -->
-    <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
+    <!-- Usage & Top Products Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Monthly Usage -->
+      <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
       <div class="flex items-center justify-between mb-6">
         <div>
           <h2 class="text-xl font-semibold text-white">Monthly Usage</h2>
@@ -374,6 +376,25 @@ onMounted(async () => {
       >
         Upgrade Plan (Coming Soon)
       </button>
+      </div>
+
+      <!-- Top Recommended Products by AI -->
+      <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
+        <h2 class="text-xl font-semibold text-white mb-6">Top Recommended Products by AI</h2>
+        <div class="space-y-3">
+          <div v-if="topProducts.length === 0" class="text-center text-gray-500 py-4">
+            No conversions yet
+          </div>
+          <div 
+            v-for="product in topProducts" 
+            :key="product.name"
+            class="flex items-center justify-between"
+          >
+            <span class="text-sm text-gray-400 truncate mr-2">{{ product.name }}</span>
+            <span class="text-sm font-semibold text-green-400">{{ product.conversions }} sales</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Charts Section -->
@@ -451,24 +472,6 @@ onMounted(async () => {
               <div class="w-full bg-gray-800 rounded-full h-2">
                 <div class="bg-purple-600 h-2 rounded-full" :style="`width: ${Math.min((stats.enabledProducts / stats.products) * 100, 100)}%`"></div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Top Recommended Products by AI -->
-        <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
-          <h2 class="text-xl font-semibold text-white mb-6">Top Recommended Products by AI</h2>
-          <div class="space-y-3">
-            <div v-if="topProducts.length === 0" class="text-center text-gray-500 py-4">
-              No conversions yet
-            </div>
-            <div 
-              v-for="product in topProducts" 
-              :key="product.name"
-              class="flex items-center justify-between"
-            >
-              <span class="text-sm text-gray-400 truncate mr-2">{{ product.name }}</span>
-              <span class="text-sm font-semibold text-green-400">{{ product.conversions }} sales</span>
             </div>
           </div>
         </div>
