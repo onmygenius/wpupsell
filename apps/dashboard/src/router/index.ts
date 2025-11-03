@@ -8,31 +8,31 @@ const router = createRouter({
       path: '/',
       name: 'dashboard',
       component: () => import('../views/DashboardView.vue'),
-      meta: { title: 'Dashboard' }
+      meta: { title: 'Dashboard', requiresAuth: true }
     },
     {
       path: '/analytics',
       name: 'analytics',
       component: () => import('../views/AnalyticsView.vue'),
-      meta: { title: 'Analytics' }
+      meta: { title: 'Analytics', requiresAuth: true }
     },
     {
       path: '/stores',
       name: 'stores',
       component: () => import('../views/StoresView.vue'),
-      meta: { title: 'Stores' }
+      meta: { title: 'Stores', requiresAuth: true }
     },
     {
       path: '/products',
       name: 'products',
       component: () => import('../views/ProductsView.vue'),
-      meta: { title: 'Products' }
+      meta: { title: 'Products', requiresAuth: true }
     },
     {
       path: '/landing-pages',
       name: 'landing-pages',
       component: () => import('../views/LandingPagesView.vue'),
-      meta: { title: 'Landing Pages' }
+      meta: { title: 'Landing Pages', requiresAuth: true }
     },
     {
       path: '/popup-recommendations',
