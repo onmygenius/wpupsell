@@ -16,7 +16,7 @@ const searchQuery = ref('');
 const selectedProduct = ref<any>(null);
 const pageTitle = ref('');
 const pageSlug = ref('');
-const urlPrefix = ref('oferte');
+const urlPrefix = ref('offers');
 const generating = ref(false);
 const showEditModal = ref(false);
 const editingPage = ref<any>(null);
@@ -122,7 +122,7 @@ function openGenerateModal() {
   selectedProduct.value = null;
   pageTitle.value = '';
   pageSlug.value = '';
-  urlPrefix.value = 'oferte';
+  urlPrefix.value = 'offers';
   selectedTemplate.value = '';
 }
 
@@ -132,11 +132,11 @@ function closeGenerateModal() {
 
 function selectProduct(product: any) {
   selectedProduct.value = product;
-  pageTitle.value = `${product.name} - Ofertă Specială`;
+  pageTitle.value = `${product.name} - Special Offer`;
   pageSlug.value = product.name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '') + '-oferta';
+    .replace(/^-|-$/g, '') + '-offer';
   searchQuery.value = ''; // Close dropdown after selection
 }
 
@@ -618,7 +618,7 @@ function viewLivePage(url: string) {
             <input 
               v-model="pageTitle"
               type="text" 
-              placeholder="Lănțișor Perla Eleganței - Ofertă Specială"
+              placeholder="Pearl Elegance Necklace - Special Offer"
               class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none"
             />
           </div>
@@ -629,7 +629,7 @@ function viewLivePage(url: string) {
               v-model="pageSlug"
               @input="sanitizeSlug"
               type="text" 
-              placeholder="lantisor-perla-elegantei-oferta"
+              placeholder="pearl-elegance-necklace-offer"
               class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none"
             />
             <p class="text-xs text-gray-500 mt-1">Only lowercase letters, numbers, and hyphens</p>
@@ -650,7 +650,7 @@ function viewLivePage(url: string) {
             <label class="block text-sm font-medium text-gray-400 mb-2">URL Prefix (optional)</label>
             <select v-model="urlPrefix" class="w-full bg-[#0f1535] border border-gray-800 rounded-lg px-4 py-3 text-white focus:border-blue-600 focus:outline-none">
               <option value="">No prefix</option>
-              <option value="oferte">oferte</option>
+              <option value="offers">offers</option>
               <option value="promo">promo</option>
               <option value="lp">lp</option>
               <option value="landing">landing</option>

@@ -1,4 +1,5 @@
 const Groq = require('groq-sdk');
+const { getDb } = require('../lib/firebase-admin');
 
 let groqInstance = null;
 
@@ -260,6 +261,34 @@ module.exports = async (req, res) => {
 
     console.log('Validation passed ✓');
 
+    // Get store by API Key to read settings
+    const db = getDb();
+    let storeSettings = { popupEnabled: true, maxRecommendations: 3 }; // Defaults
+    let storeId = null;
+    
+    try {
+      const storesSnapshot = await db.collection('stores')
+        .where('apiKey', '==', apiKey)
+        .limit(1)
+        .get();
+      
+      if (!storesSnapshot.empty) {
+        const storeDoc = storesSnapshot.docs[0];
+        storeId = storeDoc.id;
+        const storeData = storeDoc.data();
+        
+        if (storeData.settings) {
+          storeSettings.popupEnabled = storeData.settings.popupEnabled !== false;
+          storeSettings.maxRecommendations = storeData.settings.maxRecommendations || 3;
+        }
+        
+        console.log('Store settings loaded:', storeSettings);
+      }
+    } catch (error) {
+      console.error('Failed to load store settings:', error);
+      // Continue with defaults
+    }
+
     // Use product data from request (sent by plugin)
     const product = {
       id: productId,
@@ -356,7 +385,7 @@ module.exports = async (req, res) => {
     const recommendationId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     console.log('Generated temp recommendation ID:', recommendationId);
 
-    // Return recommendations
+    // Return recommendations with settings
     const response = {
       success: true,
       recommendation_id: recommendationId,
@@ -366,7 +395,9 @@ module.exports = async (req, res) => {
       },
       popupTitle: popupTitle,
       popupSubtitle: popupSubtitle,
-      recommendations: recommendations.map(r => ({
+      popupEnabled: storeSettings.popupEnabled,
+      maxRecommendations: storeSettings.maxRecommendations,
+      recommendations: recommendations.slice(0, storeSettings.maxRecommendations).map(r => ({
         id: r.id,
         name: r.name,
         price: r.price,

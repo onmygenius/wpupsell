@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import PieDonutChart from '../components/charts/PieDonutChart.vue';
 import { useAuthStore } from '../stores/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 const authStore = useAuthStore();
@@ -37,6 +37,38 @@ const planData = ref({
     currentPeriodEnd: new Date()
   }
 });
+
+// Pop-up settings
+const popupSettings = ref({
+  enabled: true,
+  maxRecommendations: 3
+});
+
+const savingPopupSettings = ref(false);
+
+async function togglePopup() {
+  popupSettings.value.enabled = !popupSettings.value.enabled;
+  await savePopupSettings();
+}
+
+async function updateMaxRecommendations(value: number) {
+  popupSettings.value.maxRecommendations = value;
+  await savePopupSettings();
+}
+
+async function savePopupSettings() {
+  savingPopupSettings.value = true;
+  try {
+    await updateDoc(doc(db, 'stores', STORE_ID), {
+      'settings.popupEnabled': popupSettings.value.enabled,
+      'settings.maxRecommendations': popupSettings.value.maxRecommendations
+    });
+  } catch (error) {
+    console.error('Error saving popup settings:', error);
+  } finally {
+    savingPopupSettings.value = false;
+  }
+}
 
 // Computed properties for usage
 const usagePercent = computed(() => {
@@ -186,7 +218,7 @@ onMounted(async () => {
       }
     }
     
-    // Load plan data from Firebase
+    // Load plan data and popup settings from Firebase
     try {
       const storeDoc = await getDoc(doc(db, 'stores', STORE_ID));
       if (storeDoc.exists()) {
@@ -197,6 +229,12 @@ onMounted(async () => {
             limits: storeData.limits,
             usage: storeData.usage
           };
+        }
+        
+        // Load popup settings
+        if (storeData.settings) {
+          popupSettings.value.enabled = storeData.settings.popupEnabled !== false; // Default true
+          popupSettings.value.maxRecommendations = storeData.settings.maxRecommendations || 3;
         }
       }
     } catch (error) {
@@ -431,6 +469,52 @@ onMounted(async () => {
             >
               <span class="text-sm text-gray-400 truncate mr-2">{{ product.name }}</span>
               <span class="text-sm font-semibold text-green-400">{{ product.conversions }} sales</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pop-up Settings -->
+        <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-white">🎯 Pop-up Settings</h2>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                v-model="popupSettings.enabled" 
+                @change="togglePopup"
+                :disabled="savingPopupSettings"
+                class="sr-only peer"
+              >
+              <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-400 mb-2">Products per Pop-up</label>
+              <div class="flex gap-2">
+                <button
+                  v-for="num in [1, 2, 3]"
+                  :key="num"
+                  @click="updateMaxRecommendations(num)"
+                  :disabled="!popupSettings.enabled || savingPopupSettings"
+                  :class="[
+                    'flex-1 py-2 px-4 rounded-lg font-medium transition',
+                    popupSettings.maxRecommendations === num
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800',
+                    (!popupSettings.enabled || savingPopupSettings) && 'opacity-50 cursor-not-allowed'
+                  ]"
+                >
+                  {{ num }}
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 mt-2">💡 3 products recommended for best conversion</p>
+            </div>
+            
+            <div class="text-xs text-gray-500">
+              <span v-if="popupSettings.enabled" class="text-green-400">✅ Pop-up active</span>
+              <span v-else class="text-red-400">❌ Pop-up disabled</span>
             </div>
           </div>
         </div>

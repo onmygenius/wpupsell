@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 const authStore = useAuthStore();
 const userProfile = ref<any>(null);
 const loading = ref(true);
 
-onMounted(async () => {
-  userProfile.value = await authStore.getUserProfile();
-  loading.value = false;
-});
 
 const notifications = ref({
   emailOnConversion: true,
@@ -23,6 +21,45 @@ const billing = ref({
   price: 79,
   nextBillingDate: new Date('2025-11-15'),
   paymentMethod: '**** **** **** 4242'
+});
+
+const popupSettings = ref({
+  maxRecommendations: 3
+});
+
+const savingPopupSettings = ref(false);
+
+async function loadPopupSettings() {
+  try {
+    const storeDoc = await getDoc(doc(db, 'stores', authStore.userId));
+    if (storeDoc.exists()) {
+      const data = storeDoc.data();
+      popupSettings.value.maxRecommendations = data.settings?.maxRecommendations || 3;
+    }
+  } catch (error) {
+    console.error('Error loading popup settings:', error);
+  }
+}
+
+async function savePopupSettings() {
+  savingPopupSettings.value = true;
+  try {
+    await updateDoc(doc(db, 'stores', authStore.userId), {
+      'settings.maxRecommendations': popupSettings.value.maxRecommendations
+    });
+    alert('✅ Pop-up settings saved successfully!');
+  } catch (error) {
+    console.error('Error saving popup settings:', error);
+    alert('❌ Failed to save settings. Please try again.');
+  } finally {
+    savingPopupSettings.value = false;
+  }
+}
+
+onMounted(async () => {
+  userProfile.value = await authStore.getUserProfile();
+  await loadPopupSettings();
+  loading.value = false;
 });
 </script>
 
@@ -68,6 +105,27 @@ const billing = ref({
           />
         </div>
         <!-- Removed save button since fields are read-only -->
+      </div>
+    </div>
+
+    <!-- Pop-up Settings -->
+    <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-6">
+      <h2 class="text-xl font-semibold text-white mb-6">🎯 Pop-up Settings</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">Number of Products in Recommendations Pop-up</label>
+          <select 
+            v-model="popupSettings.maxRecommendations"
+            @change="savePopupSettings"
+            :disabled="savingPopupSettings"
+            class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option :value="1">1 Product</option>
+            <option :value="2">2 Products</option>
+            <option :value="3">3 Products (Recommended)</option>
+          </select>
+          <p class="text-sm text-gray-500 mt-2">💡 Tip: More products = more choices, but 3 is optimal for conversion</p>
+        </div>
       </div>
     </div>
 
