@@ -1,17 +1,24 @@
 // Delete user and store from Firebase
-const { initializeApp, cert } = require('firebase-admin/app');
-const { getAuth } = require('firebase-admin/auth');
-const { getFirestore } = require('firebase-admin/firestore');
+// Load .env manually
+const fs = require('fs');
+const path = require('path');
+const envPath = path.join(__dirname, '../.env');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf8');
+  envContent.split('\n').forEach(line => {
+    const match = line.match(/^([^=]+)=(.*)$/);
+    if (match) {
+      const key = match[1].trim();
+      const value = match[2].trim().replace(/^["']|["']$/g, '');
+      process.env[key] = value;
+    }
+  });
+}
 
-// Initialize Firebase Admin
-const serviceAccount = require('../api/lib/firebase-service-account.json');
-
-initializeApp({
-  credential: cert(serviceAccount)
-});
+const { getAuth, getDb } = require('../api/lib/firebase-admin');
 
 const auth = getAuth();
-const db = getFirestore();
+const db = getDb();
 
 async function deleteUser(email) {
   try {

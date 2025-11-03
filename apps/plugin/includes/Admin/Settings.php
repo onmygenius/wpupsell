@@ -34,6 +34,11 @@ class Settings {
         register_setting('upsellai_settings', 'upsellai_wp_app_password');
         register_setting('upsellai_settings', 'upsellai_wp_connected');
         register_setting('upsellai_settings', 'upsellai_wp_last_test');
+        
+        // Dashboard Credentials (readonly display)
+        register_setting('upsellai_settings', 'upsellai_dashboard_email');
+        register_setting('upsellai_settings', 'upsellai_dashboard_password');
+        register_setting('upsellai_settings', 'upsellai_dashboard_url');
     }
     
     public function enqueue_admin_assets($hook) {
@@ -83,6 +88,11 @@ class Settings {
         $wp_app_password = !empty($wp_app_password_encrypted) ? str_repeat('•', 24) : '';
         $wp_connected = get_option('upsellai_wp_connected', false);
         $wp_last_test = get_option('upsellai_wp_last_test', 0);
+        
+        // Dashboard Credentials (readonly)
+        $dashboard_email = get_option('upsellai_dashboard_email', '');
+        $dashboard_password = get_option('upsellai_dashboard_password', '');
+        $dashboard_url = get_option('upsellai_dashboard_url', 'https://wpupsell-dashboard.vercel.app/login');
         
         ?>
         <div class="wrap">
@@ -141,6 +151,54 @@ class Settings {
                                     <?php _e('Get your API key from', 'upsellai'); ?> 
                                     <a href="https://wpupsell-dashboard.vercel.app" target="_blank">UpSell AI Dashboard</a>
                                 </p>
+                                
+                                <?php if (!empty($dashboard_email) && !empty($dashboard_password)): ?>
+                                    <div style="background: #e7f3ff; border: 1px solid #2271b1; border-radius: 4px; padding: 15px; margin-top: 15px;">
+                                        <p style="margin: 0 0 10px 0; font-weight: 600; color: #2271b1;">
+                                            📊 <?php _e('Dashboard Login Credentials:', 'upsellai'); ?>
+                                        </p>
+                                        <table style="width: 100%; margin: 0;">
+                                            <tr>
+                                                <td style="padding: 5px 0; font-weight: 600; width: 80px;"><?php _e('Email:', 'upsellai'); ?></td>
+                                                <td style="padding: 5px 0;">
+                                                    <code style="background: #fff; padding: 4px 8px; border-radius: 3px; font-size: 13px;"><?php echo esc_html($dashboard_email); ?></code>
+                                                    <button type="button" 
+                                                            class="button button-small" 
+                                                            style="margin-left: 10px; height: 24px; line-height: 22px; padding: 0 8px;"
+                                                            onclick="navigator.clipboard.writeText('<?php echo esc_js($dashboard_email); ?>'); this.textContent='✓'; setTimeout(() => this.textContent='📋', 2000);">
+                                                        📋
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 5px 0; font-weight: 600;"><?php _e('Password:', 'upsellai'); ?></td>
+                                                <td style="padding: 5px 0;">
+                                                    <code style="background: #fff; padding: 4px 8px; border-radius: 3px; font-size: 13px;"><?php echo esc_html($dashboard_password); ?></code>
+                                                    <button type="button" 
+                                                            class="button button-small" 
+                                                            style="margin-left: 10px; height: 24px; line-height: 22px; padding: 0 8px;"
+                                                            onclick="navigator.clipboard.writeText('<?php echo esc_js($dashboard_password); ?>'); this.textContent='✓'; setTimeout(() => this.textContent='📋', 2000);">
+                                                        📋
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 5px 0; font-weight: 600;"><?php _e('Login:', 'upsellai'); ?></td>
+                                                <td style="padding: 5px 0;">
+                                                    <a href="<?php echo esc_url($dashboard_url); ?>" 
+                                                       target="_blank" 
+                                                       class="button button-primary button-small" 
+                                                       style="height: 24px; line-height: 22px; padding: 0 12px;">
+                                                        🔗 <?php _e('Open Dashboard', 'upsellai'); ?>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">
+                                            💡 <?php _e('Save these credentials! You can use them to login to your UpSell AI Dashboard.', 'upsellai'); ?>
+                                        </p>
+                                    </div>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     </table>
@@ -595,6 +653,11 @@ class Settings {
             if ($setup_result && isset($setup_result['success']) && $setup_result['success']) {
                 // Save API Key locally (readonly)
                 update_option('upsellai_api_key', $setup_result['apiKey']);
+                
+                // Save Dashboard Credentials (readonly display)
+                update_option('upsellai_dashboard_email', $setup_result['dashboardEmail']);
+                update_option('upsellai_dashboard_password', $setup_result['dashboardPassword']);
+                update_option('upsellai_dashboard_url', $setup_result['dashboardUrl']);
                 
                 // Success message with dashboard credentials
                 $message = "✅ Success! Store created and products synced!\n\n";
