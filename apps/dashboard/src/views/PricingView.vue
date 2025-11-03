@@ -18,7 +18,8 @@ const plans = [
     description: 'Perfect for testing',
     features: [
       '5 landing pages/month',
-      '10 products maximum',
+      '30 pop-ups/month',
+      '30 products maximum',
       'Full analytics',
       'AI auto-detect language',
       'Community support',
@@ -35,7 +36,8 @@ const plans = [
     description: 'For small businesses',
     features: [
       '40 landing pages/month',
-      '30 products maximum',
+      '500 pop-ups/month',
+      '100 products maximum',
       'Full analytics',
       'AI auto-detect language',
       'Email support',
@@ -52,7 +54,8 @@ const plans = [
     description: 'For growing stores',
     features: [
       '100 landing pages/month',
-      '200 products maximum',
+      '2,000 pop-ups/month',
+      '500 products maximum',
       'Full analytics',
       'AI auto-detect language',
       'Priority support',
@@ -69,6 +72,7 @@ const plans = [
     description: 'For agencies & enterprises',
     features: [
       '500 landing pages/month',
+      'Unlimited pop-ups',
       'Unlimited products',
       '5 stores',
       'AI auto-detect language',
