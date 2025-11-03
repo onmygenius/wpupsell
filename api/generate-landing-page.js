@@ -15,6 +15,7 @@ function getGroq() {
 }
 
 const { generateLandingPageHTML } = require('../lib/api-helpers/html-template');
+const { incrementUsage, checkPlanLimits } = require('../lib/plan-limits');
 
 // AI generates landing page content
 async function generateLandingPageContent(product) {
@@ -215,6 +216,27 @@ module.exports = async (req, res) => {
       });
     }
 
+    // ✅ CHECK PLAN LIMITS BEFORE GENERATION
+    try {
+      const limitCheck = await checkPlanLimits(storeId, 'generate_page', 1);
+      if (!limitCheck.allowed) {
+        console.log('❌ Plan limit reached:', limitCheck.message);
+        return res.status(403).json({
+          error: 'Plan limit reached',
+          message: limitCheck.message,
+          current: limitCheck.current,
+          limit: limitCheck.limit,
+          upgradeMessage: limitCheck.upgradeMessage,
+          upgradePlan: limitCheck.upgradePlan,
+          upgradeUrl: '/pricing'
+        });
+      }
+      console.log('✅ Plan limit check passed');
+    } catch (error) {
+      console.error('⚠️ Plan limit check failed:', error);
+      // Continue anyway if check fails (graceful degradation)
+    }
+
     // Load Firebase
     const hasFirebase = process.env.FIREBASE_PROJECT_ID && 
                         process.env.FIREBASE_CLIENT_EMAIL && 
@@ -314,6 +336,15 @@ module.exports = async (req, res) => {
       await landingPageRef.set(landingPageData);
       
       console.log('✅ Landing page created:', landingPageRef.id);
+      
+      // ✅ INCREMENT USAGE AFTER SUCCESSFUL GENERATION
+      try {
+        await incrementUsage(storeId, 'pagesGenerated', 1);
+        console.log('✅ Usage incremented: +1 page');
+      } catch (error) {
+        console.error('⚠️ Failed to increment usage:', error);
+        // Don't fail the request if usage increment fails
+      }
       
       return res.status(200).json({
         success: true,

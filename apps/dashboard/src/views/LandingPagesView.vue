@@ -35,6 +35,11 @@ const bulkNumberOfPages = ref(10);
 const bulkProgress = ref(0);
 const bulkResults = ref<any[]>([]);
 
+// Upgrade modal
+const showUpgradeModal = ref(false);
+const upgradeMessage = ref('');
+const upgradeDetails = ref<any>(null);
+
 // Available templates
 const templates = [
   { id: 'starter', name: 'Starter', description: 'Modern, clean design with Tailwind CSS - Perfect for any product' }
@@ -198,6 +203,15 @@ async function generateLandingPage() {
     });
     
     const data = await response.json();
+    
+    if (response.status === 403) {
+      // Plan limit reached - show upgrade modal
+      upgradeMessage.value = data.message || 'You have reached your plan limit';
+      upgradeDetails.value = data;
+      showUpgradeModal.value = true;
+      closeGenerateModal();
+      return;
+    }
     
     if (data.success) {
       alert('Landing page generated successfully!');
@@ -961,6 +975,55 @@ function viewLivePage(url: string) {
               ⏳ Generating...
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upgrade Modal -->
+    <div
+      v-if="showUpgradeModal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      @click.self="showUpgradeModal = false"
+    >
+      <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-8 max-w-md w-full">
+        <div class="text-center mb-6">
+          <div class="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-4xl">🚀</span>
+          </div>
+          <h2 class="text-2xl font-bold text-white mb-2">Plan Limit Reached</h2>
+          <p class="text-gray-400">{{ upgradeMessage }}</p>
+        </div>
+        
+        <div v-if="upgradeDetails" class="bg-gray-800/50 rounded-lg p-4 mb-6">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-gray-400">Current Usage</span>
+            <span class="text-sm font-semibold text-white">{{ upgradeDetails.current }} / {{ upgradeDetails.limit }}</span>
+          </div>
+          <div class="w-full bg-gray-700 rounded-full h-2">
+            <div 
+              class="bg-yellow-500 h-2 rounded-full" 
+              :style="{ width: '100%' }"
+            ></div>
+          </div>
+        </div>
+        
+        <div v-if="upgradeDetails?.upgradeMessage" class="bg-blue-600/10 border border-blue-600/30 rounded-lg p-4 mb-6">
+          <p class="text-sm text-blue-400">{{ upgradeDetails.upgradeMessage }}</p>
+        </div>
+        
+        <div class="flex gap-3">
+          <button
+            @click="showUpgradeModal = false"
+            class="flex-1 bg-gray-800 text-white px-4 py-3 rounded-lg hover:bg-gray-700 transition"
+          >
+            Maybe Later
+          </button>
+          <button
+            @click="$router.push('/pricing')"
+            class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition font-semibold"
+          >
+            ⭐ Upgrade Now
+          </button>
         </div>
       </div>
     </div>
