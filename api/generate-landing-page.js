@@ -78,6 +78,13 @@ CRITICAL INSTRUCTIONS:
 
 Return ONLY a JSON object with this EXACT structure:
 {
+  "sectionTitles": {
+    "whyChoose": "Section title for benefits (e.g., English: 'Why choose', Romanian: 'De ce să alegi', Spanish: 'Por qué elegir', Italian: 'Perché scegliere', Portuguese: 'Por que escolher')",
+    "customerReviews": "Section title for testimonials (e.g., English: 'What our customers say', Romanian: 'Ce spun clienții noștri', Spanish: 'Lo que dicen nuestros clientes')",
+    "specifications": "Section title for features (e.g., English: 'Specifications', Romanian: 'Specificații', Spanish: 'Especificaciones')",
+    "faq": "Section title for FAQ (e.g., English: 'Frequently Asked Questions', Romanian: 'Întrebări Frecvente', Spanish: 'Preguntas Frecuentes')",
+    "readyToOrder": "Final CTA section title (e.g., English: 'Ready to order?', Romanian: 'Gata să comanzi?', Spanish: '¿Listo para ordenar?')"
+  },
   "hero": {
     "headline": "Powerful, benefit-driven headline (max 10 words)",
     "subheadline": "Supporting text that creates urgency (max 20 words)",
