@@ -30,10 +30,12 @@ const planData = ref({
   plan: 'free',
   limits: {
     pagesPerMonth: 5,
-    maxProducts: 10
+    popupsPerMonth: 30,
+    maxProducts: 30
   },
   usage: {
     pagesGenerated: 0,
+    popupsShown: 0,
     currentPeriodEnd: new Date()
   }
 });
@@ -77,7 +79,14 @@ const usagePercent = computed(() => {
   return Math.round((pagesGenerated / pagesPerMonth) * 100);
 });
 
+const popupsUsagePercent = computed(() => {
+  const { popupsShown } = planData.value.usage;
+  const { popupsPerMonth } = planData.value.limits;
+  return Math.round((popupsShown / popupsPerMonth) * 100);
+});
+
 const showWarning = computed(() => usagePercent.value >= 80);
+const showPopupsWarning = computed(() => popupsUsagePercent.value >= 80);
 
 const resetDate = computed(() => {
   const date = planData.value.usage.currentPeriodEnd;
@@ -351,6 +360,30 @@ onMounted(async () => {
         </div>
       </div>
 
+      <!-- Pop-ups Usage -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-gray-400">Pop-up AI Recommendations</span>
+          <span class="text-sm font-semibold text-white">
+            {{ planData.usage.popupsShown }} / {{ planData.limits.popupsPerMonth }}
+          </span>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+          <div 
+            class="h-3 rounded-full transition-all duration-500"
+            :class="showPopupsWarning ? 'bg-yellow-500' : 'bg-green-600'"
+            :style="{ width: popupsUsagePercent + '%' }"
+          ></div>
+        </div>
+        
+        <div class="flex items-center justify-between mt-2">
+          <span class="text-xs text-gray-500">{{ popupsUsagePercent }}% used</span>
+          <span class="text-xs text-gray-500">Resets on {{ resetDate }}</span>
+        </div>
+      </div>
+
       <!-- Warning Message -->
       <div 
         v-if="showWarning" 
@@ -364,6 +397,24 @@ onMounted(async () => {
             </p>
             <p class="text-xs text-yellow-400/80">
               You've used {{ planData.usage.pagesGenerated }} of {{ planData.limits.pagesPerMonth }} pages this month.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Pop-ups Warning Message -->
+      <div 
+        v-if="showPopupsWarning" 
+        class="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-4"
+      >
+        <div class="flex items-start gap-3">
+          <span class="text-xl">⚠️</span>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-yellow-400 mb-1">
+              You're running low on pop-ups!
+            </p>
+            <p class="text-xs text-yellow-400/80">
+              You've used {{ planData.usage.popupsShown }} of {{ planData.limits.popupsPerMonth }} pop-ups this month.
             </p>
           </div>
         </div>
