@@ -329,10 +329,10 @@ module.exports = async (req, res) => {
         ...storeData
       };
       
-      // Add currency to product for template
+      // Add currency to product for template (only if product doesn't have one)
       const productWithCurrency = {
         ...product,
-        currency: store.currency
+        currency: product.currency || store.currency
       };
       
       // Generate HTML from content
