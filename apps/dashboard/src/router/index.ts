@@ -35,6 +35,12 @@ const router = createRouter({
       meta: { title: 'Landing Pages' }
     },
     {
+      path: '/popup-recommendations',
+      name: 'popup-recommendations',
+      component: () => import('../views/PopupRecommendationsView.vue'),
+      meta: { title: 'Pop-up Recommendations', requiresAuth: true }
+    },
+    {
       path: '/pricing',
       name: 'pricing',
       component: () => import('../views/PricingView.vue'),

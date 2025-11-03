@@ -21,6 +21,7 @@ const navigation = [
   { name: 'Stores', path: '/stores', icon: '🏪' },
   { name: 'Products', path: '/products', icon: '📦' },
   { name: 'Landing Pages', path: '/landing-pages', icon: '🎨' },
+  { name: 'Pop-up Recommendations', path: '/popup-recommendations', icon: '🎯' },
   { name: 'Settings', path: '/settings', icon: '⚙️' }
 ];
 
