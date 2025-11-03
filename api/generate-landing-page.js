@@ -173,24 +173,24 @@ IMPORTANT:
     console.log('🧹 Cleaning JSON before parsing...');
     
     // 1. Remove control characters (newlines, tabs, etc.)
-    jsonString = jsonString.replace(/[\x00-\x1F\x7F]/g, '');
+    jsonString = jsonString.replace(/[\x00-\x1F\x7F]/g, ' ');
     
     // 2. Fix trailing commas
     jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1');
     
-    // 3. Fix missing quotes around property names
-    jsonString = jsonString.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
+    // 3. CRITICAL FIX: Replace ALL escaped quotes \" with single quotes '
+    // This is the main cause of JSON parse errors
+    jsonString = jsonString.replace(/\\"/g, "'");
     
-    // 4. CRITICAL FIX: Replace escaped quotes inside string values with single quotes
-    // This fixes: "Lanțisorul \"Inima Eternă\"" -> "Lanțisorul 'Inima Eternă'"
-    jsonString = jsonString.replace(/:\s*"([^"]*?)\\"/g, (match, before) => {
-      // Replace \" with ' inside string values
-      return `: "${before.replace(/\\"/g, "'")}"`;
+    // 4. Fix any unescaped quotes inside strings (between ": and ")
+    // Match pattern: ": ... " ... " ... "
+    jsonString = jsonString.replace(/:\s*"([^"]*)"([^"]*)"([^"]*?)"/g, (match, p1, p2, p3) => {
+      // If there's a quote in the middle, it's likely a name/title quote
+      if (p2) {
+        return `: "${p1}'${p2}'${p3}"`;
+      }
+      return match;
     });
-    
-    // 5. Also fix any remaining \" that might break JSON
-    // But preserve \" at the end of strings (those are valid)
-    jsonString = jsonString.replace(/\\"(?!")/g, "'");
     
     console.log('✅ JSON cleaned, attempting parse...');
     
