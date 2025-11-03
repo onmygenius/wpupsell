@@ -15,7 +15,7 @@ function getGroq() {
 }
 
 const { generateLandingPageHTML } = require('../lib/api-helpers/html-template');
-const { incrementUsage, checkPlanLimits } = require('../lib/plan-limits');
+const { incrementUsage, checkPlanLimits } = require('./lib/plan-limits');
 
 // AI generates landing page content
 async function generateLandingPageContent(product) {
