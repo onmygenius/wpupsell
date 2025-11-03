@@ -41,7 +41,7 @@ async function handleSync(req, res) {
   const { apiKey, products } = req.body;
   
   console.log('📦 Sync request:', { apiKey: apiKey ? apiKey.substring(0, 15) + '...' : 'N/A', productsCount: products?.length });
-  console.log('📦 First 3 products:', products?.slice(0, 3).map(p => ({ id: p.id, name: p.name })));
+  console.log('📦 First 3 products:', products?.slice(0, 3).map(p => ({ id: p.id, name: p.name, currency: p.currency, description: p.description?.substring(0, 50) })));
   
   if (!apiKey || !products || !Array.isArray(products)) {
     return res.status(400).json({ 
