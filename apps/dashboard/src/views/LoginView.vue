@@ -33,13 +33,15 @@ async function handleLogin() {
     <div class="max-w-md w-full">
       <!-- Logo -->
       <div class="text-center mb-8">
+        <div class="flex justify-center mb-4">
+          <img src="/logo.gif" alt="UpSell AI" class="w-32 h-32 rounded-2xl shadow-2xl shadow-blue-500/50" />
+        </div>
         <h1 class="text-4xl font-bold text-white mb-2">UpSell AI</h1>
-        <p class="text-gray-400">AI-Powered Recommendations for WooCommerce</p>
+        <p class="text-gray-400">The only WooCommerce solution that combines AI semantic recommendations with dedicated landing pages for maximum conversions</p>
       </div>
 
       <!-- Login Card -->
       <div class="bg-[#0f1535] rounded-xl border border-gray-800 p-8">
-        <h2 class="text-2xl font-bold text-white mb-6">Welcome Back</h2>
 
         <!-- Error Message -->
         <div v-if="error" class="mb-4 p-3 bg-red-600/20 border border-red-600/50 rounded-lg text-red-400 text-sm">
