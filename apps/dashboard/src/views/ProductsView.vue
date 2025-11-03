@@ -17,6 +17,7 @@ interface Product {
   name: string;
   category: string;
   price: number;
+  currency?: string;
   stock: number;
   image?: string;
   url: string;
@@ -70,7 +71,7 @@ const totalPages = computed(() => {
   return Math.ceil(filteredProducts.value.length / itemsPerPage);
 });
 
-// Currency symbol
+// Currency symbol (for store default)
 const currencySymbol = computed(() => {
   const currency = store.value?.currency || 'USD';
   const symbols: Record<string, string> = {
@@ -82,6 +83,19 @@ const currencySymbol = computed(() => {
   };
   return symbols[currency] || currency;
 });
+
+// Get currency symbol for a specific product
+const getProductCurrency = (product: Product) => {
+  const currency = product.currency || store.value?.currency || 'USD';
+  const symbols: Record<string, string> = {
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'LEI': 'LEI',
+    'RON': 'LEI'
+  };
+  return symbols[currency] || currency;
+};
 
 // Locale for date formatting
 const locale = computed(() => {
@@ -397,7 +411,7 @@ const formatDate = (date: Date) => {
               
               <!-- Price -->
               <td class="px-6 py-4 text-right">
-                <span class="text-sm font-semibold text-white">{{ product.price }} {{ currencySymbol }}</span>
+                <span class="text-sm font-semibold text-white">{{ product.price }} {{ getProductCurrency(product) }}</span>
               </td>
               
               <!-- Stock -->
@@ -516,7 +530,7 @@ const formatDate = (date: Date) => {
             </div>
             <div class="flex-1">
               <p class="text-white font-medium">{{ promotingProduct.name }}</p>
-              <p class="text-sm text-gray-400">{{ promotingProduct.price }} {{ currencySymbol }}</p>
+              <p class="text-sm text-gray-400">{{ promotingProduct.price }} {{ getProductCurrency(promotingProduct) }}</p>
             </div>
           </div>
           
