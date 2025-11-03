@@ -95,8 +95,8 @@ Return ONLY a JSON object with this EXACT structure:
     "rating": 4.8,
     "reviewCount": 127,
     "testimonials": [
-      {"name": "Realistic name matching the detected language", "text": "DETAILED, authentic testimonial (50-60 words). Include: 1) What problem they had, 2) Why they chose this product, 3) Specific results they got, 4) How it made them FEEL. Make it personal and believable.", "rating": 5},
-      {"name": "Different realistic name", "text": "DIFFERENT detailed testimonial (50-60 words). Focus on DIFFERENT aspect of product. Include specific details and emotional impact. Make it unique from first testimonial.", "rating": 5}
+      {"name": "Realistic full name matching the detected language (e.g., English: 'Sarah Mitchell' or 'James Anderson', Romanian: 'Maria Popescu' or 'Andrei Ionescu', Spanish: 'Carlos García' or 'Ana Martínez', French: 'Sophie Dubois' or 'Pierre Martin', German: 'Anna Schmidt' or 'Michael Müller'). NEVER use 'John Doe' or 'Jane Smith'!", "text": "DETAILED, authentic testimonial (50-60 words). Include: 1) What problem they had, 2) Why they chose this product, 3) Specific results they got, 4) How it made them FEEL. Make it personal and believable.", "rating": 5},
+      {"name": "DIFFERENT realistic full name in same language (use different first AND last name from first testimonial). NEVER repeat names!", "text": "DIFFERENT detailed testimonial (50-60 words). Focus on DIFFERENT aspect of product. Include specific details and emotional impact. Make it unique from first testimonial.", "rating": 5}
     ]
   },
   "features": [
