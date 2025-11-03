@@ -90,8 +90,10 @@ class Products {
             $formatted_products[] = [
                 'id' => (string) $product->get_id(),
                 'name' => $product->get_name(),
+                'description' => $product->get_short_description() ?: $product->get_description(),
                 'category' => $this->get_product_category($product),
                 'price' => (float) $product->get_price(),
+                'currency' => get_woocommerce_currency(), // Get store currency (USD, EUR, RON, etc.)
                 'stock' => (int) $product->get_stock_quantity(),
                 'image' => wp_get_attachment_url($product->get_image_id()),
                 'url' => get_permalink($product->get_id()),

@@ -120,8 +120,10 @@ async function handleSync(req, res) {
       batch.set(productRef, {
         productId: product.id,
         name: product.name,
+        description: product.description || '',
         category: product.category,
         price: product.price,
+        currency: product.currency || 'USD', // Save currency from WooCommerce
         stock: product.stock || 0,
         image: product.image || '',
         url: product.url || '',

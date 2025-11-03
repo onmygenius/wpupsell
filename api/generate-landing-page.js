@@ -36,25 +36,27 @@ Your task: Generate a complete, high-converting landing page structure in JSON f
 CRITICAL INSTRUCTIONS:
 
 1. LANGUAGE DETECTION (MOST IMPORTANT!):
-   - Analyze product name, description AND currency to detect language:
+   - Analyze product name and description FIRST, then use currency as hint:
      * Product Name: "${product.name}"
      * Product Description: "${product.description || 'N/A'}"
      * Currency: "${product.currency || 'N/A'}"
-   - Currency hints:
-     * RON or LEI → Romanian language
-     * EUR → check product text language
-     * USD or $ → English language (default)
-     * GBP or £ → English (UK)
-   - Detect the language from the text + currency above
-   - If currency is RON/LEI → generate ALL content in Romanian
-   - If currency is USD/GBP and text is English → generate in English
-   - If text is in English → generate ALL content in English
-   - If text is in Romanian → generate ALL content in Romanian
-   - If text is in Spanish → generate ALL content in Spanish
-   - If text is in French → generate ALL content in French
-   - Generate ALL content in the EXACT SAME language as the product text + currency
+   
+   PRIORITY ORDER:
+   1. If product name/description contains clear English words → English
+   2. If product name/description contains clear Romanian words → Romanian
+   3. If product name/description contains clear Spanish words → Spanish
+   4. If product name/description contains clear French words → French
+   5. If product name/description contains clear German words → German
+   6. If text is unclear, use currency as hint:
+      * RON or LEI → Romanian
+      * USD or $ → English
+      * GBP or £ → English
+      * EUR → English (default)
+   
+   - Generate ALL content in the EXACT SAME language as the product text
+   - Product text language has PRIORITY over currency
    - NO mixed languages allowed!
-   - IGNORE the website domain (.ro, .com, .es, etc.) - ONLY analyze product text + currency!
+   - IGNORE the website domain (.ro, .com, .es, etc.)
 
 2. INDUSTRY DETECTION:
    - Identify industry: jewelry, auto, fashion, hotels, tourism, electronics, etc.
@@ -229,13 +231,20 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { productId, pageTitle, pageSlug, urlPrefix, templateId, storeId } = req.body;
+    const { productId, product, pageTitle, pageSlug, urlPrefix, templateId, storeId } = req.body;
     
     console.log('📊 Request:', { productId, pageTitle, pageSlug, urlPrefix, templateId, storeId });
+    console.log('📦 Product data:', product);
     
     if (!productId || !pageTitle || !pageSlug || !storeId) {
       return res.status(400).json({ 
         error: 'Missing required fields: productId, pageTitle, pageSlug, storeId' 
+      });
+    }
+    
+    if (!product || !product.name) {
+      return res.status(400).json({ 
+        error: 'Missing product data (name, description, price, currency required)' 
       });
     }
 
@@ -292,20 +301,10 @@ module.exports = async (req, res) => {
       
       const db = admin.firestore();
       
-      // Get product from Firebase
-      const productDoc = await db
-        .collection('stores')
-        .doc(storeId)
-        .collection('products')
-        .doc(productId)
-        .get();
-      
-      if (!productDoc.exists) {
-        return res.status(404).json({ error: 'Product not found' });
-      }
-      
-      const product = productDoc.data();
-      console.log('📦 Product loaded:', product.name);
+      // Product data comes from request (sent by Dashboard)
+      console.log('📦 Using product data from request:', product.name);
+      console.log('💰 Currency:', product.currency);
+      console.log('📝 Description:', product.description?.substring(0, 100) + '...');
       
       // Generate landing page content with AI
       const content = await generateLandingPageContent(product);

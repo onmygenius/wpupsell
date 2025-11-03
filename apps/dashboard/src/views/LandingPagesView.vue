@@ -194,6 +194,16 @@ async function generateLandingPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         productId: selectedProduct.value.productId,
+        product: {
+          id: selectedProduct.value.productId,
+          name: selectedProduct.value.name,
+          description: selectedProduct.value.description || '',
+          price: selectedProduct.value.price,
+          currency: selectedProduct.value.currency || store.value?.currency || 'USD',
+          category: selectedProduct.value.category || '',
+          image: selectedProduct.value.image || '',
+          url: selectedProduct.value.url || ''
+        },
         pageTitle: pageTitle.value,
         pageSlug: pageSlug.value,
         urlPrefix: urlPrefix.value,
