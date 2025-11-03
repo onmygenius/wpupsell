@@ -178,6 +178,7 @@ const loadProducts = async () => {
         name: data.name || '',
         category: data.category || '',
         price: data.price || 0,
+        currency: data.currency,
         stock: data.stock || 0,
         image: data.image,
         url: data.url || '',
