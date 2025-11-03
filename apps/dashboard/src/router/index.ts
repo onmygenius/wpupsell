@@ -41,6 +41,18 @@ const router = createRouter({
       meta: { title: 'Pop-up Recommendations', requiresAuth: true }
     },
     {
+      path: '/why-upsell-ai',
+      name: 'why-upsell-ai',
+      component: () => import('../views/WhyUpSellAIView.vue'),
+      meta: { title: 'Why UpSell AI' }
+    },
+    {
+      path: '/how-it-works',
+      name: 'how-it-works',
+      component: () => import('../views/HowItWorksView.vue'),
+      meta: { title: 'How It Works' }
+    },
+    {
       path: '/pricing',
       name: 'pricing',
       component: () => import('../views/PricingView.vue'),

@@ -22,6 +22,8 @@ const navigation = [
   { name: 'Products', path: '/products', icon: '📦' },
   { name: 'Landing Pages', path: '/landing-pages', icon: '🎨' },
   { name: 'Pop-up Recommendations', path: '/popup-recommendations', icon: '🎯' },
+  { name: 'Why UpSell AI', path: '/why-upsell-ai', icon: '💎' },
+  { name: 'How It Works', path: '/how-it-works', icon: '🔧' },
   { name: 'Settings', path: '/settings', icon: '⚙️' }
 ];
 
@@ -54,9 +56,7 @@ const toggleSidebar = () => {
       <div class="p-6">
         <!-- Logo -->
         <div :class="['flex items-center gap-2 mb-8 transition-all', isCollapsed ? 'justify-center' : '']">
-          <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span class="text-xl">🚀</span>
-          </div>
+          <img src="/logo.gif" alt="UpSell AI" class="w-10 h-10 rounded-lg shadow-lg" />
           <div v-if="!isCollapsed">
             <h1 class="text-lg font-bold text-white">UpSell AI</h1>
             <p class="text-xs text-gray-400">{{ authStore.userEmail }}</p>
