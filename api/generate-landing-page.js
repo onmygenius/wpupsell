@@ -36,36 +36,25 @@ Your task: Generate a complete, high-converting landing page structure in JSON f
 CRITICAL INSTRUCTIONS:
 
 1. LANGUAGE DETECTION (MOST IMPORTANT!):
-   - Analyze product name, description AND currency to detect language
+   - Analyze ONLY product name AND description to detect language
    - Product Name: "${product.name}"
    - Product Description: "${product.description || 'N/A'}"
-   - Product Currency: "${product.currency || 'N/A'}"
    
    DETECTION RULES:
-   Step 1 - Analyze TEXT (name + description):
    - If text contains English words (the, and, with, for, of, in, etc.) → English
    - If text contains Romanian words (și, sau, pentru, este, cu, de, la, în, etc.) → Romanian
    - If text contains Spanish words (y, o, para, con, de, en, el, la, etc.) → Spanish
    - If text contains French words (et, ou, pour, avec, de, dans, le, la, etc.) → French
    - If text contains German words (und, oder, für, mit, von, in, der, die, das, etc.) → German
    - If text contains Italian words (e, o, per, con, di, in, il, la, etc.) → Italian
-   
-   Step 2 - Use CURRENCY as additional hint:
-   - RON or LEI → Suggests Romanian
-   - USD or $ → Neutral (can be any language)
-   - EUR or € → Neutral (can be any language)
-   - GBP or £ → Suggests English
-   
-   Step 3 - Combine analysis:
-   - If text language is CLEAR → Use text language (currency is just a hint)
-   - If text is MIXED or UNCLEAR → Currency helps decide
-   - If both unclear → Default to English
+   - If text is unclear or very short → Default to English
    
    CRITICAL:
-   - Generate ALL content in the DETECTED language
+   - Generate ALL content in the EXACT SAME language as the product text
+   - IGNORE currency (EUR can be any language, USD can be Spanish, etc.)
    - IGNORE website domain (.ro, .com, .es, etc.)
    - NO mixed languages allowed!
-   - Currency is displayed as-is (RON, EUR, USD, etc.)
+   - Language is detected ONLY from product text content!
 
 2. INDUSTRY DETECTION:
    - Identify industry: jewelry, auto, fashion, hotels, tourism, electronics, etc.
@@ -97,17 +86,10 @@ CRITICAL INSTRUCTIONS:
 
 Return ONLY a JSON object with this EXACT structure:
 {
-  "sectionTitles": {
-    "whyChoose": "Section title in DETECTED LANGUAGE (e.g., English: 'Why choose', Romanian: 'De ce să alegi', Spanish: 'Por qué elegir', French: 'Pourquoi choisir', German: 'Warum wählen', Italian: 'Perché scegliere')",
-    "customerReviews": "Section title in DETECTED LANGUAGE (e.g., English: 'What our customers say', Romanian: 'Ce spun clienții noștri', Spanish: 'Lo que dicen nuestros clientes', French: 'Ce que disent nos clients', German: 'Was unsere Kunden sagen', Italian: 'Cosa dicono i nostri clienti')",
-    "specifications": "Section title in DETECTED LANGUAGE (e.g., English: 'Specifications', Romanian: 'Specificații', Spanish: 'Especificaciones', French: 'Spécifications', German: 'Spezifikationen', Italian: 'Specifiche')",
-    "faq": "Section title in DETECTED LANGUAGE (e.g., English: 'Frequently Asked Questions', Romanian: 'Întrebări Frecvente', Spanish: 'Preguntas Frecuentes', French: 'Questions Fréquentes', German: 'Häufig gestellte Fragen', Italian: 'Domande Frequenti')",
-    "readyToOrder": "Final CTA section title in DETECTED LANGUAGE (e.g., English: 'Ready to order?', Romanian: 'Gata să comanzi?', Spanish: '¿Listo para ordenar?', French: 'Prêt à commander?', German: 'Bereit zu bestellen?', Italian: 'Pronto per ordinare?')"
-  },
   "hero": {
-    "headline": "Powerful, benefit-driven headline in DETECTED LANGUAGE (max 10 words)",
-    "subheadline": "Supporting text that creates urgency in DETECTED LANGUAGE (max 20 words)",
-    "cta": "Action-oriented button text in DETECTED LANGUAGE (max 3 words)"
+    "headline": "Powerful, benefit-driven headline (max 10 words)",
+    "subheadline": "Supporting text that creates urgency (max 20 words)",
+    "cta": "Action-oriented button text (max 3 words)"
   },
   "description": "COMPREHENSIVE product description (MINIMUM 500 words, 5-7 paragraphs). CRITICAL: Must be AT LEAST 500 words! Requirements: 1) Start with powerful emotional hook that captures attention, 2) Paint vivid, detailed picture of ownership experience using sensory language, 3) Describe how it looks, feels, sounds, and makes the customer FEEL, 4) Tell a compelling story about transformation (before/after owning this product), 5) Include specific use cases and scenarios, 6) Address the customer's deepest desires and pain points, 7) Use metaphors and analogies to make it memorable, 8) Build anticipation and desire through detailed storytelling, 9) Include technical details woven into emotional narrative, 10) End with powerful, inspiring statement. AVOID generic phrases! Be EXTREMELY specific, detailed, and compelling. This is the MOST IMPORTANT section - make every word count!",
   "benefits": [
