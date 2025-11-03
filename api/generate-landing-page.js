@@ -77,12 +77,15 @@ CRITICAL INSTRUCTIONS:
    - Use social proof effectively
    - Make it feel exclusive and premium
 
-5. JSON FORMATTING RULES (CRITICAL):
-   - NEVER use double quotes (") inside string values
-   - Use single quotes (') or apostrophes instead
-   - Example: CORRECT: "Lanțisorul 'Inima Eternă' este frumos"
-   - Example: WRONG: "Lanțisorul \"Inima Eternă\" este frumos"
-   - This is CRITICAL for valid JSON parsing!
+5. JSON FORMATTING RULES (CRITICAL - MUST FOLLOW):
+   - NEVER EVER use double quotes (") inside string values
+   - ALWAYS use single quotes (') for product names, titles, or any quoted text
+   - Example CORRECT: "Lanțisorul 'Inima Eternă' este frumos"
+   - Example WRONG: "Lanțisorul \"Inima Eternă\" este frumos"
+   - Example WRONG: "Lanțisorul "Inima Eternă" este frumos"
+   - If you need to quote something, use ONLY single quotes (')
+   - This is ABSOLUTELY CRITICAL for valid JSON parsing!
+   - DO NOT use backslash escaping (\") - use single quotes instead!
 
 Return ONLY a JSON object with this EXACT structure:
 {
@@ -173,24 +176,24 @@ IMPORTANT:
     console.log('🧹 Cleaning JSON before parsing...');
     
     // 1. Remove control characters (newlines, tabs, etc.)
-    jsonString = jsonString.replace(/[\x00-\x1F\x7F]/g, ' ');
+    jsonString = jsonString.replace(/[\x00-\x1F\x7F]/g, '');
     
     // 2. Fix trailing commas
     jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1');
     
-    // 3. CRITICAL FIX: Replace ALL escaped quotes \" with single quotes '
-    // This is the main cause of JSON parse errors
-    jsonString = jsonString.replace(/\\"/g, "'");
+    // 3. Fix missing quotes around property names
+    jsonString = jsonString.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
     
-    // 4. Fix any unescaped quotes inside strings (between ": and ")
-    // Match pattern: ": ... " ... " ... "
-    jsonString = jsonString.replace(/:\s*"([^"]*)"([^"]*)"([^"]*?)"/g, (match, p1, p2, p3) => {
-      // If there's a quote in the middle, it's likely a name/title quote
-      if (p2) {
-        return `: "${p1}'${p2}'${p3}"`;
-      }
-      return match;
+    // 4. CRITICAL FIX: Replace escaped quotes inside string values with single quotes
+    // This fixes: "Lanțisorul \"Inima Eternă\"" -> "Lanțisorul 'Inima Eternă'"
+    jsonString = jsonString.replace(/:\s*"([^"]*?)\\"/g, (match, before) => {
+      // Replace \" with ' inside string values
+      return `: "${before.replace(/\\"/g, "'")}"`;
     });
+    
+    // 5. Also fix any remaining \" that might break JSON
+    // But preserve \" at the end of strings (those are valid)
+    jsonString = jsonString.replace(/\\"(?!")/g, "'");
     
     console.log('✅ JSON cleaned, attempting parse...');
     
