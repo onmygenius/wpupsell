@@ -336,45 +336,6 @@ Return in JSON format:
 }
 
 /**
- * Detect language from content
- */
-function detectLanguage(text) {
-  const lowerText = text.toLowerCase();
-  
-  // Romanian detection
-  if (lowerText.match(/\b(și|sau|pentru|este|sunt|acest|această|cu|de|la|în)\b/)) return 'ro';
-  // Spanish detection
-  if (lowerText.match(/\b(y|o|para|es|son|este|esta|con|de|en|el|la)\b/)) return 'es';
-  // French detection
-  if (lowerText.match(/\b(et|ou|pour|est|sont|ce|cette|avec|de|dans|le|la)\b/)) return 'fr';
-  // German detection
-  if (lowerText.match(/\b(und|oder|für|ist|sind|diese|dieser|mit|von|in|der|die|das)\b/)) return 'de';
-  // Italian detection
-  if (lowerText.match(/\b(e|o|per|è|sono|questo|questa|con|di|in|il|la)\b/)) return 'it';
-  // Portuguese detection
-  if (lowerText.match(/\b(e|ou|para|é|são|este|esta|com|de|em|o|a)\b/)) return 'pt';
-  
-  // Default to English
-  return 'en';
-}
-
-/**
- * Get translations for section titles
- */
-function getTranslations(lang) {
-  const translations = {
-    en: { faqTitle: 'Frequently Asked Questions', shopNow: 'Shop Now' },
-    ro: { faqTitle: 'Întrebări Frecvente', shopNow: 'Cumpără Acum' },
-    es: { faqTitle: 'Preguntas Frecuentes', shopNow: 'Comprar Ahora' },
-    fr: { faqTitle: 'Questions Fréquentes', shopNow: 'Acheter Maintenant' },
-    de: { faqTitle: 'Häufig gestellte Fragen', shopNow: 'Jetzt Kaufen' },
-    it: { faqTitle: 'Domande Frequenti', shopNow: 'Acquista Ora' },
-    pt: { faqTitle: 'Perguntas Frequentes', shopNow: 'Comprar Agora' }
-  };
-  return translations[lang] || translations.en;
-}
-
-/**
  * Generate HTML for the page
  */
 function generatePageHTML(store, products, title, contentData) {
@@ -397,13 +358,9 @@ function generatePageHTML(store, products, title, contentData) {
   // Split content into paragraphs
   const paragraphs = typeof content === 'string' ? content.split('\n\n').filter(p => p.trim()) : [content];
 
-  // Detect language from title and content
-  const lang = detectLanguage(title + ' ' + paragraphs.join(' '));
-  const t = getTranslations(lang);
-
   const html = `
 <!DOCTYPE html>
-<html lang="${lang}">
+<html lang="ro">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -496,7 +453,7 @@ function generatePageHTML(store, products, title, contentData) {
     <section class="bg-gray-50 py-16">
         <div class="max-w-4xl mx-auto px-4">
             <h2 class="text-3xl font-bold text-center text-gray-900 mb-12">
-                ${t.faqTitle}
+                Întrebări Frecvente
             </h2>
             <div class="space-y-4">
                 ${faq.map(item => `

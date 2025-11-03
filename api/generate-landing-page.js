@@ -35,26 +35,10 @@ Your task: Generate a complete, high-converting landing page structure in JSON f
 
 CRITICAL INSTRUCTIONS:
 
-1. LANGUAGE DETECTION (MOST IMPORTANT!):
-   - Analyze ONLY product name and description to detect language:
-     * Product Name: "${product.name}"
-     * Product Description: "${product.description || 'N/A'}"
-   
-   DETECTION RULES:
-   - If text contains English words (the, and, with, for, of, in, etc.) → English
-   - If text contains Romanian words (și, sau, pentru, este, cu, de, la, în, etc.) → Romanian
-   - If text contains Spanish words (y, o, para, con, de, en, el, la, etc.) → Spanish
-   - If text contains French words (et, ou, pour, avec, de, dans, le, la, etc.) → French
-   - If text contains German words (und, oder, für, mit, von, in, der, die, das, etc.) → German
-   - If text contains Italian words (e, o, per, con, di, in, il, la, etc.) → Italian
-   - If text is unclear or very short → Default to English
-   
-   CRITICAL:
-   - Generate ALL content in the EXACT SAME language as the product text
-   - IGNORE currency (EUR can be any language, USD can be Spanish, etc.)
-   - IGNORE website domain (.ro, .com, .es, etc.)
+1. LANGUAGE DETECTION:
+   - Analyze product name language (Romanian, English, etc.)
+   - Generate ALL content in the SAME language
    - NO mixed languages allowed!
-   - Language is detected ONLY from product text content!
 
 2. INDUSTRY DETECTION:
    - Identify industry: jewelry, auto, fashion, hotels, tourism, electronics, etc.
@@ -77,25 +61,15 @@ CRITICAL INSTRUCTIONS:
    - Use social proof effectively
    - Make it feel exclusive and premium
 
-5. JSON FORMATTING RULES (ABSOLUTELY CRITICAL - MUST FOLLOW):
-   - NEVER EVER use apostrophes (') or single quotes in text
-   - NEVER use contractions like: don't, won't, you'll, it's, we're
-   - Instead write: do not, will not, you will, it is, we are
-   - NEVER use possessives with apostrophe: customer's → customers
-   - Example CORRECT: "The product is amazing and you will love it"
-   - Example WRONG: "The product's amazing and you'll love it"
-   - This is ABSOLUTELY CRITICAL for valid JSON parsing!
-   - If you use apostrophes, the JSON will FAIL and be rejected!
+5. JSON FORMATTING RULES (CRITICAL):
+   - NEVER use double quotes (") inside string values
+   - Use single quotes (') or apostrophes instead
+   - Example: CORRECT: "Lanțisorul 'Inima Eternă' este frumos"
+   - Example: WRONG: "Lanțisorul \"Inima Eternă\" este frumos"
+   - This is CRITICAL for valid JSON parsing!
 
 Return ONLY a JSON object with this EXACT structure:
 {
-  "sectionTitles": {
-    "whyChoose": "Section title for benefits (e.g., English: 'Why choose', Romanian: 'De ce să alegi', Spanish: 'Por qué elegir', Italian: 'Perché scegliere', Portuguese: 'Por que escolher')",
-    "customerReviews": "Section title for testimonials (e.g., English: 'What our customers say', Romanian: 'Ce spun clienții noștri', Spanish: 'Lo que dicen nuestros clientes')",
-    "specifications": "Section title for features (e.g., English: 'Specifications', Romanian: 'Specificații', Spanish: 'Especificaciones')",
-    "faq": "Section title for FAQ (e.g., English: 'Frequently Asked Questions', Romanian: 'Întrebări Frecvente', Spanish: 'Preguntas Frecuentes')",
-    "readyToOrder": "Final CTA section title (e.g., English: 'Ready to order?', Romanian: 'Gata să comanzi?', Spanish: '¿Listo para ordenar?')"
-  },
   "hero": {
     "headline": "Powerful, benefit-driven headline (max 10 words)",
     "subheadline": "Supporting text that creates urgency (max 20 words)",
@@ -113,8 +87,8 @@ Return ONLY a JSON object with this EXACT structure:
     "rating": 4.8,
     "reviewCount": 127,
     "testimonials": [
-      {"name": "Realistic full name matching the detected language (e.g., English: 'Sarah Mitchell' or 'James Anderson', Romanian: 'Maria Popescu' or 'Andrei Ionescu', Spanish: 'Carlos García' or 'Ana Martínez', French: 'Sophie Dubois' or 'Pierre Martin', German: 'Anna Schmidt' or 'Michael Müller'). NEVER use 'John Doe' or 'Jane Smith'!", "text": "DETAILED, authentic testimonial (50-60 words). Include: 1) What problem they had, 2) Why they chose this product, 3) Specific results they got, 4) How it made them FEEL. Make it personal and believable.", "rating": 5},
-      {"name": "DIFFERENT realistic full name in same language (use different first AND last name from first testimonial). NEVER repeat names!", "text": "DIFFERENT detailed testimonial (50-60 words). Focus on DIFFERENT aspect of product. Include specific details and emotional impact. Make it unique from first testimonial.", "rating": 5}
+      {"name": "Realistic name matching the detected language", "text": "DETAILED, authentic testimonial (50-60 words). Include: 1) What problem they had, 2) Why they chose this product, 3) Specific results they got, 4) How it made them FEEL. Make it personal and believable.", "rating": 5},
+      {"name": "Different realistic name", "text": "DIFFERENT detailed testimonial (50-60 words). Focus on DIFFERENT aspect of product. Include specific details and emotional impact. Make it unique from first testimonial.", "rating": 5}
     ]
   },
   "features": [
@@ -232,20 +206,13 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { productId, product, pageTitle, pageSlug, urlPrefix, templateId, storeId } = req.body;
+    const { productId, pageTitle, pageSlug, urlPrefix, templateId, storeId } = req.body;
     
     console.log('📊 Request:', { productId, pageTitle, pageSlug, urlPrefix, templateId, storeId });
-    console.log('📦 Product data:', product);
     
     if (!productId || !pageTitle || !pageSlug || !storeId) {
       return res.status(400).json({ 
         error: 'Missing required fields: productId, pageTitle, pageSlug, storeId' 
-      });
-    }
-    
-    if (!product || !product.name) {
-      return res.status(400).json({ 
-        error: 'Missing product data (name, description, price, currency required)' 
       });
     }
 
@@ -302,10 +269,20 @@ module.exports = async (req, res) => {
       
       const db = admin.firestore();
       
-      // Product data comes from request (sent by Dashboard)
-      console.log('📦 Using product data from request:', product.name);
-      console.log('💰 Currency:', product.currency);
-      console.log('📝 Description:', product.description?.substring(0, 100) + '...');
+      // Get product from Firebase
+      const productDoc = await db
+        .collection('stores')
+        .doc(storeId)
+        .collection('products')
+        .doc(productId)
+        .get();
+      
+      if (!productDoc.exists) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      
+      const product = productDoc.data();
+      console.log('📦 Product loaded:', product.name);
       
       // Generate landing page content with AI
       const content = await generateLandingPageContent(product);
