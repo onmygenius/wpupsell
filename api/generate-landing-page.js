@@ -35,10 +35,18 @@ Your task: Generate a complete, high-converting landing page structure in JSON f
 
 CRITICAL INSTRUCTIONS:
 
-1. LANGUAGE DETECTION:
-   - Analyze product name language (Romanian, English, etc.)
-   - Generate ALL content in the SAME language
+1. LANGUAGE DETECTION (MOST IMPORTANT!):
+   - Analyze BOTH product name AND description to detect language:
+     * Product Name: "${product.name}"
+     * Product Description: "${product.description || 'N/A'}"
+   - Detect the language from the text above (English, Romanian, Spanish, French, German, etc.)
+   - If text is in English → generate ALL content in English
+   - If text is in Romanian → generate ALL content in Romanian
+   - If text is in Spanish → generate ALL content in Spanish
+   - If text is in French → generate ALL content in French
+   - Generate ALL content in the EXACT SAME language as the product text
    - NO mixed languages allowed!
+   - IGNORE the website domain (.ro, .com, .es, etc.) - ONLY analyze the actual product text language!
 
 2. INDUSTRY DETECTION:
    - Identify industry: jewelry, auto, fashion, hotels, tourism, electronics, etc.
