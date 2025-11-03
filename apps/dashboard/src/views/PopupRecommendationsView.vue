@@ -124,7 +124,7 @@ onMounted(async () => {
     <div class="grid md:grid-cols-2 gap-6">
       <!-- Display Settings Card -->
       <div class="bg-gradient-to-br from-[#0f1535] to-[#1a1f3a] rounded-2xl border border-gray-800/50 p-8 shadow-xl hover:shadow-2xl transition-all hover:border-purple-500/30">
-      <div class="flex items-start space-x-4 mb-6">
+        <div class="flex items-start space-x-4 mb-6">
         <div class="w-12 h-12 bg-purple-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
           <span class="text-2xl">📊</span>
         </div>
@@ -151,9 +151,10 @@ onMounted(async () => {
           <p class="text-sm text-gray-400">Tip: 3 products is optimal for conversion rates</p>
         </div>
       </div>
+      </div>
 
       <!-- Timing Settings Card -->
-    <div class="bg-gradient-to-br from-[#0f1535] to-[#1a1f3a] rounded-2xl border border-gray-800/50 p-8 shadow-xl hover:shadow-2xl transition-all hover:border-green-500/30">
+      <div class="bg-gradient-to-br from-[#0f1535] to-[#1a1f3a] rounded-2xl border border-gray-800/50 p-8 shadow-xl hover:shadow-2xl transition-all hover:border-green-500/30">
       <div class="flex items-start space-x-4 mb-6">
         <div class="w-12 h-12 bg-green-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
           <span class="text-2xl">⏱️</span>
@@ -201,6 +202,7 @@ onMounted(async () => {
           <p class="text-sm text-gray-400 mt-2">Maximum number of pop-ups to show per user session</p>
         </div>
       </div>
+    </div>
     </div>
 
     <!-- Trigger Settings Card -->
