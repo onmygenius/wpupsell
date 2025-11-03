@@ -159,6 +159,19 @@ class Recommendations {
             'recommendation_id' => $recommendations['recommendation_id'] ?? null,
             'popupTitle' => $recommendations['popupTitle'] ?? null,
             'popupSubtitle' => $recommendations['popupSubtitle'] ?? null,
+            'settings' => $recommendations['settings'] ?? [
+                'popupEnabled' => true,
+                'maxRecommendations' => 3,
+                'initialDelay' => 2,
+                'cooldownTime' => 10,
+                'sessionLimit' => 1,
+                'exitIntentEnabled' => true,
+                'scrollTriggerEnabled' => true,
+                'scrollTriggerPercent' => 0,
+                'postCartEnabled' => true,
+                'timeTriggerEnabled' => true,
+                'timeTriggerDelay' => 2
+            ],
         ]);
     }
     

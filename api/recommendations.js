@@ -263,7 +263,19 @@ module.exports = async (req, res) => {
 
     // Get store by API Key to read settings
     const db = getDb();
-    let storeSettings = { popupEnabled: true, maxRecommendations: 3 }; // Defaults
+    let storeSettings = {
+      popupEnabled: true,
+      maxRecommendations: 3,
+      initialDelay: 2,
+      cooldownTime: 10,
+      sessionLimit: 1,
+      exitIntentEnabled: true,
+      scrollTriggerEnabled: true,
+      scrollTriggerPercent: 0,
+      postCartEnabled: true,
+      timeTriggerEnabled: true,
+      timeTriggerDelay: 2
+    }; // Defaults
     let storeId = null;
     
     try {
@@ -280,6 +292,15 @@ module.exports = async (req, res) => {
         if (storeData.settings) {
           storeSettings.popupEnabled = storeData.settings.popupEnabled !== false;
           storeSettings.maxRecommendations = storeData.settings.maxRecommendations || 3;
+          storeSettings.initialDelay = storeData.settings.initialDelay || 2;
+          storeSettings.cooldownTime = storeData.settings.cooldownTime || 10;
+          storeSettings.sessionLimit = storeData.settings.sessionLimit || 1;
+          storeSettings.exitIntentEnabled = storeData.settings.exitIntentEnabled !== false;
+          storeSettings.scrollTriggerEnabled = storeData.settings.scrollTriggerEnabled !== false;
+          storeSettings.scrollTriggerPercent = storeData.settings.scrollTriggerPercent || 0;
+          storeSettings.postCartEnabled = storeData.settings.postCartEnabled !== false;
+          storeSettings.timeTriggerEnabled = storeData.settings.timeTriggerEnabled !== false;
+          storeSettings.timeTriggerDelay = storeData.settings.timeTriggerDelay || 2;
         }
         
         console.log('Store settings loaded:', storeSettings);
@@ -385,7 +406,7 @@ module.exports = async (req, res) => {
     const recommendationId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     console.log('Generated temp recommendation ID:', recommendationId);
 
-    // Return recommendations with settings
+    // Return recommendations with ALL settings
     const response = {
       success: true,
       recommendation_id: recommendationId,
@@ -395,8 +416,22 @@ module.exports = async (req, res) => {
       },
       popupTitle: popupTitle,
       popupSubtitle: popupSubtitle,
-      popupEnabled: storeSettings.popupEnabled,
-      maxRecommendations: storeSettings.maxRecommendations,
+      
+      // Settings
+      settings: {
+        popupEnabled: storeSettings.popupEnabled,
+        maxRecommendations: storeSettings.maxRecommendations,
+        initialDelay: storeSettings.initialDelay,
+        cooldownTime: storeSettings.cooldownTime,
+        sessionLimit: storeSettings.sessionLimit,
+        exitIntentEnabled: storeSettings.exitIntentEnabled,
+        scrollTriggerEnabled: storeSettings.scrollTriggerEnabled,
+        scrollTriggerPercent: storeSettings.scrollTriggerPercent,
+        postCartEnabled: storeSettings.postCartEnabled,
+        timeTriggerEnabled: storeSettings.timeTriggerEnabled,
+        timeTriggerDelay: storeSettings.timeTriggerDelay
+      },
+      
       recommendations: recommendations.slice(0, storeSettings.maxRecommendations).map(r => ({
         id: r.id,
         name: r.name,
