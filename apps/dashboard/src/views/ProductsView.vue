@@ -71,19 +71,6 @@ const totalPages = computed(() => {
   return Math.ceil(filteredProducts.value.length / itemsPerPage);
 });
 
-// Currency symbol (for store default)
-const currencySymbol = computed(() => {
-  const currency = store.value?.currency || 'USD';
-  const symbols: Record<string, string> = {
-    'USD': '$',
-    'EUR': '€',
-    'GBP': '£',
-    'LEI': 'LEI',
-    'RON': 'LEI'
-  };
-  return symbols[currency] || currency;
-});
-
 // Get currency symbol for a specific product
 const getProductCurrency = (product: Product) => {
   const currency = product.currency || store.value?.currency || 'USD';
