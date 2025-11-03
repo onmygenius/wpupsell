@@ -86,7 +86,7 @@ Return ONLY a JSON object with this EXACT structure:
     "rating": 4.8,
     "reviewCount": 127,
     "testimonials": [
-      {"name": "Realistic Romanian/English name (based on language)", "text": "DETAILED, authentic testimonial (50-60 words). Include: 1) What problem they had, 2) Why they chose this product, 3) Specific results they got, 4) How it made them FEEL. Make it personal and believable.", "rating": 5},
+      {"name": "Realistic name matching the detected language", "text": "DETAILED, authentic testimonial (50-60 words). Include: 1) What problem they had, 2) Why they chose this product, 3) Specific results they got, 4) How it made them FEEL. Make it personal and believable.", "rating": 5},
       {"name": "Different realistic name", "text": "DIFFERENT detailed testimonial (50-60 words). Focus on DIFFERENT aspect of product. Include specific details and emotional impact. Make it unique from first testimonial.", "rating": 5}
     ]
   },

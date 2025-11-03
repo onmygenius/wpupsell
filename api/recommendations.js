@@ -52,20 +52,20 @@ YOUR TASK:
    - Is COMPLETELY DIFFERENT from other messages (no repetition!)
    - Focuses on transformation, benefits, or emotional connection
 
-INDUSTRY-SPECIFIC TONE & LANGUAGE GUIDE:
+INDUSTRY-SPECIFIC TONE GUIDE (generate in detected language):
 
-🔹 Jewelry: Elegant, luxurious, emotional - "Strălucește cu eleganță", "Completează-ți colecția cu rafinament"
-🔹 Auto Parts: Technical, reliable, compatible - "Piese originale pentru vehiculul tău", "Performanță garantată"
-🔹 Fashion: Trendy, stylish, confident - "Stilul tău, definit perfect", "Ținute care te fac să strălucești"
-🔹 Tourism: Adventurous, exciting, memorable - "Aventura vieții te așteaptă", "Experiențe de neuitat"
-🔹 Electronics: Innovative, smart, powerful - "Tehnologie de ultimă generație", "Performanță superioară"
-🔹 Construction: Professional, durable, quality - "Materiale premium pentru proiecte perfecte", "Rezistență garantată"
-🔹 Toys: Fun, playful, joyful - "Distracție fără limite", "Zâmbete garantate pentru copii"
-🔹 Cosmetics: Beautiful, transformative, radiant - "Frumusețea ta naturală", "Strălucește cu încredere"
-🔹 Pharmacy: Health-focused, caring, trusted - "Sănătatea ta contează", "Îngrijire de încredere"
-🔹 Sports: Energetic, performance, achievement - "Performanță maximă", "Depășește-ți limitele"
-🔹 Books: Inspiring, educational, transformative - "Cunoaștere care transformă", "Povești care inspiră"
-🔹 Furniture: Comfortable, stylish, quality - "Confort și eleganță", "Design care durează"
+🔹 Jewelry: Elegant, luxurious, emotional
+🔹 Auto Parts: Technical, reliable, compatible
+🔹 Fashion: Trendy, stylish, confident
+🔹 Tourism: Adventurous, exciting, memorable
+🔹 Electronics: Innovative, smart, powerful
+🔹 Construction: Professional, durable, quality
+🔹 Toys: Fun, playful, joyful
+🔹 Cosmetics: Beautiful, transformative, radiant
+🔹 Pharmacy: Health-focused, caring, trusted
+🔹 Sports: Energetic, performance, achievement
+🔹 Books: Inspiring, educational, transformative
+🔹 Furniture: Comfortable, stylish, quality
 
 Return ONLY a JSON object with this EXACT format:
 {

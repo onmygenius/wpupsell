@@ -222,19 +222,14 @@ Industry: ${categories.join(', ')}
 Sample products: ${productNames.join(', ')}
 
 Requirements:
+- DETECT the language from product names (Romanian, English, Spanish, French, German, Italian, etc.)
+- Generate ALL titles in the DETECTED LANGUAGE
 - Each title must be COMPLETELY DIFFERENT
 - Focus on PROMOTION and PERSUASION
 - Include emotional triggers
 - Vary the angle: elegance, luxury, gift, style, quality, etc.
 - Keep titles between 40-60 characters
 - Make them compelling and click-worthy
-
-Examples of good titles:
-- "Descoperă luxul autentic cu ${store.name}"
-- "Bijuterii care îți transformă stilul"
-- "Eleganță și rafinament pentru fiecare moment"
-- "Cadoul perfect care va rămâne pentru totdeauna"
-- "Strălucește cu bijuterii din aur 18K"
 
 Generate EXACTLY ${count} titles in JSON format:
 {
@@ -287,11 +282,12 @@ Products to mention: ${selectedProducts.map(p => p.name).join(', ')}
 Category: ${mainCategory}
 
 Requirements:
-- Write 1000-1500 words of PERSUASIVE, PROMOTIONAL content
+- DETECT the language from product names and title
+- Write 1000-1500 words of PERSUASIVE, PROMOTIONAL content IN THE DETECTED LANGUAGE
 - Focus on EMOTIONS and BENEFITS, not technical details
 - Include strong CTAs throughout
 - Mention the 2-3 products naturally in context
-- Use "tu" form (Romanian)
+- Use appropriate pronouns for the detected language (tu/you/tú/vous/du/tu)
 - Make it compelling and conversion-focused
 - Vary the structure and flow (this is page ${pageNumber}, make it unique!)
 
