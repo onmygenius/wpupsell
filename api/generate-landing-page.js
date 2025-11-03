@@ -86,6 +86,14 @@ CRITICAL INSTRUCTIONS:
 
 Return ONLY a JSON object with this EXACT structure:
 {
+  "detectedLanguage": "Language code (en/ro/es/fr/de/it) detected from product name and description",
+  "sectionTitles": {
+    "whyChoose": "Section title in detected language (e.g., 'Why choose' for English, 'De ce să alegi' for Romanian, 'Por qué elegir' for Spanish)",
+    "customerReviews": "Section title in detected language (e.g., 'What our customers say' for English, 'Ce spun clienții noștri' for Romanian)",
+    "specifications": "Section title in detected language (e.g., 'Specifications' for English, 'Specificații' for Romanian)",
+    "faq": "Section title in detected language (e.g., 'Frequently Asked Questions' for English, 'Întrebări Frecvente' for Romanian)",
+    "readyToOrder": "Section title in detected language (e.g., 'Ready to order?' for English, 'Gata să comanzi?' for Romanian)"
+  },
   "hero": {
     "headline": "Powerful, benefit-driven headline (max 10 words)",
     "subheadline": "Supporting text that creates urgency (max 20 words)",
