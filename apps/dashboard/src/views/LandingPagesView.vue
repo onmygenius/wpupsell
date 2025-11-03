@@ -3,8 +3,10 @@ import { ref, onMounted, computed } from 'vue';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuthStore } from '../stores/auth';
+import { useRoute } from 'vue-router';
 
 const authStore = useAuthStore();
+const route = useRoute();
 const API_URL = 'https://wpupsell-dashboard.vercel.app/api';
 const STORE_ID = authStore.userId; // Use userId as storeId - 100% dynamic!
 
@@ -44,6 +46,16 @@ onMounted(async () => {
     loadLandingPages(),
     loadProducts()
   ]);
+  
+  // Check if productId in query params (from Promote button)
+  const productId = route.query.productId as string;
+  if (productId && products.value.length > 0) {
+    const product = products.value.find(p => p.id === productId);
+    if (product) {
+      selectProduct(product);
+      showGenerateModal.value = true;
+    }
+  }
 });
 
 async function loadStore() {
