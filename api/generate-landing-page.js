@@ -36,27 +36,25 @@ Your task: Generate a complete, high-converting landing page structure in JSON f
 CRITICAL INSTRUCTIONS:
 
 1. LANGUAGE DETECTION (MOST IMPORTANT!):
-   - Analyze product name and description FIRST, then use currency as hint:
+   - Analyze ONLY product name and description to detect language:
      * Product Name: "${product.name}"
      * Product Description: "${product.description || 'N/A'}"
-     * Currency: "${product.currency || 'N/A'}"
    
-   PRIORITY ORDER:
-   1. If product name/description contains clear English words → English
-   2. If product name/description contains clear Romanian words → Romanian
-   3. If product name/description contains clear Spanish words → Spanish
-   4. If product name/description contains clear French words → French
-   5. If product name/description contains clear German words → German
-   6. If text is unclear, use currency as hint:
-      * RON or LEI → Romanian
-      * USD or $ → English
-      * GBP or £ → English
-      * EUR → English (default)
+   DETECTION RULES:
+   - If text contains English words (the, and, with, for, of, in, etc.) → English
+   - If text contains Romanian words (și, sau, pentru, este, cu, de, la, în, etc.) → Romanian
+   - If text contains Spanish words (y, o, para, con, de, en, el, la, etc.) → Spanish
+   - If text contains French words (et, ou, pour, avec, de, dans, le, la, etc.) → French
+   - If text contains German words (und, oder, für, mit, von, in, der, die, das, etc.) → German
+   - If text contains Italian words (e, o, per, con, di, in, il, la, etc.) → Italian
+   - If text is unclear or very short → Default to English
    
+   CRITICAL:
    - Generate ALL content in the EXACT SAME language as the product text
-   - Product text language has PRIORITY over currency
+   - IGNORE currency (EUR can be any language, USD can be Spanish, etc.)
+   - IGNORE website domain (.ro, .com, .es, etc.)
    - NO mixed languages allowed!
-   - IGNORE the website domain (.ro, .com, .es, etc.)
+   - Language is detected ONLY from product text content!
 
 2. INDUSTRY DETECTION:
    - Identify industry: jewelry, auto, fashion, hotels, tourism, electronics, etc.
