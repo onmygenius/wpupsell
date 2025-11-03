@@ -77,12 +77,15 @@ CRITICAL INSTRUCTIONS:
    - Use social proof effectively
    - Make it feel exclusive and premium
 
-5. JSON FORMATTING RULES (CRITICAL):
-   - NEVER use double quotes (") inside string values
-   - Use single quotes (') or apostrophes instead
-   - Example: CORRECT: "Lanțisorul 'Inima Eternă' este frumos"
-   - Example: WRONG: "Lanțisorul \"Inima Eternă\" este frumos"
-   - This is CRITICAL for valid JSON parsing!
+5. JSON FORMATTING RULES (ABSOLUTELY CRITICAL - MUST FOLLOW):
+   - NEVER EVER use apostrophes (') or single quotes in text
+   - NEVER use contractions like: don't, won't, you'll, it's, we're
+   - Instead write: do not, will not, you will, it is, we are
+   - NEVER use possessives with apostrophe: customer's → customers
+   - Example CORRECT: "The product is amazing and you will love it"
+   - Example WRONG: "The product's amazing and you'll love it"
+   - This is ABSOLUTELY CRITICAL for valid JSON parsing!
+   - If you use apostrophes, the JSON will FAIL and be rejected!
 
 Return ONLY a JSON object with this EXACT structure:
 {
