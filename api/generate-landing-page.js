@@ -109,6 +109,22 @@ Return ONLY a JSON object with this EXACT structure:
     {"icon": "🎁", "title": "Compelling benefit title (3-5 words)", "description": "DETAILED benefit explanation (35-40 words). Focus on TRANSFORMATION and EMOTIONAL impact. Use specific examples. Explain HOW it improves their life. Make it tangible and desirable."},
     {"icon": "🚀", "title": "Compelling benefit title (3-5 words)", "description": "DETAILED benefit explanation (35-40 words). Focus on TRANSFORMATION and EMOTIONAL impact. Use specific examples. Explain HOW it improves their life. Make it tangible and desirable."}
   ],
+  "forWho": {
+    "title": "Section title in detected language (e.g., 'For Who?' for English, 'Pentru Cine?' for Romanian, '¿Para Quién?' for Spanish)",
+    "items": [
+      "SPECIFIC target audience with emotional appeal (30-35 words). Example: 'Perfect for women who appreciate timeless elegance and want to feel confident and sophisticated at every special occasion'",
+      "DIFFERENT target audience or use case (30-35 words). Be specific about WHO will love this and WHY",
+      "ANOTHER specific scenario or person type (30-35 words). Focus on emotional connection and lifestyle fit"
+    ]
+  },
+  "whyChoose": {
+    "title": "Section title with product name in detected language (e.g., 'Why Choose [Product Name]?' for English, 'De Ce Să Alegi [Product Name]?' for Romanian)",
+    "items": [
+      "UNIQUE selling point with emotional benefit (30-35 words). Explain what makes THIS product special compared to alternatives. Focus on differentiation.",
+      "QUALITY or CRAFTSMANSHIP highlight (30-35 words). Emphasize superior materials, attention to detail, or exceptional standards.",
+      "LONG-TERM VALUE proposition (30-35 words). Explain why this is a smart investment that will bring joy for years to come."
+    ]
+  },
   "urgency": null,
   "socialProof": {
     "rating": 4.8,
@@ -137,11 +153,17 @@ Return ONLY a JSON object with this EXACT structure:
   "trustBadges": []
 }
 
-IMPORTANT: 
+CRITICAL REQUIREMENTS: 
+- DETECT the language from product name and description (en/ro/es/fr/de/it)
+- Generate ALL content in the DETECTED LANGUAGE - every single word!
+- If product is Romanian → ALL sections in Romanian (hero, description, benefits, forWho, whyChoose, testimonials, FAQ)
+- If product is English → ALL sections in English
+- If product is Spanish → ALL sections in Spanish
 - Use industry-appropriate language
 - Create urgency without being pushy
 - Focus on benefits, not features
 - Make it feel authentic and trustworthy
+- NEVER mix languages - maintain consistency throughout!
 `;
 
     const groq = getGroq();
