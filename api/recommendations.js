@@ -294,7 +294,7 @@ module.exports = async (req, res) => {
           storeSettings.maxRecommendations = storeData.settings.maxRecommendations || 3;
           storeSettings.initialDelay = storeData.settings.initialDelay || 2;
           storeSettings.cooldownTime = storeData.settings.cooldownTime || 10;
-          storeSettings.sessionLimit = storeData.settings.sessionLimit || 1;
+          storeSettings.sessionLimit = storeData.settings.sessionLimit || 999;
           storeSettings.exitIntentEnabled = storeData.settings.exitIntentEnabled !== false;
           storeSettings.scrollTriggerEnabled = storeData.settings.scrollTriggerEnabled !== false;
           storeSettings.scrollTriggerPercent = storeData.settings.scrollTriggerPercent || 0;
