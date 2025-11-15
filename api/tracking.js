@@ -95,6 +95,16 @@ module.exports = async (req, res) => {
       
       console.log(`✅ Event tracked: ${eventType} - ${productName || 'N/A'}`);
       
+      // Increment popup views counter for 'impression' events
+      if (eventType === 'impression') {
+        await storeDoc.ref.update({
+          'usage.popupsShown': admin.firestore.FieldValue.increment(1),
+          updatedAt: new Date()
+        });
+        
+        console.log(`✅ Pop-up views incremented for store ${storeId}`);
+      }
+      
       return res.status(200).json({
         success: true,
         message: 'Event tracked successfully',

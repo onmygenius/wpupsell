@@ -289,21 +289,28 @@ module.exports = async (req, res) => {
         storeId = storeDoc.id;
         const storeData = storeDoc.data();
         
+        // Get popup limit from plan limits
+        const popupsLimit = storeData.limits?.popupsPerMonth || 30;
+        
         if (storeData.settings) {
           storeSettings.popupEnabled = storeData.settings.popupEnabled !== false;
           storeSettings.maxRecommendations = storeData.settings.maxRecommendations || 3;
           storeSettings.initialDelay = storeData.settings.initialDelay || 2;
           storeSettings.cooldownTime = storeData.settings.cooldownTime || 10;
-          storeSettings.sessionLimit = storeData.settings.sessionLimit || 999;
+          storeSettings.sessionLimit = storeData.settings.sessionLimit || popupsLimit;
           storeSettings.exitIntentEnabled = storeData.settings.exitIntentEnabled !== false;
           storeSettings.scrollTriggerEnabled = storeData.settings.scrollTriggerEnabled !== false;
           storeSettings.scrollTriggerPercent = storeData.settings.scrollTriggerPercent || 0;
           storeSettings.postCartEnabled = storeData.settings.postCartEnabled !== false;
           storeSettings.timeTriggerEnabled = storeData.settings.timeTriggerEnabled !== false;
           storeSettings.timeTriggerDelay = storeData.settings.timeTriggerDelay || 2;
+        } else {
+          // No custom settings, use plan limit
+          storeSettings.sessionLimit = popupsLimit;
         }
         
         console.log('Store settings loaded:', storeSettings);
+        console.log('Session limit set to:', storeSettings.sessionLimit, '(from plan limit:', popupsLimit + ')');
       }
     } catch (error) {
       console.error('Failed to load store settings:', error);

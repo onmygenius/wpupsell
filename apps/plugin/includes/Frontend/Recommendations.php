@@ -164,7 +164,7 @@ class Recommendations {
                 'maxRecommendations' => 3,
                 'initialDelay' => 2,
                 'cooldownTime' => 10,
-                'sessionLimit' => 1,
+                'sessionLimit' => 30,
                 'exitIntentEnabled' => true,
                 'scrollTriggerEnabled' => true,
                 'scrollTriggerPercent' => 0,

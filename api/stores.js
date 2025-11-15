@@ -253,11 +253,13 @@ module.exports = async function handler(req, res) {
               status: 'active',
               limits: {
                 pagesPerMonth: 5,
+                popupsPerMonth: 30,
                 maxProducts: 10,
                 maxStores: 1
               },
               usage: {
                 pagesGenerated: 0,
+                popupsShown: 0,
                 lastResetDate: now,
                 currentPeriodStart: now,
                 currentPeriodEnd: periodEnd
