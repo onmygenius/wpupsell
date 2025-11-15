@@ -1,4 +1,4 @@
-const { getDb } = require('./lib/firebase-admin');
+const { getDb } = require('../lib/firebase-admin');
 
 module.exports = async function handler(req, res) {
   // Set CORS headers
@@ -174,7 +174,7 @@ module.exports = async function handler(req, res) {
             const existingStoreData = storeDoc.data();
             
             // Get the email of the existing store owner
-            const { getAuth } = require('./lib/firebase-admin');
+            const { getAuth } = require('../lib/firebase-admin');
             const auth = getAuth();
             const existingUser = await auth.getUser(existingStoreData.userId);
             
@@ -218,7 +218,7 @@ module.exports = async function handler(req, res) {
             dashboardPassword = crypto.randomBytes(8).toString('base64').slice(0, 12);
             
             // Get Firebase Auth instance (already initialized)
-            const { getAuth } = require('./lib/firebase-admin');
+            const { getAuth } = require('../lib/firebase-admin');
             const auth = getAuth();
             
             // Create user in Firebase Auth
