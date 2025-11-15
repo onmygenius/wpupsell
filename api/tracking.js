@@ -95,19 +95,6 @@ module.exports = async (req, res) => {
       
       console.log(`✅ Event tracked: ${eventType} - ${productName || 'N/A'}`);
       
-      // Increment pop-up views counter for 'impression' events
-      if (eventType === 'impression') {
-        const storeData = storeDoc.data();
-        const currentViews = storeData.usage?.popupViews || 0;
-        
-        await storeDoc.ref.update({
-          'usage.popupViews': currentViews + 1,
-          updatedAt: new Date()
-        });
-        
-        console.log(`✅ Pop-up views incremented: ${currentViews} → ${currentViews + 1}`);
-      }
-      
       return res.status(200).json({
         success: true,
         message: 'Event tracked successfully',
