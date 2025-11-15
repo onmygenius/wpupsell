@@ -42,8 +42,7 @@ const upgradeDetails = ref<any>(null);
 
 // Available templates
 const templates = [
-  { id: 'starter', name: 'Starter (FREE)', description: 'Modern, clean design with Tailwind CSS - Perfect for any product' },
-  { id: 'professional', name: 'Professional (PAID)', description: 'Luxury dark theme with gold accents - Premium feel for high-end products' }
+  { id: 'starter', name: 'Starter', description: 'Modern, clean design with Tailwind CSS - Perfect for any product' }
 ];
 
 onMounted(async () => {
